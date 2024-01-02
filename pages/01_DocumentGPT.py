@@ -8,6 +8,7 @@ from langchain.vectorstores.faiss import FAISS
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
+import os
 
 st.set_page_config(
     page_title="DocumentGPT",
@@ -40,6 +41,9 @@ llm = ChatOpenAI(
 
 @st.cache_data(show_spinner="Embedding file...")
 def embed_file(file):
+    # Ensure .cache/files directory exists
+    file_dir = f"./.cache/files"
+    os.makedirs(file_dir, exist_ok=True)
     file_content = file.read()
     file_path = f"./.cache/files/{file.name}"
     with open(file_path, "wb") as f:
