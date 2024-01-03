@@ -7,17 +7,15 @@ st.set_page_config(
 
 st.markdown(
     """
-# Hello!
+# Welcome to QUUS AI projects!
             
-Welcome to my FullstackGPT Portfolio!
+Here are the apps we proudly present:
             
-Here are the apps I made:
-            
-- [x] [📃 DocumentGPT](/DocumentGPT)
-- [x] [🔒 PrivateGPT](/PrivateGPT)
-- [x] [❓ QuizGPT](/QuizGPT)
-- [x] [🖥️ SiteGPT](/SiteGPT)
-- [x] [💼 MeetingGPT](/MeetingGPT)
-- [x] [📈 InvestorGPT](/InvestorGPT)
+- [x] [📃 Document AI](/DocumentAI)
+- [x] [🔒 Local AI](/LocalAI)
+- [x] [❓ Quiz AI](/QuizAI)
+- [x] [🖥️ Crawling AI](/CrawlingAI)
+- [x] [💼 Meeting AI](/MeetingAI)
+- [x] [📈 Investor AI](/InvestorAI)
 """
 )
