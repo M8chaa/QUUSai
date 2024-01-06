@@ -97,7 +97,7 @@ st.set_page_config(
 
 st.markdown(
     """
-# MeetingGPT
+# MeetingAI
             
 Welcome to MeetingGPT, upload a video and I will give you a transcript, a summary and a chat bot to ask any questions about it.
 

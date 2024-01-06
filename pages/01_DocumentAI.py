@@ -102,7 +102,7 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 
-st.title("DocumentGPT")
+st.title("DocumentAI")
 
 st.markdown(
     """
