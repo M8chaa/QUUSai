@@ -121,7 +121,7 @@ st.set_page_config(
 
 st.markdown(
     """
-    # InvestorGPT
+    # InvestorAI
             
     Welcome to InvestorGPT.
             

@@ -256,7 +256,7 @@ with st.sidebar:
 if not docs:
     st.markdown(
         """
-    Welcome to QuizGPT.
+    Welcome to QuizAI.
                 
     I will make a quiz from Wikipedia articles or files you upload to test your knowledge and help you study.
                 

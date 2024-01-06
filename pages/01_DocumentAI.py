@@ -11,7 +11,7 @@ import streamlit as st
 import os
 
 st.set_page_config(
-    page_title="DocumentGPT",
+    page_title="DocumentAI",
     page_icon="📃",
 )
 

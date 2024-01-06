@@ -91,7 +91,7 @@ def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
 
 
 st.set_page_config(
-    page_title="MeetingGPT",
+    page_title="MeetingAI",
     page_icon="💼",
 )
 

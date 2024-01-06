@@ -139,7 +139,7 @@ st.set_page_config(
 
 st.markdown(
     """
-    # SiteGPT
+    # CrawlingAI
             
     Ask questions about the content of a website.
             

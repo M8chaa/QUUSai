@@ -93,7 +93,7 @@ prompt = ChatPromptTemplate.from_template(
 )
 
 
-st.title("PrivateGPT")
+st.title("LocalAI")
 
 st.markdown(
     """
