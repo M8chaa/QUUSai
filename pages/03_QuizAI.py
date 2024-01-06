@@ -18,11 +18,11 @@ class JsonOutputParser(BaseOutputParser):
 output_parser = JsonOutputParser()
 
 st.set_page_config(
-    page_title="QuizGPT",
+    page_title="QuizAI",
     page_icon="❓",
 )
 
-st.title("QuizGPT")
+st.title("QuizAI")
 
 llm = ChatOpenAI(
     temperature=0.1,
