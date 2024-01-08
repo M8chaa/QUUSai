@@ -5,8 +5,18 @@ from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from langchain.document_transformers import Html2TextTransformer
+import requests
+from bs4 import BeautifulSoup
+
 import streamlit as st
 
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome import service as fs
+from selenium.webdriver import ChromeOptions
+from webdriver_manager.core.os_manager import ChromeType
+from selenium.webdriver.common.by import By
 
 
 llm = ChatOpenAI(
@@ -118,7 +128,7 @@ def parse_page(soup):
 
 
 @st.cache_data(show_spinner="Loading website...")
-def load_website(url):
+def load_sitemap(url):
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size=1000,
         chunk_overlap=200,
@@ -131,6 +141,23 @@ def load_website(url):
     docs = loader.load_and_split(text_splitter=splitter)
     vector_store = FAISS.from_documents(docs, OpenAIEmbeddings())
     return vector_store.as_retriever()
+    
+def load_website(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+
+        # Use BeautifulSoup to extract text
+        soup = BeautifulSoup(response.text, 'html.parser')
+        text = soup.get_text()
+
+        # Assuming Html2TextTransformer is correctly defined/imported
+        transformed = Html2TextTransformer().transform_documents([text])
+        return transformed
+
+    except requests.HTTPError as e:
+        # Handle HTTP errors (e.g., return a custom error message or log the error)
+        return f"An HTTP error occurred: {e}"
 
 
 st.set_page_config(
@@ -143,9 +170,9 @@ st.markdown(
     """
     # CrawlingAI
             
-    Ask questions about the content of a website.
-            
-    Start by writing the URL of the website on the sidebar.
+    Extract data of any website!
+
+    Enter url at the sidebar and retrieve the data without html tag! 
 """
 )
 
@@ -159,10 +186,10 @@ with st.sidebar:
 
 if url:
     if ".xml" not in url:
-        with st.sidebar:
-            st.error("Please write down a Sitemap URL.")
-    else:
         retriever = load_website(url)
+        st.write(retriever)
+    else:
+        retriever = load_sitemap(url)
         query = st.text_input("Ask a question to the website.")
         if query:
             chain = (
@@ -175,3 +202,26 @@ if url:
             )
             result = chain.invoke(query)
             st.markdown(result.content.replace("$", "\$"))
+
+
+def start_chromium(url):
+    options = ChromeOptions()
+
+    # option設定を追加（設定する理由はメモリの削減）
+    options.add_argument("--headless")
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
+#     # webdriver_managerによりドライバーをインストール
+# 　  # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+    CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+    service = fs.Service(CHROMEDRIVER)
+    driver = webdriver.Chrome(
+                            options=options,
+                            service=service
+                            )
+
+    # URLで指定したwebページを開く
+    driver.get(url)
+    driver.close()
