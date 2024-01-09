@@ -241,6 +241,6 @@ xlrd==2.0.1
 XlsxWriter==3.1.5
 yarl==1.9.2
 zipp==3.16.2
-selenium==4.0.0
-seleniumbase==2.0.2
+selenium
+seleniumbase
 webdriver-manager
