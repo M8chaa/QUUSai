@@ -150,14 +150,20 @@ def load_website(url):
         # Use BeautifulSoup to extract text
         soup = BeautifulSoup(response.text, 'html.parser')
         text = soup.get_text()
-
+        return text
         # Assuming Html2TextTransformer is correctly defined/imported
-        transformed = Html2TextTransformer().transform_documents([text])
-        return transformed
+        # try:
+        #     transformed = Html2TextTransformer().transform_documents([text])
+        #     return transformed
+        # except Exception as e:
+        #     # Handle exceptions from Html2TextTransformer
+        #     print(f"Error during HTML to text transformation: {e}")
+        #     return None
 
     except requests.HTTPError as e:
-        # Handle HTTP errors (e.g., return a custom error message or log the error)
+        # Handle HTTP errors
         return f"An HTTP error occurred: {e}"
+
 
 
 st.set_page_config(
