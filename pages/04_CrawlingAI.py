@@ -150,35 +150,6 @@ def load_sitemap(url):
     vector_store = FAISS.from_documents(docs, OpenAIEmbeddings())
     return vector_store.as_retriever()
     
-def load_website(url):
-    try:
-        # response = requests.get(url)
-        # response.raise_for_status()
-
-        # # Use BeautifulSoup to extract text
-        # soup = BeautifulSoup(response.text, 'html.parser')
-        # text = soup.get_text()
-        # return text
-        
-        # Assuming Html2TextTransformer is correctly defined/imported
-        try:
-            rawData = start_chromium(url)
-            # transformed = Html2TextTransformer().transform_documents([rawData])
-            return rawData
-        except Exception as e:
-            # Handle exceptions from Html2TextTransformer
-            print(f"Error during HTML to text transformation: {e}")
-            return e
-
-
-    except requests.HTTPError as e:
-        # Handle HTTP errors
-        return f"An HTTP error occurred: {e}"
-
-
-
-
-
 
 st.markdown(
     """
@@ -220,7 +191,30 @@ def start_chromium(url):
     # URLで指定したwebページを開く
     driver.get(url)
 
+def load_website(url):
+    try:
+        # response = requests.get(url)
+        # response.raise_for_status()
 
+        # # Use BeautifulSoup to extract text
+        # soup = BeautifulSoup(response.text, 'html.parser')
+        # text = soup.get_text()
+        # return text
+        
+        # Assuming Html2TextTransformer is correctly defined/imported
+        try:
+            rawData = start_chromium(url)
+            # transformed = Html2TextTransformer().transform_documents([rawData])
+            return rawData
+        except Exception as e:
+            # Handle exceptions from Html2TextTransformer
+            print(f"Error during HTML to text transformation: {e}")
+            return e
+
+
+    except requests.HTTPError as e:
+        # Handle HTTP errors
+        return f"An HTTP error occurred: {e}"
 
 if url:
     if ".xml" not in url:
