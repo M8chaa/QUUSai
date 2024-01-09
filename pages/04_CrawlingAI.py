@@ -1,3 +1,4 @@
+# coding:utf-8
 from langchain.document_loaders import SitemapLoader
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -8,16 +9,23 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.document_transformers import Html2TextTransformer
 import requests
 from bs4 import BeautifulSoup
-
+import platform
+import os, sys
 import streamlit as st
-
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome import service as fs
 from selenium.webdriver import ChromeOptions
+# from webdriver_manager.core.utils import ChromeType
 from webdriver_manager.core.os_manager import ChromeType
 from selenium.webdriver.common.by import By
 
+
+
+st.set_page_config(
+    page_title="SiteGPT",
+    page_icon="🖥️",
+)
 
 llm = ChatOpenAI(
     temperature=0.1,
@@ -144,21 +152,24 @@ def load_sitemap(url):
     
 def load_website(url):
     try:
-        response = requests.get(url)
-        response.raise_for_status()
+        # response = requests.get(url)
+        # response.raise_for_status()
 
-        # Use BeautifulSoup to extract text
-        soup = BeautifulSoup(response.text, 'html.parser')
-        text = soup.get_text()
-        return text
+        # # Use BeautifulSoup to extract text
+        # soup = BeautifulSoup(response.text, 'html.parser')
+        # text = soup.get_text()
+        # return text
+        
         # Assuming Html2TextTransformer is correctly defined/imported
-        # try:
-        #     transformed = Html2TextTransformer().transform_documents([text])
-        #     return transformed
-        # except Exception as e:
-        #     # Handle exceptions from Html2TextTransformer
-        #     print(f"Error during HTML to text transformation: {e}")
-        #     return None
+        try:
+            rawData = start_chromium(url)
+            # transformed = Html2TextTransformer().transform_documents([rawData])
+            return rawData
+        except Exception as e:
+            # Handle exceptions from Html2TextTransformer
+            print(f"Error during HTML to text transformation: {e}")
+            return e
+
 
     except requests.HTTPError as e:
         # Handle HTTP errors
@@ -166,10 +177,7 @@ def load_website(url):
 
 
 
-st.set_page_config(
-    page_title="SiteGPT",
-    page_icon="🖥️",
-)
+
 
 
 st.markdown(
@@ -190,6 +198,30 @@ with st.sidebar:
     )
 
 
+def start_chromium(url):
+    # ドライバのオプション
+    options = ChromeOptions()
+
+    # option設定を追加（設定する理由はメモリの削減）
+    options.add_argument("--headless")
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
+    # webdriver_managerによりドライバーをインストール
+    # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+    CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+    service = fs.Service(CHROMEDRIVER)
+    driver = webdriver.Chrome(
+                              options=options,
+                              service=service
+                             )
+
+    # URLで指定したwebページを開く
+    driver.get(url)
+
+
+
 if url:
     if ".xml" not in url:
         retriever = load_website(url)
@@ -208,26 +240,3 @@ if url:
             )
             result = chain.invoke(query)
             st.markdown(result.content.replace("$", "\$"))
-
-
-def start_chromium(url):
-    options = ChromeOptions()
-
-    # option設定を追加（設定する理由はメモリの削減）
-    options.add_argument("--headless")
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-
-#     # webdriver_managerによりドライバーをインストール
-# 　  # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
-    CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-    service = fs.Service(CHROMEDRIVER)
-    driver = webdriver.Chrome(
-                            options=options,
-                            service=service
-                            )
-
-    # URLで指定したwebページを開く
-    driver.get(url)
-    driver.close()
