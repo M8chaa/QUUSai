@@ -131,7 +131,7 @@ pathy==0.10.2
 pdf2image==1.16.3
 #pdfminer.six==20221105
 pdfminer.six==20211012
-pdfplumber==0.10.2
+pdfplumber<=0.10.2
 pexpect==4.8.0
 pickleshare==0.7.5
 Pillow==9.5.0
