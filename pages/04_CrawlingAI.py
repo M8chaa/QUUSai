@@ -258,5 +258,5 @@ if url:
     driver.get(url)
     html = driver.page_source
     driver.close()
-    st.text_area("HTML Content", html_content, height=300)
+    st.text_area("HTML Content", html, height=300)
 
