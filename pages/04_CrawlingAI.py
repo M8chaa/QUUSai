@@ -169,7 +169,73 @@ with st.sidebar:
     )
 
 
-def start_chromium(url):
+# def start_chromium(url):
+#     # ドライバのオプション
+#     options = ChromeOptions()
+
+#     # option設定を追加（設定する理由はメモリの削減）
+#     options.add_argument("--headless")
+#     options.add_argument('--disable-gpu')
+#     options.add_argument('--no-sandbox')
+#     options.add_argument('--disable-dev-shm-usage')
+
+#     # webdriver_managerによりドライバーをインストール
+#     # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+#     CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+#     service = fs.Service(CHROMEDRIVER)
+#     driver = webdriver.Chrome(
+#                               options=options,
+#                               service=service
+#                              )
+
+#     # URLで指定したwebページを開く
+#     driver.get(url)
+
+# def load_website(url):
+#     try:
+#         # response = requests.get(url)
+#         # response.raise_for_status()
+
+#         # # Use BeautifulSoup to extract text
+#         # soup = BeautifulSoup(response.text, 'html.parser')
+#         # text = soup.get_text()
+#         # return text
+        
+#         # Assuming Html2TextTransformer is correctly defined/imported
+#         try:
+#             rawData = start_chromium(url)
+#             # transformed = Html2TextTransformer().transform_documents([rawData])
+#             return rawData
+#         except Exception as e:
+#             # Handle exceptions from Html2TextTransformer
+#             print(f"Error during HTML to text transformation: {e}")
+#             return e
+
+
+#     except requests.HTTPError as e:
+#         # Handle HTTP errors
+#         return f"An HTTP error occurred: {e}"
+
+# if url:
+#     if ".xml" not in url:
+#         retriever = load_website(url)
+#         st.write(retriever)
+#     else:
+#         retriever = load_sitemap(url)
+#         query = st.text_input("Ask a question to the website.")
+#         if query:
+#             chain = (
+#                 {
+#                     "docs": retriever,
+#                     "question": RunnablePassthrough(),
+#                 }
+#                 | RunnableLambda(get_answers)
+#                 | RunnableLambda(choose_answer)
+#             )
+#             result = chain.invoke(query)
+#             st.markdown(result.content.replace("$", "\$"))
+
+if url:
     # ドライバのオプション
     options = ChromeOptions()
 
@@ -190,47 +256,6 @@ def start_chromium(url):
 
     # URLで指定したwebページを開く
     driver.get(url)
+    html = driver.page_source
+    st.text_area("HTML Content", html_content, height=300)
 
-def load_website(url):
-    try:
-        # response = requests.get(url)
-        # response.raise_for_status()
-
-        # # Use BeautifulSoup to extract text
-        # soup = BeautifulSoup(response.text, 'html.parser')
-        # text = soup.get_text()
-        # return text
-        
-        # Assuming Html2TextTransformer is correctly defined/imported
-        try:
-            rawData = start_chromium(url)
-            # transformed = Html2TextTransformer().transform_documents([rawData])
-            return rawData
-        except Exception as e:
-            # Handle exceptions from Html2TextTransformer
-            print(f"Error during HTML to text transformation: {e}")
-            return e
-
-
-    except requests.HTTPError as e:
-        # Handle HTTP errors
-        return f"An HTTP error occurred: {e}"
-
-if url:
-    if ".xml" not in url:
-        retriever = load_website(url)
-        st.write(retriever)
-    else:
-        retriever = load_sitemap(url)
-        query = st.text_input("Ask a question to the website.")
-        if query:
-            chain = (
-                {
-                    "docs": retriever,
-                    "question": RunnablePassthrough(),
-                }
-                | RunnableLambda(get_answers)
-                | RunnableLambda(choose_answer)
-            )
-            result = chain.invoke(query)
-            st.markdown(result.content.replace("$", "\$"))
