@@ -7,6 +7,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.document_transformers import Html2TextTransformer
+from langchain.schema import Document
 import requests
 from bs4 import BeautifulSoup
 import platform
@@ -230,7 +231,9 @@ if url:
     if ".xml" not in url:
         result = start_chromium(url)
         st.text_area("Raw HTML", result, height=300)
-        transformed = Html2TextTransformer().transform_documents([result])
+        html_content = start_chromium(url)
+        document = Document(page_content=html_content)
+        transformed = Html2TextTransformer().transform_documents([document])
         st.text_area("Text Content", transformed, height = 300)
     else:
         retriever = load_sitemap(url)
