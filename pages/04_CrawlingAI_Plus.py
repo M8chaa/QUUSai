@@ -169,27 +169,31 @@ with st.sidebar:
     )
 
 
-# def start_chromium(url):
-#     # ドライバのオプション
-#     options = ChromeOptions()
+def start_chromium(url):
+    # ドライバのオプション
+    options = ChromeOptions()
 
-#     # option設定を追加（設定する理由はメモリの削減）
-#     options.add_argument("--headless")
-#     options.add_argument('--disable-gpu')
-#     options.add_argument('--no-sandbox')
-#     options.add_argument('--disable-dev-shm-usage')
+    # option設定を追加（設定する理由はメモリの削減）
+    options.add_argument("--headless")
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
 
-#     # webdriver_managerによりドライバーをインストール
-#     # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
-#     CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-#     service = fs.Service(CHROMEDRIVER)
-#     driver = webdriver.Chrome(
-#                               options=options,
-#                               service=service
-#                              )
+    # webdriver_managerによりドライバーをインストール
+    # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+    CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+    service = fs.Service(CHROMEDRIVER)
+    driver = webdriver.Chrome(
+                              options=options,
+                              service=service
+                             )
 
-#     # URLで指定したwebページを開く
-#     driver.get(url)
+    # URLで指定したwebページを開く
+    driver.get(url)
+    html = driver.page_source
+    driver.close()
+    return html
+
 
 # def load_website(url):
 #     try:
@@ -236,27 +240,28 @@ with st.sidebar:
 #             st.markdown(result.content.replace("$", "\$"))
 
 if url:
-    # ドライバのオプション
-    options = ChromeOptions()
+    # # ドライバのオプション
+    # options = ChromeOptions()
 
-    # option設定を追加（設定する理由はメモリの削減）
-    options.add_argument("--headless")
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    # # option設定を追加（設定する理由はメモリの削減）
+    # options.add_argument("--headless")
+    # options.add_argument('--disable-gpu')
+    # options.add_argument('--no-sandbox')
+    # options.add_argument('--disable-dev-shm-usage')
 
-    # webdriver_managerによりドライバーをインストール
-    # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
-    CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-    service = fs.Service(CHROMEDRIVER)
-    driver = webdriver.Chrome(
-                              options=options,
-                              service=service
-                             )
+    # # webdriver_managerによりドライバーをインストール
+    # # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+    # CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+    # service = fs.Service(CHROMEDRIVER)
+    # driver = webdriver.Chrome(
+    #                           options=options,
+    #                           service=service
+    #                          )
 
-    # URLで指定したwebページを開く
-    driver.get(url)
-    html = driver.page_source
-    driver.close()
-    st.text_area("HTML Content", html, height=300)
+    # # URLで指定したwebページを開く
+    # driver.get(url)
+    # html = driver.page_source
+    # driver.close()
+    result = start_chromium(url)
+    st.text_area("HTML Content", result, height=300)
 
