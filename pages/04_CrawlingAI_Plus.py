@@ -23,7 +23,7 @@ from selenium.webdriver.common.by import By
 
 
 st.set_page_config(
-    page_title="CrawlingAI Plus",
+    page_title="CrawlingAI_Plus",
     page_icon="🖥️",
 )
 

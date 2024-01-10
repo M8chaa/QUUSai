@@ -132,7 +132,7 @@ def load_website(url):
 
 
 st.set_page_config(
-    page_title="CrawlingAI",
+    page_title="CrawlingAI_",
     page_icon="🖥️",
 )
 
