@@ -15,6 +15,7 @@ Here are the apps we proudly present:
 - [x] [🔒 Local AI](/LocalAI)
 - [x] [❓ Quiz AI](/QuizAI)
 - [x] [🖥️ Crawling AI](/CrawlingAI)
+- [x] [🖥️ Crawling AI Plus](/CrawlingAI Plus)
 - [x] [💼 Meeting AI](/MeetingAI)
 - [x] [📈 Investor AI](/InvestorAI)
 """

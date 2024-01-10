@@ -132,14 +132,14 @@ def load_website(url):
 
 
 st.set_page_config(
-    page_title="SiteGPT",
+    page_title="CrawlingAI",
     page_icon="🖥️",
 )
 
 
 st.markdown(
     """
-    # SiteGPT
+    # CrawlingAI
             
     Ask questions about the content of a website.
             

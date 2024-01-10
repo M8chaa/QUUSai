@@ -23,7 +23,7 @@ from selenium.webdriver.common.by import By
 
 
 st.set_page_config(
-    page_title="SiteGPT",
+    page_title="CrawlingAI Plus",
     page_icon="🖥️",
 )
 
@@ -153,7 +153,7 @@ def load_sitemap(url):
 
 st.markdown(
     """
-    # CrawlingAI
+    # CrawlingAI Plus
             
     Extract data of any website!
 
