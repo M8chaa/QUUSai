@@ -230,7 +230,7 @@ if url:
     if ".xml" not in url:
         result = start_chromium(url)
         st.text_area("Raw HTML", result, height=300)
-        transformed = Html2TextTransformer().transform_documents([result])
+        transformed = Html2TextTransformer().transform_documents(result)
         st.text_area("Text Content", transformed, height = 300)
     else:
         retriever = load_sitemap(url)
