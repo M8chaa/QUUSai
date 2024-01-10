@@ -224,25 +224,14 @@ def start_chromium(url):
 #     if ".xml" not in url:
 #         retriever = load_website(url)
 #         st.write(retriever)
-#     else:
-#         retriever = load_sitemap(url)
-#         query = st.text_input("Ask a question to the website.")
-#         if query:
-#             chain = (
-#                 {
-#                     "docs": retriever,
-#                     "question": RunnablePassthrough(),
-#                 }
-#                 | RunnableLambda(get_answers)
-#                 | RunnableLambda(choose_answer)
-#             )
-#             result = chain.invoke(query)
-#             st.markdown(result.content.replace("$", "\$"))
+
 
 if url:
     if ".xml" not in url:
         result = start_chromium(url)
-        st.text_area("HTML Content", result, height=300)
+        st.text_area("Raw HTML", result, height=300)
+        transformed = Html2TextTransformer().transform_documents([result])
+        st.text_area("Text Content", transformed, height = 300)
     else:
         retriever = load_sitemap(url)
         query = st.text_input("Ask a question to the website.")
