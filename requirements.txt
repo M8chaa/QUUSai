@@ -242,3 +242,5 @@ zipp==3.16.2
 selenium
 seleniumbase
 webdriver-manager
+streamlit-extras
+st-gsheets-connection
