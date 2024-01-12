@@ -242,3 +242,9 @@ zipp==3.16.2
 selenium
 seleniumbase
 webdriver-manager
+streamlit-extras
+st-gsheets-connection
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+google

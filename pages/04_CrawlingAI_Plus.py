@@ -8,10 +8,10 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.document_transformers import Html2TextTransformer
 from langchain.schema import Document
-import requests
-from bs4 import BeautifulSoup
-import platform
-import os, sys
+# import requests
+# from bs4 import BeautifulSoup
+# import platform
+# import os, sys
 import streamlit as st
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -20,7 +20,10 @@ from selenium.webdriver import ChromeOptions
 # from webdriver_manager.core.utils import ChromeType
 from webdriver_manager.core.os_manager import ChromeType
 from selenium.webdriver.common.by import By
-
+import streamlit_extras
+from streamlit_extras.add_vertical_space import add_vertical_space
+from streamlit_extras.row import row
+from streamlit_gsheets import GSheetsConnection
 
 
 st.set_page_config(
@@ -225,16 +228,63 @@ def start_chromium(url):
 #     if ".xml" not in url:
 #         retriever = load_website(url)
 #         st.write(retriever)
+import pandas as pd
+
+
+# conn = st.connection("gsheets", type=GSheetsConnection)
+
+# df = conn.read()
+
+# # Print results.
+# for row in df.itertuples():
+#     st.write(f"{row.name} has a :{row.pet}:")
+
+
+def convert_html_to_csv(html):
+    # This function should convert HTML table data to CSV. 
+    # This is a placeholder and needs to be adjusted based on the actual HTML structure.
+    df = pd.read_html(html)[0]  # Adjust this to fit the HTML structure
+    return df.to_csv(index=False)
+
 
 
 if url:
     if ".xml" not in url:
         result = start_chromium(url)
-        st.text_area("Raw HTML", result, height=300)
         html_content = start_chromium(url)
         document = Document(page_content=html_content)
         transformed = Html2TextTransformer().transform_documents([document])
-        st.text_area("Text Content", transformed, height = 300)
+
+
+        
+        add_vertical_space(1)        
+        st.markdown("#### Raw HTML")
+        links_row = row(2, vertical_align="left")
+        links_row.download_button(
+            label="Text File",
+            data=result,
+            file_name="raw_html.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+        links_row.link_button("Google Sheet","",use_container_width=True,)
+
+        with st.expander("Click to see"):
+            st.text_area("", result, height=300)
+        
+        # Adding a gap
+        st.divider()
+
+        st.markdown("#### Text Content")
+        st.download_button(
+            label="Text File",
+            data=str(transformed),
+            file_name="html_text.txt",
+            mime="text/plain"
+        )
+        with st.expander("Click to see"):
+            st.text_area("", transformed, height=300)
+
     else:
         retriever = load_sitemap(url)
         query = st.text_input("Ask a question to the website.")

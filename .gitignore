@@ -9,3 +9,8 @@ files/
 .DS_Store
 falcon.bin
 __pycache__
+QUUSai_clientID_webapp.json
+QUUSai_clientID_desktop.json
+client_secret_496134501957-ufiled3fi98pjqhmk1i8gelru3pekeed.apps.googleusercontent.com.json
+Google.py
+demo.py
