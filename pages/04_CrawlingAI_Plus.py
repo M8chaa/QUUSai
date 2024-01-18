@@ -179,9 +179,10 @@ def moyocrawling(url1, url2):
     except ValueError:
         return None
     
-    crawledText = []
+
     for start_num in range(number1, number2 + 1, 50):
         end_num = min(start_num + 49, number2)
+        crawledText = ""  # Initialize for each batch of requests
         
         for i in range(start_num, end_num + 1):
             # Construct the URL by replacing the last part with the current number
@@ -194,18 +195,16 @@ def moyocrawling(url1, url2):
             if response.status_code == 200:
                 # Parse the HTML content with BeautifulSoup
                 soup = BeautifulSoup(response.text, 'html.parser')
-                crawledText.append(soup)
+                crawledText += str(soup) + '\n\n'  # Append data with two newlines
             else:
-                crawledText.append(current_url+" Failed")
-
+                crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
+        
         st.download_button(
             label=f"Text File ~ {end_num}",
-            data=crawledText,
-            file_name=f"Text_File_{i + 1}.txt",
+            data=crawledText.encode('utf-8'),
+            file_name=f"Text_File_{end_num}.txt",
             mime="text/plain",
         )
-        crawledText = []
-
 
 
 # with st.sidebar:
