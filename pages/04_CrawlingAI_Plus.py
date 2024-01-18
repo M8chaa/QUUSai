@@ -203,7 +203,7 @@ with st.sidebar:
 
 
 
-@st.cache_data(show_spinner="Getting Screenshot")
+# @st.cache_data(show_spinner="Getting Screenshot")
 def start_chromium(url):
     # ドライバのオプション
     options = ChromeOptions()
