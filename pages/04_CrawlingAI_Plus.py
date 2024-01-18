@@ -222,7 +222,10 @@ with st.sidebar:
         "Write down the Last URL",
         placeholder="https://example.com",
     )
-    st.button("Start Crawling",on_click=moyocrawling(url1, url2))
+    
+    # Use the lambda function to pass arguments to moyocrawling
+    if st.button("Start Crawling"):
+        moyocrawling(url1, url2)
 
 
 
