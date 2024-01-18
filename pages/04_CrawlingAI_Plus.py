@@ -226,17 +226,18 @@ def start_chromium(url):
     # URLで指定したwebページを開く
     driver.get(url)
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+    clickable_elements = driver.find_elements(By.XPATH, "//*[self::a or self::button or (self::input and @type='button')]")
     html = driver.page_source
     # elements = driver.find_elements(By.XPATH, '//*')
     # element_xpaths = [generate_xpath(element) for element in elements]
-    file_dir = f"./.cache/screenshots"
-    os.makedirs(file_dir, exist_ok=True)
-    screenshot_path = os.path.join(file_dir, "screenshot.png")
-    driver.get_screenshot_as_file(screenshot_path)
+    # file_dir = f"./.cache/screenshots"
+    # os.makedirs(file_dir, exist_ok=True)
+    # screenshot_path = os.path.join(file_dir, "screenshot.png")
+    # driver.get_screenshot_as_file(screenshot_path)
 
 
     driver.close()
-    return html, screenshot_path
+    return html, clickable_elements
 
 
 # def load_website(url):
@@ -301,7 +302,7 @@ def convert_html_to_csv(html):
 
 if url:
     if ".xml" not in url:
-        result, screenshot_path = start_chromium(url)
+        result, clickable_elements = start_chromium(url)
         document = Document(page_content=result)
         transformed = Html2TextTransformer().transform_documents([document])
 
@@ -338,6 +339,11 @@ if url:
         with st.expander("Click to see"):
             st.text_area("", transformed, height=300)
         
+        st.divider()
+
+        st.markdown("#### Clickable Elements")
+        with st.expander("Click to see"):
+            st.text_area("", clickable_elements, height=300)
         # st.divider()
 
         # st.markdown("#### XPath")
@@ -350,11 +356,11 @@ if url:
         # with st.expander("Click to see"):
         #     st.text_area("", transformed, height=300)
             
-        st.divider()
-        if os.path.exists(screenshot_path):
-            st.image(screenshot_path)
-        else:
-            st.error("Screenshot not found.")
+        # st.divider()
+        # if os.path.exists(screenshot_path):
+        #     st.image(screenshot_path)
+        # else:
+        #     st.error("Screenshot not found.")
 
 
     else:
