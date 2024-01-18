@@ -10,7 +10,7 @@ from langchain.document_transformers import Html2TextTransformer
 from langchain.schema import Document
 from langchain.storage import LocalFileStore
 # import requests
-# from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup
 # import platform
 import os, sys
 import streamlit as st
@@ -225,21 +225,21 @@ def start_chromium(url):
 
     # URLで指定したwebページを開く
     driver.get(url)
-    # WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-    wait = WebDriverWait(driver, 60)  # Timeout after 10 seconds
-    # locator = (By.CSS_SELECTOR, "a[href='/plans/16353']")
-    locator = (By.CSS_SELECTOR, "a.ekz2e6k13.css-1kmf8ij")
-    wait.until(EC.visibility_of_element_located(locator))
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+    # wait = WebDriverWait(driver, 60)  # Timeout after 10 seconds
+    # # locator = (By.CSS_SELECTOR, "a[href='/plans/16353']")
+    # locator = (By.CSS_SELECTOR, "a.ekz2e6k13.css-1kmf8ij")
+    # wait.until(EC.visibility_of_element_located(locator))
 
-    clickable_elements = driver.find_elements(By.XPATH, "//*[self::a or self::button or (self::input and @type='button')]")
-    clickable_elements_xpath = []
-    for element in clickable_elements:
-        tag_name = element.tag_name
-        text = element.text
-        href = element.get_attribute('href') if tag_name == 'a' else "Not an anchor tag"
+    # clickable_elements = driver.find_elements(By.XPATH, "//*[self::a or self::button or (self::input and @type='button')]")
+    # clickable_elements_xpath = []
+    # for element in clickable_elements:
+    #     tag_name = element.tag_name
+    #     text = element.text
+    #     href = element.get_attribute('href') if tag_name == 'a' else "Not an anchor tag"
 
-        # Append a tuple of tag name, text, and the 'btn' attribute value to the list
-        clickable_elements_xpath.append((tag_name, text, href))
+    #     # Append a tuple of tag name, text, and the 'btn' attribute value to the list
+    #     clickable_elements_xpath.append((tag_name, text, href))
 
     html = driver.page_source
     # elements = driver.find_elements(By.XPATH, '//*')
@@ -249,9 +249,21 @@ def start_chromium(url):
     # screenshot_path = os.path.join(file_dir, "screenshot.png")
     # driver.get_screenshot_as_file(screenshot_path)
 
+    soup = BeautifulSoup(html, 'html.parser')
+
+    # Find all clickable elements (links and buttons)
+    clickable_elements = soup.find_all(['a', 'button'])
+    clickable_elements_content = []
+    # Process the elements
+    for element in clickable_elements:
+        tag_name = element.name
+        text = element.get_text()
+        href = element.get('href') if tag_name == 'a' else "Not an anchor tag"
+        clickable_elements_content.append((tag_name, text, href))
+        # Do something with the information
 
     driver.close()
-    return html, clickable_elements_xpath
+    return html, clickable_elements_content
 
 
 # def load_website(url):
@@ -316,7 +328,7 @@ def convert_html_to_csv(html):
 
 if url:
     if ".xml" not in url:
-        result, clickable_elements_xpath = start_chromium(url)
+        result, clickable_elements_content = start_chromium(url)
         document = Document(page_content=result)
         transformed = Html2TextTransformer().transform_documents([document])
 
@@ -357,7 +369,7 @@ if url:
 
         st.markdown("#### Clickable Elements")
         with st.expander("Click to see"):
-            st.text_area("", clickable_elements_xpath, height=300)
+            st.text_area("", clickable_elements_content, height=300)
         # st.divider()
 
         # st.markdown("#### XPath")
