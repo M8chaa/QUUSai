@@ -251,15 +251,15 @@ def convert_html_to_csv(html):
     df = pd.read_html(html)[0]  # Adjust this to fit the HTML structure
     return df.to_csv(index=False)
 
-def googleDriveConnect():
-    CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
-    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
-    API_NAME = 'drive'
-    API_VERSION = 'v3'
-    SCOPES = ['https://www.googleapis.com/auth/drive']
-    serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
-    # print (dir(serviceInstance))
-    st.write(dir(serviceInstance))  # Changed from print to st.write
+# def googleDriveConnect():
+#     CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
+#     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
+#     API_NAME = 'drive'
+#     API_VERSION = 'v3'
+#     SCOPES = ['https://www.googleapis.com/auth/drive']
+#     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
+#     # print (dir(serviceInstance))
+#     st.write(dir(serviceInstance))  # Changed from print to st.write
 
 
 
@@ -282,9 +282,9 @@ if url:
             mime="text/plain",
             use_container_width=True
         )
-        # links_row.link_button("Google Sheet","",use_container_width=True,)
-        if links_row.link_button("Google Sheet", "", use_container_width=True):
-            googleDriveConnect()  # Trigger the function when button is clicked
+        links_row.link_button("Google Sheet","",use_container_width=True,)
+        # if links_row.link_button("Google Sheet", "", use_container_width=True):
+        #     googleDriveConnect()  # Trigger the function when button is clicked
 
 
         with st.expander("Click to see"):
