@@ -8,10 +8,11 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.document_transformers import Html2TextTransformer
 from langchain.schema import Document
+from langchain.storage import LocalFileStore
 # import requests
 # from bs4 import BeautifulSoup
 # import platform
-# import os, sys
+import os, sys
 import streamlit as st
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -176,7 +177,33 @@ with st.sidebar:
         placeholder="https://example.com",
     )
 
+# def generate_xpath(element):
+#     """
+#     Generates a simple XPath for a given element.
+#     """
+#     components = []
+#     child = element
+#     while child is not None:
+#         parent = child.find_element(By.XPATH, '..')
+#         siblings = parent.find_elements(By.XPATH, child.tag_name)
+#         count = 0
+#         index = 0
+#         for i, sibling in enumerate(siblings, start=1):
+#             if sibling == child:
+#                 index = i
+#             count += 1
+#         if count > 1:
+#             components.append(f'{child.tag_name}[{index}]')
+#         else:
+#             components.append(child.tag_name)
+#         child = parent if parent.tag_name != 'html' else None
 
+#     components.reverse()
+#     return '/' + '/'.join(components)
+
+
+
+@st.cache_data(show_spinner="Getting Screenshot")
 def start_chromium(url):
     # ドライバのオプション
     options = ChromeOptions()
@@ -200,8 +227,16 @@ def start_chromium(url):
     driver.get(url)
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
     html = driver.page_source
+    # elements = driver.find_elements(By.XPATH, '//*')
+    # element_xpaths = [generate_xpath(element) for element in elements]
+    file_dir = f"./.cache/screenshots"
+    os.makedirs(file_dir, exist_ok=True)
+    screenshot_path = os.path.join(file_dir, "screenshot.png")
+    driver.get_screenshot_as_file(screenshot_path)
+
+
     driver.close()
-    return html
+    return html, screenshot_path
 
 
 # def load_website(url):
@@ -263,11 +298,11 @@ def convert_html_to_csv(html):
 
 
 
+
 if url:
     if ".xml" not in url:
-        result = start_chromium(url)
-        html_content = start_chromium(url)
-        document = Document(page_content=html_content)
+        result, screenshot_path = start_chromium(url)
+        document = Document(page_content=result)
         transformed = Html2TextTransformer().transform_documents([document])
 
 
@@ -302,6 +337,25 @@ if url:
         )
         with st.expander("Click to see"):
             st.text_area("", transformed, height=300)
+        
+        # st.divider()
+
+        # st.markdown("#### XPath")
+        # st.download_button(
+        #     label="XPath",
+        #     data=str(transformed),
+        #     file_name="html_text.txt",
+        #     mime="text/plain"
+        # )
+        # with st.expander("Click to see"):
+        #     st.text_area("", transformed, height=300)
+            
+        st.divider()
+        if os.path.exists(screenshot_path):
+            st.image(screenshot_path)
+        else:
+            st.error("Screenshot not found.")
+
 
     else:
         retriever = load_sitemap(url)
