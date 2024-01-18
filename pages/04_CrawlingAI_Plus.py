@@ -9,7 +9,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.document_transformers import Html2TextTransformer
 from langchain.schema import Document
 from langchain.storage import LocalFileStore
-# import requests
+import requests
 from bs4 import BeautifulSoup
 # import platform
 import os, sys
@@ -170,12 +170,57 @@ st.markdown(
 """
 )
 
+def moyocrawling(url1, url2):
+    part1 = url1.split('/')
+    part2 = url2.split('/')
+    try:
+        number1 = int(part1[-1])
+        number2 = int(part2[-1])
+    except ValueError:
+        return None
+    
+    crawledText = []
+    for i in range(number1, number2 + 1):
+        # Construct the URL by replacing the last part with the current number
+        current_url = '/'.join(part1[:-1] + [str(i)])
+        
+        # Make an HTTP request to the current URL
+        response = requests.get(current_url)
+        
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+            # Parse the HTML content with BeautifulSoup
+            soup = BeautifulSoup(response.text, 'html.parser')
+            crawledText.append(soup)
+
+    st.download_button(
+            label="Text File",
+            data=result,
+            file_name="Text_File.txt",
+            mime="text/plain",
+    )
+
+
+# with st.sidebar:
+#     url = st.text_input(
+#         "Write down a Starting URL",
+#         placeholder="https://example.com",
+#     )
 
 with st.sidebar:
-    url = st.text_input(
-        "Write down a URL",
+    url1 = st.text_input(
+        "Write down a Starting URL",
         placeholder="https://example.com",
     )
+    url2 = st.text_input(
+        "Write down the Last URL",
+        placeholder="https://example.com",
+    )
+    st.button("Start Crawling",on_click=moyocrawling(url1, url2))
+
+
+
+
 
 # def generate_xpath(element):
 #     """
@@ -340,7 +385,7 @@ def convert_html_to_csv(html):
 
 
 
-
+url = ''
 if url:
     if ".xml" not in url:
         result, clickable_elements_content, html2 = start_chromium(url)
