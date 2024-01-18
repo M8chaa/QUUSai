@@ -262,8 +262,22 @@ def start_chromium(url):
         clickable_elements_content.append((tag_name, text, href))
         # Do something with the information
 
+    button_locator = (By.CSS_SELECTOR, "button.tw-w-40.tw-h-40.tw-inline-flex.tw-justify-center.tw-items-center.tw-text-gray-500.tw-font-medium.tw-rounded-8.hover\\:tw-bg-gray-100")
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(button_locator))
+
+    # Click the button
+    button = driver.find_element(*button_locator)
+    button.click()
+
+    # Wait for the page to update after the click, if necessary
+    # WebDriverWait(driver, 10).until(EC.some_condition)  # Replace 'some_condition' with an appropriate condition
+
+    # Retrieve the updated HTML
+    html2 = driver.page_source
+
+
     driver.close()
-    return html, clickable_elements_content
+    return html, clickable_elements_content, html2
 
 
 # def load_website(url):
@@ -328,7 +342,7 @@ def convert_html_to_csv(html):
 
 if url:
     if ".xml" not in url:
-        result, clickable_elements_content = start_chromium(url)
+        result, clickable_elements_content, html2 = start_chromium(url)
         document = Document(page_content=result)
         transformed = Html2TextTransformer().transform_documents([document])
 
@@ -370,6 +384,13 @@ if url:
         st.markdown("#### Clickable Elements")
         with st.expander("Click to see"):
             st.text_area("", clickable_elements_content, height=300)
+
+        st.divider()
+
+        st.markdown("#### Second page clicked")
+        with st.expander("Click to see"):
+            st.text_area("", html2, height=300)
+
         # st.divider()
 
         # st.markdown("#### XPath")
