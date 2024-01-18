@@ -226,7 +226,7 @@ def start_chromium(url):
     # URLで指定したwebページを開く
     driver.get(url)
     # WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-    wait = WebDriverWait(driver, 15)  # Timeout after 10 seconds
+    wait = WebDriverWait(driver, 60)  # Timeout after 10 seconds
     # locator = (By.CSS_SELECTOR, "a[href='/plans/16353']")
     locator = (By.CSS_SELECTOR, "a.ekz2e6k13.css-1kmf8ij")
     wait.until(EC.visibility_of_element_located(locator))
