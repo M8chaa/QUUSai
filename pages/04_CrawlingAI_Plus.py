@@ -231,8 +231,10 @@ def start_chromium(url):
     for element in clickable_elements:
         tag_name = element.tag_name
         text = element.text
-        href = element.get_attribute('href') if tag_name == 'a' else "Not an anchor tag"
-        print(f"Tag: {tag_name}, Text: {text}, Href: {href}")
+        btn_attribute = element.get_attribute('btn')  # Retrieve the 'btn' attribute if it exists
+
+        # Append a tuple of tag name, text, and the 'btn' attribute value to the list
+        clickable_elements_xpath.append((tag_name, text, btn_attribute))
 
     html = driver.page_source
     # elements = driver.find_elements(By.XPATH, '//*')
@@ -244,7 +246,7 @@ def start_chromium(url):
 
 
     driver.close()
-    return html, clickable_elements
+    return html, clickable_elements_xpath
 
 
 # def load_website(url):
@@ -309,7 +311,7 @@ def convert_html_to_csv(html):
 
 if url:
     if ".xml" not in url:
-        result, clickable_elements = start_chromium(url)
+        result, clickable_elements_xpath = start_chromium(url)
         document = Document(page_content=result)
         transformed = Html2TextTransformer().transform_documents([document])
 
@@ -350,7 +352,7 @@ if url:
 
         st.markdown("#### Clickable Elements")
         with st.expander("Click to see"):
-            st.text_area("", clickable_elements, height=300)
+            st.text_area("", clickable_elements_xpath, height=300)
         # st.divider()
 
         # st.markdown("#### XPath")
