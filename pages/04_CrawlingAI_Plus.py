@@ -180,25 +180,32 @@ def moyocrawling(url1, url2):
         return None
     
     crawledText = []
-    for i in range(number1, number2 + 1):
-        # Construct the URL by replacing the last part with the current number
-        current_url = '/'.join(part1[:-1] + [str(i)])
+    for start_num in range(number1, number2 + 1, 50):
+        end_num = min(start_num + 49, number2)
         
-        # Make an HTTP request to the current URL
-        response = requests.get(current_url)
-        
-        # Check if the request was successful (status code 200)
-        if response.status_code == 200:
-            # Parse the HTML content with BeautifulSoup
-            soup = BeautifulSoup(response.text, 'html.parser')
-            crawledText.append(soup)
+        for i in range(start_num, end_num + 1):
+            # Construct the URL by replacing the last part with the current number
+            current_url = '/'.join(part1[:-1] + [str(i)])
+            
+            # Make an HTTP request to the current URL
+            response = requests.get(current_url)
+            
+            # Check if the request was successful (status code 200)
+            if response.status_code == 200:
+                # Parse the HTML content with BeautifulSoup
+                soup = BeautifulSoup(response.text, 'html.parser')
+                crawledText.append(soup)
+            else:
+                crawledText.append(current_url+" Failed")
 
-    st.download_button(
-            label="Text File",
-            data=result,
-            file_name="Text_File.txt",
+        st.download_button(
+            label=f"Text File ~ {end_num}",
+            data=crawledText,
+            file_name=f"Text_File_{i + 1}.txt",
             mime="text/plain",
-    )
+        )
+        crawledText = []
+
 
 
 # with st.sidebar:
