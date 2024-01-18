@@ -20,10 +20,14 @@ from selenium.webdriver import ChromeOptions
 # from webdriver_manager.core.utils import ChromeType
 from webdriver_manager.core.os_manager import ChromeType
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager, ChromeType
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import streamlit_extras
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
 from streamlit_gsheets import GSheetsConnection
+from Google import Create_Service
 
 
 st.set_page_config(
@@ -194,6 +198,7 @@ def start_chromium(url):
 
     # URLで指定したwebページを開く
     driver.get(url)
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
     html = driver.page_source
     driver.close()
     return html
@@ -246,6 +251,16 @@ def convert_html_to_csv(html):
     df = pd.read_html(html)[0]  # Adjust this to fit the HTML structure
     return df.to_csv(index=False)
 
+def googleDriveConnect():
+    CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
+    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
+    API_NAME = 'drive'
+    API_VERSION = 'v3'
+    SCOPES = ['https://www.googleapis.com/auth/drive']
+    serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
+    # print (dir(serviceInstance))
+    st.write(dir(serviceInstance))  # Changed from print to st.write
+
 
 
 if url:
@@ -267,7 +282,10 @@ if url:
             mime="text/plain",
             use_container_width=True
         )
-        links_row.link_button("Google Sheet","",use_container_width=True,)
+        # links_row.link_button("Google Sheet","",use_container_width=True,)
+        if links_row.link_button("Google Sheet", "", use_container_width=True):
+            googleDriveConnect()  # Trigger the function when button is clicked
+
 
         with st.expander("Click to see"):
             st.text_area("", result, height=300)
