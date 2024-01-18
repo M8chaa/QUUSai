@@ -179,6 +179,8 @@ def moyocrawling(url1, url2):
     except ValueError:
         return None
     
+    if 'download_buttons' not in st.session_state:
+        st.session_state['download_buttons'] = []
 
     for start_num in range(number1, number2 + 1, 50):
         end_num = min(start_num + 49, number2)
@@ -194,17 +196,17 @@ def moyocrawling(url1, url2):
             # Check if the request was successful (status code 200)
             if response.status_code == 200:
                 # Parse the HTML content with BeautifulSoup
-                soup = BeautifulSoup(response.text, 'html.parser')
+                soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 crawledText += str(soup) + '\n\n'  # Append data with two newlines
             else:
                 crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
         
-        st.download_button(
-            label=f"Text File ~ {end_num}",
-            data=crawledText.encode('utf-8'),
-            file_name=f"Text_File_{end_num}.txt",
-            mime="text/plain",
-        )
+        button_data = {
+            'label': f"Text File ~ {end_num}",
+            'data': crawledText.encode('utf-8'),
+            'file_name': f"Text_File_{end_num}.txt"
+        }
+        st.session_state['download_buttons'].append(button_data)
 
 
 # with st.sidebar:
@@ -214,18 +216,19 @@ def moyocrawling(url1, url2):
 #     )
 
 with st.sidebar:
-    url1 = st.text_input(
-        "Write down a Starting URL",
-        placeholder="https://example.com",
-    )
-    url2 = st.text_input(
-        "Write down the Last URL",
-        placeholder="https://example.com",
-    )
-    
-    # Use the lambda function to pass arguments to moyocrawling
+    url1 = st.text_input("Write down a Starting URL", placeholder="https://example.com")
+    url2 = st.text_input("Write down the Last URL", placeholder="https://example.com")
     if st.button("Start Crawling"):
         moyocrawling(url1, url2)
+
+# Outside the sidebar, render download buttons
+for button in st.session_state.get('download_buttons', []):
+    st.download_button(
+        label=button['label'],
+        data=button['data'],
+        file_name=button['file_name'],
+        mime="text/plain",
+    )
 
 
 
