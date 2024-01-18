@@ -231,10 +231,10 @@ def start_chromium(url):
     for element in clickable_elements:
         tag_name = element.tag_name
         text = element.text
-        btn_attribute = element.get_attribute('btn')  # Retrieve the 'btn' attribute if it exists
+        href = element.get_attribute('href') if tag_name == 'a' else "Not an anchor tag"
 
         # Append a tuple of tag name, text, and the 'btn' attribute value to the list
-        clickable_elements_xpath.append((tag_name, text, btn_attribute))
+        clickable_elements_xpath.append((tag_name, text, href))
 
     html = driver.page_source
     # elements = driver.find_elements(By.XPATH, '//*')
