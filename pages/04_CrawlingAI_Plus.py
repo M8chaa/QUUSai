@@ -227,6 +227,13 @@ def start_chromium(url):
     driver.get(url)
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
     clickable_elements = driver.find_elements(By.XPATH, "//*[self::a or self::button or (self::input and @type='button')]")
+    clickable_elements_xpath = []
+    for element in clickable_elements:
+        tag_name = element.tag_name
+        text = element.text
+        href = element.get_attribute('href') if tag_name == 'a' else "Not an anchor tag"
+        print(f"Tag: {tag_name}, Text: {text}, Href: {href}")
+
     html = driver.page_source
     # elements = driver.find_elements(By.XPATH, '//*')
     # element_xpaths = [generate_xpath(element) for element in elements]
