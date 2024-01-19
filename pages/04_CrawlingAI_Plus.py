@@ -86,6 +86,8 @@ def create_new_google_sheet():
     }
     file = serviceInstance.files().create(body=file_metadata, fields='id').execute()
     sheetID = file.get('id')
+    sheet_web_view_link = file.get('webViewLink')
+    return sheet_web_view_link
 
 
 # googleDriveConnect()
@@ -255,8 +257,8 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         moyocrawling(url1, url2, export_to_google_sheet)
     if st.button("Google Sheet"):
         export_to_google_sheet = True
-        sheet_id = create_new_google_sheet()
-        st.link_button("Go to see", f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit" )
+        sheetUrl = create_new_google_sheet()
+        st.link_button("Go to see", sheetUrl )
         moyocrawling(url1, url2, export_to_google_sheet)
 
 
