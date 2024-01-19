@@ -238,10 +238,10 @@ with st.sidebar:
             st.warning("Please enter both URLs.")
 
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
-    if st.button("TXT")
+    if st.button("TXT"):
         export_to_google_sheet = False
         moyocrawling(url1, url2, export_to_google_sheet)
-    if st.button("Google Sheet")
+    if st.button("Google Sheet"):
         export_to_google_sheet = True
         moyocrawling(url1, url2, export_to_google_sheet)
 
