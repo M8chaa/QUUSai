@@ -100,7 +100,7 @@ def create_new_google_sheet():
     sheet_web_view_link = file.get('webViewLink')
     permission = {
             'type': 'anyone',
-            'role': 'editor'
+            'role': 'writer'
         }
     serviceInstance.permissions().create(fileId=sheet_id, body=permission).execute()
 
