@@ -84,8 +84,7 @@ def create_new_google_sheet():
         'name': 'My New Sheet',
         'mimeType': 'application/vnd.google-apps.spreadsheet'
     }
-    file = serviceInstance.files().create(body=file_metadata, fields='id').execute()
-    sheetID = file.get('id')
+    file = serviceInstance.files().create(body=file_metadata, fields='webViewLink').execute()
     sheet_web_view_link = file.get('webViewLink')
     return sheet_web_view_link
 
