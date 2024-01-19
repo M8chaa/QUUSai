@@ -76,8 +76,10 @@ def googleDriveConnect():
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     # print (dir(serviceInstance))
     # st.write(dir(serviceInstance))  # Changed from print to st.write
+    return serviceInstance
 
 def create_new_google_sheet():
+    serviceInstance = googleDriveConnect()
     file_metadata = {
         'name': 'My New Sheet',
         'mimeType': 'application/vnd.google-apps.spreadsheet'
@@ -86,7 +88,7 @@ def create_new_google_sheet():
     sheetID = file.get('id')
 
 
-googleDriveConnect()
+# googleDriveConnect()
 
 def get_answers(inputs):
     docs = inputs["docs"]
