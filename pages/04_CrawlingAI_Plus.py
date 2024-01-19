@@ -257,8 +257,9 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         moyocrawling(url1, url2, export_to_google_sheet)
     if st.button("Google Sheet"):
         export_to_google_sheet = True
-        sheetUrl = create_new_google_sheet()
-        st.link_button("Go to see", str(sheetUrl) )
+        webviewlink = create_new_google_sheet()
+        sheetUrl = str(webviewlink)
+        st.link_button("Go to see", sheetUrl)
         moyocrawling(url1, url2, export_to_google_sheet)
 
 
