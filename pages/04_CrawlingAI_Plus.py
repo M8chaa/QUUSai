@@ -67,7 +67,17 @@ answers_prompt = ChatPromptTemplate.from_template(
     Question: {question}
 """
 )
+def googleDriveConnect():
+    CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
+    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
+    API_NAME = 'drive'
+    API_VERSION = 'v3'
+    SCOPES = ['https://www.googleapis.com/auth/drive']
+    serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
+    # print (dir(serviceInstance))
+    st.write(dir(serviceInstance))  # Changed from print to st.write
 
+googleDriveConnect()
 
 def get_answers(inputs):
     docs = inputs["docs"]
@@ -170,7 +180,7 @@ st.markdown(
 """
 )
 
-def moyocrawling(url1, url2):
+def moyocrawling(url1, url2, export_to_google_sheet):
     part1 = url1.split('/')
     part2 = url2.split('/')
     try:
@@ -197,6 +207,8 @@ def moyocrawling(url1, url2):
             if response.status_code == 200:
                 # Parse the HTML content with BeautifulSoup
                 soup = BeautifulSoup(response.text, 'html.parser').get_text()
+                if export_to_google_sheet:
+                    st.write(str(soup))
                 crawledText += str(soup) + '\n\n'  # Append data with two newlines
             else:
                 crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
@@ -218,8 +230,21 @@ def moyocrawling(url1, url2):
 with st.sidebar:
     url1 = st.text_input("Write down a Starting URL", placeholder="https://example.com")
     url2 = st.text_input("Write down the Last URL", placeholder="https://example.com")
+
     if st.button("Start Crawling"):
-        moyocrawling(url1, url2)
+        if url1 and url2:
+            st.session_state['show_download_buttons'] = True
+        else:
+            st.warning("Please enter both URLs.")
+
+if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
+    if st.button("TXT")
+        export_to_google_sheet = False
+        moyocrawling(url1, url2, export_to_google_sheet)
+    if st.button("Google Sheet")
+        export_to_google_sheet = True
+        moyocrawling(url1, url2, export_to_google_sheet)
+
 
 # Outside the sidebar, render download buttons
 for button in st.session_state.get('download_buttons', []):
@@ -385,15 +410,15 @@ def convert_html_to_csv(html):
     df = pd.read_html(html)[0]  # Adjust this to fit the HTML structure
     return df.to_csv(index=False)
 
-# def googleDriveConnect():
-#     CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
-#     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
-#     API_NAME = 'drive'
-#     API_VERSION = 'v3'
-#     SCOPES = ['https://www.googleapis.com/auth/drive']
-#     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
-#     # print (dir(serviceInstance))
-#     st.write(dir(serviceInstance))  # Changed from print to st.write
+def googleDriveConnect():
+    CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
+    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
+    API_NAME = 'drive'
+    API_VERSION = 'v3'
+    SCOPES = ['https://www.googleapis.com/auth/drive']
+    serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
+    # print (dir(serviceInstance))
+    st.write(dir(serviceInstance))  # Changed from print to st.write
 
 
 
