@@ -102,7 +102,7 @@ def create_new_google_sheet():
             'type': 'anyone',
             'role': 'editor'
         }
-    service.permissions().create(fileId=sheet_id, body=permission).execute()
+    serviceInstance.permissions().create(fileId=sheet_id, body=permission).execute()
 
     return sheet_web_view_link
 
