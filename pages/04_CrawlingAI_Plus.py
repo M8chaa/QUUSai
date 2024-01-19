@@ -410,15 +410,15 @@ def convert_html_to_csv(html):
     df = pd.read_html(html)[0]  # Adjust this to fit the HTML structure
     return df.to_csv(index=False)
 
-def googleDriveConnect():
-    CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
-    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
-    API_NAME = 'drive'
-    API_VERSION = 'v3'
-    SCOPES = ['https://www.googleapis.com/auth/drive']
-    serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
-    # print (dir(serviceInstance))
-    st.write(dir(serviceInstance))  # Changed from print to st.write
+# def googleDriveConnect():
+#     CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
+#     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
+#     API_NAME = 'drive'
+#     API_VERSION = 'v3'
+#     SCOPES = ['https://www.googleapis.com/auth/drive']
+#     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
+#     # print (dir(serviceInstance))
+#     st.write(dir(serviceInstance))  # Changed from print to st.write
 
 
 
