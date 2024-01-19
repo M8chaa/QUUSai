@@ -78,14 +78,32 @@ def googleDriveConnect():
     # st.write(dir(serviceInstance))  # Changed from print to st.write
     return serviceInstance
 
+def googleSheetConnect():
+    CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
+    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
+    API_NAME = 'sheets'
+    API_VERSION = 'v3'
+    SCOPES = ['https://www.googleapis.com/auth/drive']
+    serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
+    # print (dir(serviceInstance))
+    # st.write(dir(serviceInstance))  # Changed from print to st.write
+    return serviceInstance
+
 def create_new_google_sheet():
     serviceInstance = googleDriveConnect()
     file_metadata = {
         'name': 'My New Sheet',
         'mimeType': 'application/vnd.google-apps.spreadsheet'
     }
-    file = serviceInstance.files().create(body=file_metadata, fields='webViewLink').execute()
+    file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
+    sheet_id = file.get('id')
     sheet_web_view_link = file.get('webViewLink')
+    permission = {
+            'type': 'anyone',
+            'role': 'editor'
+        }
+    service.permissions().create(fileId=sheet_id, body=permission).execute()
+
     return sheet_web_view_link
 
 
