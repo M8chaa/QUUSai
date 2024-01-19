@@ -75,7 +75,7 @@ def googleDriveConnect():
     SCOPES = ['https://www.googleapis.com/auth/drive']
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     # print (dir(serviceInstance))
-    st.write(dir(serviceInstance))  # Changed from print to st.write
+    # st.write(dir(serviceInstance))  # Changed from print to st.write
 
 googleDriveConnect()
 
