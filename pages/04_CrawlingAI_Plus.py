@@ -213,12 +213,13 @@ def moyocrawling(url1, url2, export_to_google_sheet):
             else:
                 crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
         
-        button_data = {
-            'label': f"Text File ~ {end_num}",
-            'data': crawledText.encode('utf-8'),
-            'file_name': f"Text_File_{end_num}.txt"
-        }
-        st.session_state['download_buttons'].append(button_data)
+        if not export_to_google_sheet:
+            button_data = {
+                'label': f"Text File ~ {end_num}",
+                'data': crawledText.encode('utf-8'),
+                'file_name': f"Text_File_{end_num}.txt"
+            }
+            st.session_state['download_buttons'].append(button_data)
 
 
 # with st.sidebar:
