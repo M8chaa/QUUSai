@@ -92,7 +92,7 @@ def googleSheetConnect():
 def create_new_google_sheet():
     serviceInstance = googleDriveConnect()
     file_metadata = {
-        'name': '모요요금제',
+        'name': '모요 요금제',
         'mimeType': 'application/vnd.google-apps.spreadsheet'
     }
     file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
@@ -294,9 +294,9 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         export_to_google_sheet = True
         sheet_id, webviewlink = create_new_google_sheet()
         headers = {
-        'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터(GB)", "일 데이터", "데이터", "속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
+        'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터(GB)", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
         }
-        pushToSheet(headers, sheet_id, 'Sheet1!A1:M1')
+        pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
         moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
