@@ -78,16 +78,16 @@ def googleDriveConnect():
     # st.write(dir(serviceInstance))  # Changed from print to st.write
     return serviceInstance
 
-def googleSheetConnect():
-    CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
-    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
-    API_NAME = 'sheets'
-    API_VERSION = 'v3'
-    SCOPES = ['https://www.googleapis.com/auth/drive']
-    serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
-    # print (dir(serviceInstance))
-    # st.write(dir(serviceInstance))  # Changed from print to st.write
-    return serviceInstance
+# def googleSheetConnect():
+#     CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
+#     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
+#     API_NAME = 'sheets'
+#     API_VERSION = 'v3'
+#     SCOPES = ['https://www.googleapis.com/auth/drive']
+#     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
+#     # print (dir(serviceInstance))
+#     # st.write(dir(serviceInstance))  # Changed from print to st.write
+#     return serviceInstance
 
 def create_new_google_sheet():
     serviceInstance = googleDriveConnect()
@@ -104,10 +104,23 @@ def create_new_google_sheet():
         }
     serviceInstance.permissions().create(fileId=sheet_id, body=permission).execute()
 
-    return sheet_web_view_link
+    return sheet_id, sheet_web_view_link
 
 
-# googleDriveConnect()
+def pushToSheet(data, sheet_id):
+    serviceInstance = googleDriveConnect()
+    body = {
+        'values': data
+    }
+    range = 'Sheet1!A'
+    result = serviceInstance.spreadsheets().values().append(
+        spreadsheetId=sheet_id,
+        range=range,
+        valueInputOption='RAW',  # or 'USER_ENTERED'
+        body=body
+    ).execute()
+
+    return result
 
 def get_answers(inputs):
     docs = inputs["docs"]
@@ -210,7 +223,7 @@ st.markdown(
 """
 )
 
-def moyocrawling(url1, url2, export_to_google_sheet):
+def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     part1 = url1.split('/')
     part2 = url2.split('/')
     try:
@@ -238,7 +251,8 @@ def moyocrawling(url1, url2, export_to_google_sheet):
                 # Parse the HTML content with BeautifulSoup
                 soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 if export_to_google_sheet:
-                    st.write(str(soup))
+                    data = str(soup)
+                    pushToSheet(data, sheet_id)
                 crawledText += str(soup) + '\n\n'  # Append data with two newlines
             else:
                 crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
@@ -274,10 +288,10 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         moyocrawling(url1, url2, export_to_google_sheet)
     if st.button("Google Sheet"):
         export_to_google_sheet = True
-        webviewlink = create_new_google_sheet()
+        sheet_id, webviewlink = create_new_google_sheet()
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
-        moyocrawling(url1, url2, export_to_google_sheet)
+        moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
 
 
 # Outside the sidebar, render download buttons
