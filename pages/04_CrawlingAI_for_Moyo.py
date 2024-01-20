@@ -254,8 +254,9 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     regex = '\[(.*?)\]\s*(.*?)\s*\|\s*([\d,]+원)\s*\|\s*.*?월\s*(\d+)GB(?:\s*\+\s*매일\s*(\d+)GB)?.*?\((\d+mbps)\).*?(\d+분|무제한).*?(\d+건|무제한).*?(LG U\+|SKT|KT).*?(LTE|3G|4G)(?:.*?(\d+개월\s*이후\s*[\d,]+원))?'
                     strSoup = str(soup)
                     sheetValue = f"=REGEXEXTRACT(\"{strSoup}\", \"{regex}\")"
-                    data = [sheetValue]
-                    pushToSheet(data, sheet_id, range='Sheet1!A:A')
+                    planUrl = str(current_url)
+                    data = [planUrl, sheetValue]
+                    pushToSheet(data, sheet_id, range='Sheet1!A:B')
                 crawledText += str(soup) + '\n\n'  # Append data with two newlines
             else:
                 crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
