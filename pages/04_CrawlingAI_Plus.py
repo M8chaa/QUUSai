@@ -72,22 +72,22 @@ def googleDriveConnect():
     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
     API_NAME = 'drive'
     API_VERSION = 'v3'
-    SCOPES = ['https://www.googleapis.com/auth/drive', "https://www.googleapis.com/auth/spreadsheets"]
+    SCOPES = ['https://www.googleapis.com/auth/drive']
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     # print (dir(serviceInstance))
     # st.write(dir(serviceInstance))  # Changed from print to st.write
     return serviceInstance
 
-# def googleSheetConnect():
-#     CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
-#     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
-#     API_NAME = 'sheets'
-#     API_VERSION = 'v3'
-#     SCOPES = ['https://www.googleapis.com/auth/drive']
-#     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
-#     # print (dir(serviceInstance))
-#     # st.write(dir(serviceInstance))  # Changed from print to st.write
-#     return serviceInstance
+def googleSheetConnect():
+    CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
+    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
+    API_NAME = 'sheets'
+    API_VERSION = 'v3'
+    SCOPES = ['https://www.googleapis.com/auth/drive']
+    serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
+    # print (dir(serviceInstance))
+    # st.write(dir(serviceInstance))  # Changed from print to st.write
+    return serviceInstance
 
 def create_new_google_sheet():
     serviceInstance = googleDriveConnect()
@@ -108,7 +108,7 @@ def create_new_google_sheet():
 
 
 def pushToSheet(data, sheet_id):
-    serviceInstance = googleDriveConnect()
+    serviceInstance = googleSheetConnect()
     body = {
         'values': data
     }
