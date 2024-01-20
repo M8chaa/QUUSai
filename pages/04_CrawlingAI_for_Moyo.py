@@ -92,7 +92,7 @@ def googleSheetConnect():
 def create_new_google_sheet():
     serviceInstance = googleDriveConnect()
     file_metadata = {
-        'name': 'My New Sheet',
+        'name': '모요요금제',
         'mimeType': 'application/vnd.google-apps.spreadsheet'
     }
     file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
