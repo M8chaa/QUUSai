@@ -110,9 +110,9 @@ def create_new_google_sheet():
 def pushToSheet(data, sheet_id):
     serviceInstance = googleSheetConnect()
     body = {
-        'values': data
+        'values': [data]
     }
-    range = 'Sheet1!A'
+    range = 'Sheet1!A:A'
     result = serviceInstance.spreadsheets().values().append(
         spreadsheetId=sheet_id,
         range=range,
@@ -251,7 +251,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 # Parse the HTML content with BeautifulSoup
                 soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 if export_to_google_sheet:
-                    data = str(soup)
+                    data = [soup]
                     pushToSheet(data, sheet_id)
                 crawledText += str(soup) + '\n\n'  # Append data with two newlines
             else:
