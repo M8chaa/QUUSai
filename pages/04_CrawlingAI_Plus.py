@@ -116,7 +116,7 @@ def pushToSheet(data, sheet_id):
     result = serviceInstance.spreadsheets().values().append(
         spreadsheetId=sheet_id,
         range=range,
-        valueInputOption='RAW',  # or 'USER_ENTERED'
+        valueInputOption='USER_ENTERED',  # or 'RAW'
         body=body
     ).execute()
 
