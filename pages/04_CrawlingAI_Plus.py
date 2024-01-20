@@ -72,7 +72,7 @@ def googleDriveConnect():
     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
     API_NAME = 'drive'
     API_VERSION = 'v3'
-    SCOPES = ['https://www.googleapis.com/auth/drive']
+    SCOPES = ['https://www.googleapis.com/auth/drive', "https://www.googleapis.com/auth/spreadsheets"]
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     # print (dir(serviceInstance))
     # st.write(dir(serviceInstance))  # Changed from print to st.write
