@@ -82,7 +82,7 @@ def googleSheetConnect():
     CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
     API_NAME = 'sheets'
-    API_VERSION = 'v3'
+    API_VERSION = 'v4'
     SCOPES = ['https://www.googleapis.com/auth/drive']
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     # print (dir(serviceInstance))
