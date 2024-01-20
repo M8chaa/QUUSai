@@ -34,8 +34,8 @@ def Create_Service(client_secret_data, api_name, api_version, *scopes):
             cred.refresh(Request())
         else:
             # flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
-            auth_url, _ = flow.authorization_url()
             flow = InstalledAppFlow.from_client_config(client_secret_data, SCOPES)
+            auth_url, _ = flow.authorization_url()
             cred = flow.run_local_server()
             #cred = flow.redirect_uri
 
