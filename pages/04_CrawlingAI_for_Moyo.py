@@ -32,7 +32,7 @@ from Google import Create_Service
 
 
 st.set_page_config(
-    page_title="CrawlingAI_Plus",
+    page_title="CrawlingAI_for_Moyo",
     page_icon="🖥️",
 )
 
@@ -107,7 +107,7 @@ def create_new_google_sheet():
     return sheet_id, sheet_web_view_link
 
 
-def pushToSheet(data, sheet_id):
+def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
     serviceInstance = googleSheetConnect()
     body = {
         'values': [data]
@@ -215,7 +215,7 @@ def load_sitemap(url):
 
 st.markdown(
     """
-    # CrawlingAI Plus
+    # CrawlingAI for Moyo
             
     Extract data of any website!
 
@@ -255,7 +255,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     strSoup = str(soup)
                     sheetValue = f"=REGEXEXTRACT(\"{strSoup}\", \"{regex}\")"
                     data = [sheetValue]
-                    pushToSheet(data, sheet_id)
+                    pushToSheet(data, sheet_id, range='Sheet1!A:A')
                 crawledText += str(soup) + '\n\n'  # Append data with two newlines
             else:
                 crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
@@ -292,6 +292,10 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
     if st.button("Google Sheet"):
         export_to_google_sheet = True
         sheet_id, webviewlink = create_new_google_sheet()
+        headers = {
+        'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터(GB)", "일 데이터", "데이터", "속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
+        }
+        pushToSheet(headers, sheet_id, 'Sheet1!A1:M1')
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
         moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
