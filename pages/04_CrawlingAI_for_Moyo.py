@@ -251,7 +251,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 # Parse the HTML content with BeautifulSoup
                 soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 if export_to_google_sheet:
-                    regex = '\[(.*?)\]\s*(.*?)\s*\|\s*([\d,]+원)\s*\|\s*(?:.*?월\s*(\d+GB))?(?:\s*\+\s*매일\s*(\d+GB))?.*?\((\d+mbps)\)*?(무제한|\d+분).*?(무제한|\d+건).*?(LG U\+|SKT|KT).*?(LTE|3G|4G|5G)(?:.*?(\d+개월\s*이후\s*[\d,]+원))?'
+                    regex = '\[(.*?)\]\s*(.*?)\s*\|\s*([\d,]+원)\s*\|\s*(?:.*?월\s*(\d+GB))?(?:\s*\+\s*매일\s*(\d+GB))?.*?(?:\((\d+mbps)\))?.*?(무제한|\d+분).*?(무제한|\d+건).*?(LG U\+|SKT|KT).*?(LTE|3G|4G|5G)(?:.*?(\d+개월\s*이후\s*[\d,]+원))?'
                     strSoup = str(soup)
                     sheetValue = f"=REGEXEXTRACT(\"{strSoup}\", \"{regex}\")"
                     planUrl = str(current_url)
