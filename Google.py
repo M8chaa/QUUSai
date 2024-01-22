@@ -6,6 +6,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
+import streamlit as st
 
 def Create_Service(client_secret_file, api_name, api_version, *scopes):
     print(client_secret_file, api_name, api_version, scopes, sep='-')
@@ -17,15 +18,29 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
 
     cred = None
 
-    pickle_file = f'token_{API_VERSION}.pickle'
-    print(pickle_file)
+    # pickle_file = f'token_{API_VERSION}.pickle'
+    # print(pickle_file)
     # if os.path.exists(pickle_file):
     #     with open(pickle_file, 'rb') as token:
     #         cred = pickle.load(token)
     
-    if os.path.exists("token.json"):
-        cred = Credentials.from_authorized_user_file("token.json", SCOPES)
-    
+    # if os.path.exists("token.json"):
+    #     cred = Credentials.from_authorized_user_file("token.json", SCOPES)
+    if AuthToken:
+    client_id = st.secrets["AuthToken"]["client_id"]
+    client_secret = st.secrets["AuthToken"]["client_secret"]
+    refresh_token = st.secrets["AuthToken"]["refresh_token"]
+    token_uri = "https://oauth2.googleapis.com/token"  # Default token URI for Google
+
+    # Create a Credentials object
+    cred = Credentials.from_authorized_user_info({
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "refresh_token": refresh_token,
+        "token_uri": token_uri
+    }, SCOPES)
+
+
     if not cred or not cred.valid:
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
