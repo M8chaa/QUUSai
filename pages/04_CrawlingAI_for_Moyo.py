@@ -404,8 +404,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
 
 with st.sidebar:
     base_url = "https://www.moyoplan.com/plans/"
-    end_param1 = st.text_input("Enter the End Parameter for the Starting URL", placeholder="123")
-    end_param2 = st.text_input("Enter the End Parameter for the Last URL", placeholder="456")
+    end_param1 = st.text_input(f"Enter the End Parameter for the Starting URL\n {base_url}", placeholder="15000")
+    end_param2 = st.text_input(f"Enter the End Parameter for the Starting URL\n {base_url}", placeholder="15100")
 
     # Default case: both parameters are provided
     if end_param1 and end_param2:
@@ -434,20 +434,20 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
     url2 = st.session_state.get('url2')
     col1, col2 = st.columns(2)
 
-    with col1:
-        txt_button_pressed = st.button("TXT", key="txt_button", use_container_width=True)
+    # with col1:
+    #     txt_button_pressed = st.button("TXT", key="txt_button", use_container_width=True)
     
-    with col2:
-        gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
+    # with col2:
+    #     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
 
-    # Handling the actions outside of the columns
-    if txt_button_pressed:
-        with st.spinner("Processing for TXT..."):
-            export_to_google_sheet = False
-            sheet_id = ""
-            moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
-            # Code to display the first text file goes here
-
+    # # Handling the actions outside of the columns
+    # if txt_button_pressed:
+    #     with st.spinner("Processing for TXT..."):
+    #         export_to_google_sheet = False
+    #         sheet_id = ""
+    #         moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+    #         # Code to display the first text file goes here
+    gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
     if gs_button_pressed:
         with st.spinner("Processing for Google Sheet..."):
             export_to_google_sheet = True
