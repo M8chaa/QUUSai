@@ -310,7 +310,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     regex = '\[(.*?)\]\s*(.*?)\s*\|\s*([\d,]+원)\s*\|\s*(?:.*?월\s*([.\d]+(?:GB|MB)))?(?:\s*\+\s*매일\s*([.\d]+(?:GB|MB)))?.*?(?:\(([.\d]+(?:mbps|gbps))\))?.*?(무제한|\d+분).*?(무제한|\d+건).*?(LG U\+|SKT|KT).*?(LTE|3G|4G|5G)(?:.*?(\d+개월\s*이후\s*[\d,]+원))?'
                     strSoup = str(soup)
                     # sheetValue = f"=REGEXEXTRACT(\"{strSoup}\", \"{regex}\")"
-                    regex_formula = regex_extract(strSoup)
+                    regex_formula = regex_extract_for_sheet(strSoup)
                     planUrl = str(current_url)
                     data = [planUrl]
                     for regex in regex_formula:
