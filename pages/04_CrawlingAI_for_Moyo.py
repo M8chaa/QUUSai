@@ -91,10 +91,11 @@ def googleSheetConnect():
     # st.write(dir(serviceInstance))  # Changed from print to st.write
     return serviceInstance
 
-def create_new_google_sheet():
+def create_new_google_sheet(url1, url2):
     serviceInstance = googleDriveConnect()
+    name = f'모요 요금제 {url1} ~ {url2}'
     file_metadata = {
-        'name': '모요 요금제',
+        'name': name,
         'mimeType': 'application/vnd.google-apps.spreadsheet'
     }
     file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
@@ -398,14 +399,29 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
 #     )
 
 with st.sidebar:
-    url1 = st.text_input("Write down a Starting URL", placeholder="https://example.com")
-    url2 = st.text_input("Write down the Last URL", placeholder="https://example.com")
+    base_url = "https://www.moyoplan.com/plans/"
+    end_param1 = st.text_input("Enter the End Parameter for the Starting URL", placeholder="123")
+    end_param2 = st.text_input("Enter the End Parameter for the Last URL", placeholder="456")
+
+    # Default case: both parameters are provided
+    if end_param1 and end_param2:
+        url1 = base_url + end_param1
+        url2 = base_url + end_param2
+    # Handle the case where only one parameter is provided
+    elif end_param1 or end_param2:
+        common_param = end_param1 if end_param1 else end_param2
+        url1 = url2 = base_url + common_param
+    else:
+        url1 = url2 = None
 
     if st.button("Start Crawling"):
         if url1 and url2:
             st.session_state['show_download_buttons'] = True
+            st.write("Starting URL: ", url1)
+            st.write("Last URL: ", url2)
         else:
-            st.warning("Please enter both URLs.")
+            st.warning("Please enter at least one end parameter.")
+
 
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
     if st.button("TXT"):
@@ -416,7 +432,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         export_to_google_sheet = True
         sheet_id, webviewlink = create_new_google_sheet()
         headers = {
-        'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터(GB)", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
+        'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
         }
         pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
         formatHeaderAndTrimColumns(sheet_id, 0)
