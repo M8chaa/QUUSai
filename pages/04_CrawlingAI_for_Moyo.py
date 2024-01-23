@@ -203,7 +203,7 @@ def autoResizeColumns(sheet_id, sheet_index=0):
                     "sheetId": sheetId,
                     "dimension": "COLUMNS",
                     "startIndex": i,  # Auto-resize each column individually
-                    "endIndex": i + 1
+                    "endIndex": i
                 }
             }
         }
