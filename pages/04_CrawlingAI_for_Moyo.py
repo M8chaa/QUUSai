@@ -129,10 +129,9 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
 
     return result
 
-def formatHeaderAndTrimColumns(sheet_id, sheet_index=0):
+def formatHeaderTrimAndAutoResizeColumns(sheet_id, sheet_index=0):
     serviceInstance = googleSheetConnect()
 
-    # Get the total number of columns in the sheet first
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
     sheet = sheet_metadata.get('sheets', '')[sheet_index]
     totalColumns = sheet.get('properties', {}).get('gridProperties', {}).get('columnCount', 0)
@@ -142,44 +141,29 @@ def formatHeaderAndTrimColumns(sheet_id, sheet_index=0):
 
     # Formatting header row
     header_format_request = {
-        "repeatCell": {
-            "range": {
-                "sheetId": sheetId,
-                "startRowIndex": 0,
-                "endRowIndex": 1,
-                "startColumnIndex": 0,
-                "endColumnIndex": 12  # Adjust based on the number of columns in your header
-            },
-            "cell": {
-                "userEnteredFormat": {
-                    "backgroundColor": {
-                        "red": 0.9,  # Light gray color
-                        "green": 0.9,
-                        "blue": 0.9
-                    },
-                    "textFormat": {
-                        "bold": True
-                    }
-                }
-            },
-            "fields": "userEnteredFormat(backgroundColor,textFormat)"
-        }
+        # ... same as before ...
     }
     requests.append(header_format_request)
 
     # Trimming columns if necessary
     if totalColumns > 12:
         trim_columns_request = {
-            "deleteDimension": {
-                "range": {
-                    "sheetId": sheetId,
-                    "dimension": "COLUMNS",
-                    "startIndex": 12,  # Columns are zero-indexed, so 12 represents the 13th column
-                    "endIndex": totalColumns
-                }
-            }
+            # ... same as before ...
         }
         requests.append(trim_columns_request)
+
+    # Auto-resize columns (up to the 12th column)
+    auto_resize_request = {
+        "autoResizeDimensions": {
+            "dimensions": {
+                "sheetId": sheetId,
+                "dimension": "COLUMNS",
+                "startIndex": 0,  # Auto-resize from the first column
+                "endIndex": 12   # Auto-resize up to the 12th column
+            }
+        }
+    }
+    requests.append(auto_resize_request)
 
     body = {"requests": requests}
 
