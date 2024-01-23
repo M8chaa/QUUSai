@@ -316,17 +316,17 @@ def regex_extract(strSoup):
     network_type = re.search(network_type_pattern, strSoup)
     discount_info = re.search(discount_info_pattern, strSoup)
 
-    return [ mvno.group(1) if mvno else None, 
-            plan_name.group(1) if plan_name else None, 
-            monthly_fee.group(1) if monthly_fee else None, 
-            monthly_data.group(1) if monthly_data else None, 
-            daily_data.group(1) if daily_data else None, 
-            data_speed.group(1) if data_speed else None, 
-            call_minutes.group(1) if call_minutes else None, 
-            text_messages.group(1) if text_messages else None, 
-            carrier.group(1) if carrier else None, 
-            network_type.group(1) if network_type else None, 
-            discount_info.group(1) if discount_info else None
+    return [ mvno.group(1) if mvno else "제공안함", 
+            plan_name.group(1) if plan_name else "제공안함", 
+            monthly_fee.group(1) if monthly_fee else "제공안함", 
+            monthly_data.group(1) if monthly_data else "제공안함", 
+            daily_data.group(1) if daily_data else "제공안함", 
+            data_speed.group(1) if data_speed else "제공안함", 
+            call_minutes.group(1) if call_minutes else "제공안함", 
+            text_messages.group(1) if text_messages else "제공안함", 
+            carrier.group(1) if carrier else "제공안함", 
+            network_type.group(1) if network_type else "제공안함", 
+            discount_info.group(1) if discount_info else "제공안함"
     ]
 
 def regex_extract_for_sheet(strSoup):
