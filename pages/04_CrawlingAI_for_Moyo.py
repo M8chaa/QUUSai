@@ -432,21 +432,28 @@ with st.sidebar:
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
     url1 = st.session_state.get('url1')
     url2 = st.session_state.get('url2')
-    if st.button("TXT"):
-        export_to_google_sheet = False
-        sheet_id = ""
-        moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
-    if st.button("Google Sheet"):
-        export_to_google_sheet = True
-        sheet_id, webviewlink = create_new_google_sheet(url1, url2)
-        headers = {
-        'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
-        }
-        pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-        formatHeaderAndTrimColumns(sheet_id, 0)
-        sheetUrl = str(webviewlink)
-        st.link_button("Go to see", sheetUrl)
-        moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+    add_vertical_space(1)
+    links_row = row(2, vertical_align="left")
+    with links_row[0]:  # First column of the row
+        if st.button("TXT"):
+            export_to_google_sheet = False
+            sheet_id = ""
+            moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+
+    with links_row[1]:  # Second column of the row
+        if st.button("Google Sheet"):
+            export_to_google_sheet = True
+            sheet_id, webviewlink = create_new_google_sheet(url1, url2)
+            headers = {
+                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
+            }
+            pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+            formatHeaderAndTrimColumns(sheet_id, 0)
+            sheetUrl = str(webviewlink)
+            st.link_button("Go to see", sheetUrl)
+            moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+
+
 
 
 # Outside the sidebar, render download buttons
