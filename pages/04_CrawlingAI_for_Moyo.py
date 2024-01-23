@@ -92,8 +92,12 @@ def googleSheetConnect():
     return serviceInstance
 
 def create_new_google_sheet(url1, url2):
+    part1 = url1.split('/')
+    part2 = url2.split('/')
+    number1 = int(part1[-1])
+    number2 = int(part2[-1])
     serviceInstance = googleDriveConnect()
-    name = f'모요 요금제 {url1} ~ {url2}'
+    name = f'모요 요금제 {number1} ~ {number2}'
     file_metadata = {
         'name': name,
         'mimeType': 'application/vnd.google-apps.spreadsheet'
@@ -417,6 +421,8 @@ with st.sidebar:
     if st.button("Start Crawling"):
         if url1 and url2:
             st.session_state['show_download_buttons'] = True
+            st.session_state['url1'] = url1
+            st.session_state['url2'] = url2
             st.write("Starting URL: ", url1)
             st.write("Last URL: ", url2)
         else:
@@ -424,13 +430,15 @@ with st.sidebar:
 
 
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
+    url1 = st.session_state.get('url1')
+    url2 = st.session_state.get('url2')
     if st.button("TXT"):
         export_to_google_sheet = False
         sheet_id = ""
         moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
     if st.button("Google Sheet"):
         export_to_google_sheet = True
-        sheet_id, webviewlink = create_new_google_sheet()
+        sheet_id, webviewlink = create_new_google_sheet(url1, url2)
         headers = {
         'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
         }
