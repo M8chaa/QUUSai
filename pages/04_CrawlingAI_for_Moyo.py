@@ -249,19 +249,18 @@ def regex_extract(strSoup):
     network_type = re.search(network_type_pattern, strSoup)
     discount_info = re.search(discount_info_pattern, strSoup)
 
-    return {
-        "MVNO": mvno.group(1) if mvno else None,
-        "요금제명": plan_name.group(1) if plan_name else None,
-        "월요금": monthly_fee.group(1) if monthly_fee else None,
-        "월 데이터(GB)": monthly_data.group(1) if monthly_data else None,
-        "일 데이터": daily_data.group(1) if daily_data else None,
-        "데이터 속도": data_speed.group(1) if data_speed else None,
-        "통화(분)": call_minutes.group(1) if call_minutes else None,
-        "문자(건)": text_messages.group(1) if text_messages else None,
-        "통신사": carrier.group(1) if carrier else None,
-        "망종류": network_type.group(1) if network_type else None,
-        "할인정보": discount_info.group(1) if discount_info else None
-    }
+    return [ mvno.group(1) if mvno else None, 
+            plan_name.group(1) if plan_name else None, 
+            monthly_fee.group(1) if monthly_fee else None, 
+            monthly_data.group(1) if monthly_data else None, 
+            daily_data.group(1) if daily_data else None, 
+            data_speed.group(1) if data_speed else None, 
+            call_minutes.group(1) if call_minutes else None, 
+            text_messages.group(1) if text_messages else None, 
+            carrier.group(1) if carrier else None, 
+            network_type.group(1) if network_type else None, 
+            discount_info.group(1) if discount_info else None
+    ]
 
 def regex_extract_for_sheet(strSoup):
     mvno_pattern = r"\[(.*?)\]"
@@ -310,12 +309,11 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     regex = '\[(.*?)\]\s*(.*?)\s*\|\s*([\d,]+원)\s*\|\s*(?:.*?월\s*([.\d]+(?:GB|MB)))?(?:\s*\+\s*매일\s*([.\d]+(?:GB|MB)))?.*?(?:\(([.\d]+(?:mbps|gbps))\))?.*?(무제한|\d+분).*?(무제한|\d+건).*?(LG U\+|SKT|KT).*?(LTE|3G|4G|5G)(?:.*?(\d+개월\s*이후\s*[\d,]+원))?'
                     strSoup = str(soup)
                     # sheetValue = f"=REGEXEXTRACT(\"{strSoup}\", \"{regex}\")"
-                    regex_formula = regex_extract_for_sheet(strSoup)
+                    regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
                     data = [planUrl]
                     for regex in regex_formula:
-                        sheetValue = f"=REGEXEXTRACT(\"{strSoup}\",\"{regex}\")"
-                        data.append(sheetValue)
+                        data.append(regex)
                     # data = [planUrl, sheetValue]
                     pushToSheet(data, sheet_id, range='Sheet1!A:B')
                 crawledText += str(soup) + '\n\n'  # Append data with two newlines
