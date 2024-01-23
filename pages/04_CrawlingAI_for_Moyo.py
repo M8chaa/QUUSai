@@ -1,4 +1,5 @@
 # coding:utf-8
+from operator import call
 from langchain.document_loaders import SitemapLoader
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -11,6 +12,7 @@ from langchain.schema import Document
 from langchain.storage import LocalFileStore
 import requests
 from bs4 import BeautifulSoup
+import re
 # import platform
 import os, sys
 import streamlit as st
@@ -223,6 +225,60 @@ st.markdown(
 """
 )
 
+def regex_extract(strSoup):
+    mvno_pattern = r"\[(.*?)\]"
+    plan_name_pattern = r"\]\s*(.*?)\s*\|"
+    monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
+    monthly_data_pattern = r"월\s*([.\d]+(?:GB|MB))"
+    daily_data_pattern = r"매일\s*([.\d]+(?:GB|MB))"
+    data_speed_pattern = r"\(([.\d]+(?:mbps|gbps))\)"
+    call_minutes_pattern = r"(\d+분|무제한)"
+    text_messages_pattern = r"(\d+건|무제한)"
+    carrier_pattern = r"(LG U\+|SKT|KT)"
+    network_type_pattern = r"(LTE|3G|4G|5G)"
+    discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
+    mvno = re.search(mvno_pattern, strSoup)
+    plan_name = re.search(plan_name_pattern, strSoup)
+    monthly_fee = re.search(monthly_fee_pattern, strSoup)
+    monthly_data = re.search(monthly_data_pattern, strSoup)
+    daily_data = re.search(daily_data_pattern, strSoup)
+    data_speed = re.search(data_speed_pattern, strSoup)
+    call_minutes = re.search(call_minutes_pattern, strSoup)
+    text_messages = re.search(text_messages_pattern, strSoup)
+    carrier = re.search(carrier_pattern, strSoup)
+    network_type = re.search(network_type_pattern, strSoup)
+    discount_info = re.search(discount_info_pattern, strSoup)
+
+    return {
+        "MVNO": mvno.group(1) if mvno else None,
+        "요금제명": plan_name.group(1) if plan_name else None,
+        "월요금": monthly_fee.group(1) if monthly_fee else None,
+        "월 데이터(GB)": monthly_data.group(1) if monthly_data else None,
+        "일 데이터": daily_data.group(1) if daily_data else None,
+        "데이터 속도": data_speed.group(1) if data_speed else None,
+        "통화(분)": call_minutes.group(1) if call_minutes else None,
+        "문자(건)": text_messages.group(1) if text_messages else None,
+        "통신사": carrier.group(1) if carrier else None,
+        "망종류": network_type.group(1) if network_type else None,
+        "할인정보": discount_info.group(1) if discount_info else None
+    }
+
+def regex_extract_for_sheet(strSoup):
+    mvno_pattern = r"\[(.*?)\]"
+    plan_name_pattern = r"\]\s*(.*?)\s*\|"
+    monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
+    monthly_data_pattern = r"월\s*([.\d]+(?:GB|MB))"
+    daily_data_pattern = r"매일\s*([.\d]+(?:GB|MB))"
+    data_speed_pattern = r"\(([.\d]+(?:mbps|gbps))\)"
+    call_minutes_pattern = r"(\d+분|무제한)"
+    text_messages_pattern = r"(\d+건|무제한)"
+    carrier_pattern = r"(LG U\+|SKT|KT)"
+    network_type_pattern = r"(LTE|3G|4G|5G)"
+    discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
+
+    return [mvno_pattern, plan_name_pattern, monthly_fee_pattern, monthly_data_pattern, daily_data_pattern, data_speed_pattern, call_minutes_pattern, text_messages_pattern, carrier_pattern, network_type_pattern, discount_info_pattern]
+
+
 def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     part1 = url1.split('/')
     part2 = url2.split('/')
@@ -251,11 +307,16 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 # Parse the HTML content with BeautifulSoup
                 soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 if export_to_google_sheet:
-                    regex = '\[(.*?)\]\s*(.*?)\s*\|\s*([\d,]+원)\s*\|\s*(?:.*?월\s*(\d+GB))?(?:\s*\+\s*매일\s*(\d+GB))?.*?(?:\((\d+mbps)\))?.*?(무제한|\d+분).*?(무제한|\d+건).*?(LG U\+|SKT|KT).*?(LTE|3G|4G|5G)(?:.*?(\d+개월\s*이후\s*[\d,]+원))?'
+                    regex = '\[(.*?)\]\s*(.*?)\s*\|\s*([\d,]+원)\s*\|\s*(?:.*?월\s*([.\d]+(?:GB|MB)))?(?:\s*\+\s*매일\s*([.\d]+(?:GB|MB)))?.*?(?:\(([.\d]+(?:mbps|gbps))\))?.*?(무제한|\d+분).*?(무제한|\d+건).*?(LG U\+|SKT|KT).*?(LTE|3G|4G|5G)(?:.*?(\d+개월\s*이후\s*[\d,]+원))?'
                     strSoup = str(soup)
-                    sheetValue = f"=REGEXEXTRACT(\"{strSoup}\", \"{regex}\")"
+                    # sheetValue = f"=REGEXEXTRACT(\"{strSoup}\", \"{regex}\")"
+                    regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
-                    data = [planUrl, sheetValue]
+                    data = [planUrl]
+                    for regex in regex_formula:
+                        sheetValue = f"=REGEXEXTRACT(\"{strSoup}\",\"{regex}\")"
+                        data.append(sheetValue)
+                    # data = [planUrl, sheetValue]
                     pushToSheet(data, sheet_id, range='Sheet1!A:B')
                 crawledText += str(soup) + '\n\n'  # Append data with two newlines
             else:
@@ -289,7 +350,8 @@ with st.sidebar:
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
     if st.button("TXT"):
         export_to_google_sheet = False
-        moyocrawling(url1, url2, export_to_google_sheet)
+        sheet_id = ""
+        moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
     if st.button("Google Sheet"):
         export_to_google_sheet = True
         sheet_id, webviewlink = create_new_google_sheet()
