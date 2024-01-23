@@ -129,7 +129,7 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
 
     return result
 
-def formatHeaderTrimAndAutoResizeColumns(sheet_id, sheet_index=0):
+def formatHeaderTrim(sheet_id, sheet_index=0):
     serviceInstance = googleSheetConnect()
 
     # Retrieve sheet metadata
@@ -179,19 +179,6 @@ def formatHeaderTrimAndAutoResizeColumns(sheet_id, sheet_index=0):
         }
         requests.append(trim_columns_request)
 
-    # Auto-resize columns (up to the 12th column)
-    auto_resize_request = {
-        "autoResizeDimensions": {
-            "dimensions": {
-                "sheetId": sheetId,
-                "dimension": "COLUMNS",
-                "startIndex": 0,
-                "endIndex": 12
-            }
-        }
-    }
-    requests.append(auto_resize_request)
-
     body = {"requests": requests}
 
     response = serviceInstance.spreadsheets().batchUpdate(
@@ -201,6 +188,32 @@ def formatHeaderTrimAndAutoResizeColumns(sheet_id, sheet_index=0):
 
     return response
 
+def autoResizeColumns(sheet_id, sheet_index=0):
+    serviceInstance = googleSheetConnect()
+    sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
+    sheetId = sheet_metadata.get('sheets', '')[sheet_index].get('properties', {}).get('sheetId', 0)
+
+    # Since we have trimmed the columns to 12, we will resize up to the 12th column
+    endIndex = 12
+
+    requests = [{
+        "autoResizeDimensions": {
+            "dimensions": {
+                "sheetId": sheetId,
+                "dimension": "COLUMNS",
+                "startIndex": 0,  # Auto-resize from the first column
+                "endIndex": endIndex  # Auto-resize up to the 12th column
+            }
+        }
+    }]
+
+    body = {"requests": requests}
+    response = serviceInstance.spreadsheets().batchUpdate(
+        spreadsheetId=sheet_id, 
+        body=body
+    ).execute()
+
+    return response
 
 
 def get_answers(inputs):
@@ -468,10 +481,12 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
             }
             pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-            formatHeaderTrimAndAutoResizeColumns(sheet_id, 0)
+            formatHeaderTrim(sheet_id, 0)
             sheetUrl = str(webviewlink)
             st.link_button("Go to see", sheetUrl)
             moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+            autoResizeColumns(sheet_id, 0)
+            
 
     
     # if st.button("TXT"):
