@@ -124,16 +124,26 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
 
     return result
 
-def formatHeaderRow(sheet_id):
+def formatHeaderAndTrimColumns(sheet_id, sheet_index=0):
     serviceInstance = googleSheetConnect()
-    requests = [{
+
+    # Get the total number of columns in the sheet first
+    sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
+    sheet = sheet_metadata.get('sheets', '')[sheet_index]
+    totalColumns = sheet.get('properties', {}).get('gridProperties', {}).get('columnCount', 0)
+    sheetId = sheet.get('properties', {}).get('sheetId', 0)
+
+    requests = []
+
+    # Formatting header row
+    header_format_request = {
         "repeatCell": {
             "range": {
-                "sheetId": 0,  # Adjust if you are not using the first sheet
+                "sheetId": sheetId,
                 "startRowIndex": 0,
                 "endRowIndex": 1,
                 "startColumnIndex": 0,
-                "endColumnIndex": 12  # Assuming 12 columns as per your headers
+                "endColumnIndex": 12  # Adjust based on the number of columns in your header
             },
             "cell": {
                 "userEnteredFormat": {
@@ -149,11 +159,25 @@ def formatHeaderRow(sheet_id):
             },
             "fields": "userEnteredFormat(backgroundColor,textFormat)"
         }
-    }]
-
-    body = {
-        "requests": requests
     }
+    requests.append(header_format_request)
+
+    # Trimming columns if necessary
+    if totalColumns > 12:
+        trim_columns_request = {
+            "deleteDimension": {
+                "range": {
+                    "sheetId": sheetId,
+                    "dimension": "COLUMNS",
+                    "startIndex": 12,  # Columns are zero-indexed, so 12 represents the 13th column
+                    "endIndex": totalColumns
+                }
+            }
+        }
+        requests.append(trim_columns_request)
+
+    body = {"requests": requests}
+
     response = serviceInstance.spreadsheets().batchUpdate(
         spreadsheetId=sheet_id, 
         body=body
@@ -395,7 +419,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터(GB)", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
         }
         pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-        formatHeaderRow(sheet_id)
+        formatHeaderAndTrimColumns(sheet_id, 0)
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
         moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
