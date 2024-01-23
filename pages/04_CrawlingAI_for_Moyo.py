@@ -124,6 +124,44 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
 
     return result
 
+def formatHeaderRow(sheet_id):
+    serviceInstance = googleSheetConnect()
+    requests = [{
+        "repeatCell": {
+            "range": {
+                "sheetId": 0,  # Adjust if you are not using the first sheet
+                "startRowIndex": 0,
+                "endRowIndex": 1,
+                "startColumnIndex": 0,
+                "endColumnIndex": 12  # Assuming 12 columns as per your headers
+            },
+            "cell": {
+                "userEnteredFormat": {
+                    "backgroundColor": {
+                        "red": 0.9,  # Light gray color
+                        "green": 0.9,
+                        "blue": 0.9
+                    },
+                    "textFormat": {
+                        "bold": True
+                    }
+                }
+            },
+            "fields": "userEnteredFormat(backgroundColor,textFormat)"
+        }
+    }]
+
+    body = {
+        "requests": requests
+    }
+    response = serviceInstance.spreadsheets().batchUpdate(
+        spreadsheetId=sheet_id, 
+        body=body
+    ).execute()
+
+    return response
+
+
 def get_answers(inputs):
     docs = inputs["docs"]
     question = inputs["question"]
@@ -357,6 +395,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터(GB)", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
         }
         pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+        formatHeaderRow(sheet_id)
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
         moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
