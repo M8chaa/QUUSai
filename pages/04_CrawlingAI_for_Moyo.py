@@ -436,22 +436,24 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
     with col1:
         if st.button("TXT", key="txt_button", use_container_width=True):
-            export_to_google_sheet = False
-            sheet_id = ""
-            moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+            with st.spinner("Processing for TXT..."):
+                export_to_google_sheet = False
+                sheet_id = ""
+                moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
 
     with col2:
         if st.button("Google Sheet", key="gs_button", use_container_width=True):
-            export_to_google_sheet = True
-            sheet_id, webviewlink = create_new_google_sheet(url1, url2)
-            headers = {
-                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
-            }
-            pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-            formatHeaderAndTrimColumns(sheet_id, 0)
-            sheetUrl = str(webviewlink)
-            st.link_button("Go to see", sheetUrl)
-            moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+            with st.spinner("Processing for TXT..."):
+                export_to_google_sheet = True
+                sheet_id, webviewlink = create_new_google_sheet(url1, url2)
+                headers = {
+                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
+                }
+                pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+                formatHeaderAndTrimColumns(sheet_id, 0)
+                sheetUrl = str(webviewlink)
+                st.link_button("Go to see", sheetUrl)
+                moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
 
 
     
