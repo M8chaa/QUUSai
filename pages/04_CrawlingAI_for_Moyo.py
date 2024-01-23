@@ -132,6 +132,7 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
 def formatHeaderTrimAndAutoResizeColumns(sheet_id, sheet_index=0):
     serviceInstance = googleSheetConnect()
 
+    # Retrieve sheet metadata
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
     sheet = sheet_metadata.get('sheets', '')[sheet_index]
     totalColumns = sheet.get('properties', {}).get('gridProperties', {}).get('columnCount', 0)
@@ -141,14 +142,40 @@ def formatHeaderTrimAndAutoResizeColumns(sheet_id, sheet_index=0):
 
     # Formatting header row
     header_format_request = {
-        # ... same as before ...
+        "repeatCell": {
+            "range": {
+                "sheetId": sheetId,
+                "startRowIndex": 0,
+                "endRowIndex": 1,
+                "startColumnIndex": 0,
+                "endColumnIndex": 12
+            },
+            "cell": {
+                "userEnteredFormat": {
+                    "backgroundColor": {
+                        "red": 0.9, "green": 0.9, "blue": 0.9
+                    },
+                    "textFormat": {
+                        "bold": True
+                    }
+                }
+            },
+            "fields": "userEnteredFormat(backgroundColor,textFormat)"
+        }
     }
     requests.append(header_format_request)
 
     # Trimming columns if necessary
     if totalColumns > 12:
         trim_columns_request = {
-            # ... same as before ...
+            "deleteDimension": {
+                "range": {
+                    "sheetId": sheetId,
+                    "dimension": "COLUMNS",
+                    "startIndex": 12,
+                    "endIndex": totalColumns
+                }
+            }
         }
         requests.append(trim_columns_request)
 
@@ -158,8 +185,8 @@ def formatHeaderTrimAndAutoResizeColumns(sheet_id, sheet_index=0):
             "dimensions": {
                 "sheetId": sheetId,
                 "dimension": "COLUMNS",
-                "startIndex": 0,  # Auto-resize from the first column
-                "endIndex": 12   # Auto-resize up to the 12th column
+                "startIndex": 0,
+                "endIndex": 12
             }
         }
     }
@@ -173,6 +200,7 @@ def formatHeaderTrimAndAutoResizeColumns(sheet_id, sheet_index=0):
     ).execute()
 
     return response
+
 
 
 def get_answers(inputs):
