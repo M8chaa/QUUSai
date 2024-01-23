@@ -440,7 +440,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
             }
             pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-            formatHeaderAndTrimColumns(sheet_id, 0)
+            formatHeaderTrimAndAutoResizeColumns(sheet_id, 0)
             sheetUrl = str(webviewlink)
             st.link_button("Go to see", sheetUrl)
             moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
