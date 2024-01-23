@@ -286,9 +286,9 @@ st.markdown(
     """
     # CrawlingAI for Moyo
             
-    Extract data of any website!
+    ### Extract Moyo's Mobile Phone Plans!
 
-    Enter url at the sidebar and retrieve the data without html tag! 
+    Enter plan numbers at the sidebar and export data to text files or google sheet! 
 """
 )
 
