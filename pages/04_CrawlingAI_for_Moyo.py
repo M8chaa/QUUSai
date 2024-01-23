@@ -193,22 +193,21 @@ def autoResizeColumns(sheet_id, sheet_index=0):
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
     sheetId = sheet_metadata.get('sheets', '')[sheet_index].get('properties', {}).get('sheetId', 0)
 
-    # Since we have trimmed the columns to 12, we will resize up to the 12th column
-    endIndex = 12
+    requests = []
 
+    # Loop through the first 12 columns
     for i in range(12):  # Adjust the range if needed
-            auto_resize_request = {
-                "autoResizeDimensions": {
-                    "dimensions": {
-                        "sheetId": sheetId,
-                        "dimension": "COLUMNS",
-                        "startIndex": i,  # Auto-resize each column individually
-                        "endIndex": i + 1
-                    }
+        auto_resize_request = {
+            "autoResizeDimensions": {
+                "dimensions": {
+                    "sheetId": sheetId,
+                    "dimension": "COLUMNS",
+                    "startIndex": i,  # Auto-resize each column individually
+                    "endIndex": i + 1
                 }
             }
-            requests.append(auto_resize_request)
-
+        }
+        requests.append(auto_resize_request)
 
     body = {"requests": requests}
     response = serviceInstance.spreadsheets().batchUpdate(
@@ -217,6 +216,7 @@ def autoResizeColumns(sheet_id, sheet_index=0):
     ).execute()
 
     return response
+
 
 
 def get_answers(inputs):
