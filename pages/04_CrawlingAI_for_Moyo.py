@@ -191,8 +191,8 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
 def autoResizeColumns(sheet_id, sheet_index=0):
     serviceInstance = googleSheetConnect()
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
-    sheetId = sheet_metadata.get('sheets', '')[sheet_index].get('properties', {}).get('sheetId', 0)
-
+    sheet = sheet_metadata.get('sheets', '')[sheet_index]
+    sheetId = sheet.get('properties', {}).get('sheetId', 0)
     requests = []
 
     # Loop through the first 12 columns
@@ -202,8 +202,8 @@ def autoResizeColumns(sheet_id, sheet_index=0):
                 "dimensions": {
                     "sheetId": sheetId,
                     "dimension": "COLUMNS",
-                    "startIndex": i,  # Auto-resize each column individually
-                    "endIndex": i
+                    "startIndex": i,  # Start index of the column
+                    "endIndex": i + 1  # End index (exclusive), so it's set to one more than the start index
                 }
             }
         }
@@ -216,6 +216,7 @@ def autoResizeColumns(sheet_id, sheet_index=0):
     ).execute()
 
     return response
+
 
 
 
