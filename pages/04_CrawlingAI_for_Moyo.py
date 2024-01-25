@@ -76,19 +76,14 @@ def googleDriveConnect():
     API_VERSION = 'v3'
     SCOPES = ['https://www.googleapis.com/auth/drive']
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
-    # print (dir(serviceInstance))
-    # st.write(dir(serviceInstance))  # Changed from print to st.write
     return serviceInstance
 
 def googleSheetConnect():
     CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
-    # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
     API_NAME = 'sheets'
     API_VERSION = 'v4'
     SCOPES = ['https://www.googleapis.com/auth/drive']
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
-    # print (dir(serviceInstance))
-    # st.write(dir(serviceInstance))  # Changed from print to st.write
     return serviceInstance
 
 def create_new_google_sheet(url1, url2):
@@ -224,12 +219,6 @@ def get_answers(inputs):
     docs = inputs["docs"]
     question = inputs["question"]
     answers_chain = answers_prompt | llm
-    # answers = []
-    # for doc in docs:
-    #     result = answers_chain.invoke(
-    #         {"question": question, "context": doc.page_content}
-    #     )
-    #     answers.append(result.content)
     return {
         "question": question,
         "answers": [
@@ -425,11 +414,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
         #     st.session_state['download_buttons'].append(button_data)
 
 
-# with st.sidebar:
-#     url = st.text_input(
-#         "Write down a Starting URL",
-#         placeholder="https://example.com",
-#     )
 
 with st.sidebar:
     base_url = "https://www.moyoplan.com/plans/"
@@ -463,19 +447,6 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
     url2 = st.session_state.get('url2')
     col1, col2 = st.columns(2)
 
-    # with col1:
-    #     txt_button_pressed = st.button("TXT", key="txt_button", use_container_width=True)
-    
-    # with col2:
-    #     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
-
-    # # Handling the actions outside of the columns
-    # if txt_button_pressed:
-    #     with st.spinner("Processing for TXT..."):
-    #         export_to_google_sheet = False
-    #         sheet_id = ""
-    #         moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
-    #         # Code to display the first text file goes here
     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
     if gs_button_pressed:
         with st.spinner("Processing for Google Sheet..."):
@@ -492,23 +463,6 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             autoResizeColumns(sheet_id, 0)
             
 
-    
-    # if st.button("TXT"):
-    #     export_to_google_sheet = False
-    #     sheet_id = ""
-    #     moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
-    # if st.button("Google Sheet"):
-    #     export_to_google_sheet = True
-    #     sheet_id, webviewlink = create_new_google_sheet(url1, url2)
-    #     headers = {
-    #     'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
-    #     }
-    #     pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-    #     formatHeaderAndTrimColumns(sheet_id, 0)
-    #     sheetUrl = str(webviewlink)
-    #     st.link_button("Go to see", sheetUrl)
-    #     moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
-
 
 # Outside the sidebar, render download buttons
 for button in st.session_state.get('download_buttons', []):
@@ -518,34 +472,6 @@ for button in st.session_state.get('download_buttons', []):
         file_name=button['file_name'],
         mime="text/plain",
     )
-
-
-
-
-
-# def generate_xpath(element):
-#     """
-#     Generates a simple XPath for a given element.
-#     """
-#     components = []
-#     child = element
-#     while child is not None:
-#         parent = child.find_element(By.XPATH, '..')
-#         siblings = parent.find_elements(By.XPATH, child.tag_name)
-#         count = 0
-#         index = 0
-#         for i, sibling in enumerate(siblings, start=1):
-#             if sibling == child:
-#                 index = i
-#             count += 1
-#         if count > 1:
-#             components.append(f'{child.tag_name}[{index}]')
-#         else:
-#             components.append(child.tag_name)
-#         child = parent if parent.tag_name != 'html' else None
-
-#     components.reverse()
-#     return '/' + '/'.join(components)
 
 
 
@@ -573,28 +499,8 @@ def start_chromium(url):
     driver.get(url)
     driver.refresh()
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-    # wait = WebDriverWait(driver, 60)  # Timeout after 10 seconds
-    # # locator = (By.CSS_SELECTOR, "a[href='/plans/16353']")
-    # locator = (By.CSS_SELECTOR, "a.ekz2e6k13.css-1kmf8ij")
-    # wait.until(EC.visibility_of_element_located(locator))
-
-    # clickable_elements = driver.find_elements(By.XPATH, "//*[self::a or self::button or (self::input and @type='button')]")
-    # clickable_elements_xpath = []
-    # for element in clickable_elements:
-    #     tag_name = element.tag_name
-    #     text = element.text
-    #     href = element.get_attribute('href') if tag_name == 'a' else "Not an anchor tag"
-
-    #     # Append a tuple of tag name, text, and the 'btn' attribute value to the list
-    #     clickable_elements_xpath.append((tag_name, text, href))
 
     html = driver.page_source
-    # elements = driver.find_elements(By.XPATH, '//*')
-    # element_xpaths = [generate_xpath(element) for element in elements]
-    # file_dir = f"./.cache/screenshots"
-    # os.makedirs(file_dir, exist_ok=True)
-    # screenshot_path = os.path.join(file_dir, "screenshot.png")
-    # driver.get_screenshot_as_file(screenshot_path)
 
     soup = BeautifulSoup(html, 'html.parser')
 
@@ -616,9 +522,6 @@ def start_chromium(url):
     button = driver.find_element(*button_locator)
     button.click()
 
-    # Wait for the page to update after the click, if necessary
-    # WebDriverWait(driver, 10).until(EC.some_condition)  # Replace 'some_condition' with an appropriate condition
-
     # Retrieve the updated HTML
     html2 = driver.page_source
 
@@ -627,50 +530,10 @@ def start_chromium(url):
     return html, clickable_elements_content, html2
 
 
-# def load_website(url):
-#     try:
-#         # response = requests.get(url)
-#         # response.raise_for_status()
-
-#         # # Use BeautifulSoup to extract text
-#         # soup = BeautifulSoup(response.text, 'html.parser')
-#         # text = soup.get_text()
-#         # return text
-        
-#         # Assuming Html2TextTransformer is correctly defined/imported
-#         try:
-#             rawData = start_chromium(url)
-#             # transformed = Html2TextTransformer().transform_documents([rawData])
-#             return rawData
-#         except Exception as e:
-#             # Handle exceptions from Html2TextTransformer
-#             print(f"Error during HTML to text transformation: {e}")
-#             return e
-
-
-#     except requests.HTTPError as e:
-#         # Handle HTTP errors
-#         return f"An HTTP error occurred: {e}"
-
-# if url:
-#     if ".xml" not in url:
-#         retriever = load_website(url)
-#         st.write(retriever)
 import pandas as pd
-
-
-# conn = st.connection("gsheets", type=GSheetsConnection)
-
-# df = conn.read()
-
-# # Print results.
-# for row in df.itertuples():
-#     st.write(f"{row.name} has a :{row.pet}:")
-
 
 def convert_html_to_csv(html):
     # This function should convert HTML table data to CSV. 
-    # This is a placeholder and needs to be adjusted based on the actual HTML structure.
     df = pd.read_html(html)[0]  # Adjust this to fit the HTML structure
     return df.to_csv(index=False)
 
