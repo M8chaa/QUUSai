@@ -26,6 +26,8 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager, ChromeType
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoAlertPresentException, TimeoutException
+
 import streamlit_extras
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
@@ -401,6 +403,13 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             # Make an HTTP request to the current URL
                 # URLで指定したwebページを開く
             driver.get(current_url)
+            try:
+                WebDriverWait(driver, 10).until(EC.alert_is_present())
+                alert = driver.switch_to.alert
+                alert.dismiss()  # Dismiss the alert
+            except (NoAlertPresentException, TimeoutException):
+                pass  # No alert was present
+
             driver.refresh()
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             html = driver.page_source
@@ -421,6 +430,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     data.append(regex)
                 data.append(expired)
                 pushToSheet(data,sheet_id, range = 'Sheet1!A:B')
+
+    driver.close()
             
             # # Check if the request was successful (status code 200)
             # if response.status_code == 200:
