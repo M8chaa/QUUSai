@@ -416,7 +416,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             if html is None or "":
                 response = requests.get(current_url)
                 soup = BeautifulSoup(response.text, 'html.parser').get_text()
-                strSoup = str(response.text)
+                strSoup = str(soup)
                 expired = "종료 되었습니다"
             else: 
                 strSoup = str(soup)
