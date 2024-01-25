@@ -143,7 +143,7 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
                 "startRowIndex": 0,
                 "endRowIndex": 1,
                 "startColumnIndex": 0,
-                "endColumnIndex": 12
+                "endColumnIndex": 13
             },
             "cell": {
                 "userEnteredFormat": {
@@ -161,13 +161,13 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
     requests.append(header_format_request)
 
     # Trimming columns if necessary
-    if totalColumns > 12:
+    if totalColumns > 13:
         trim_columns_request = {
             "deleteDimension": {
                 "range": {
                     "sheetId": sheetId,
                     "dimension": "COLUMNS",
-                    "startIndex": 12,
+                    "startIndex": 13,
                     "endIndex": totalColumns
                 }
             }
@@ -371,39 +371,72 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
         number2 = int(part2[-1])
     except ValueError:
         return None
-    
+    options = ChromeOptions()
+
+    # option設定を追加（設定する理由はメモリの削減）
+    options.add_argument("--headless")
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
+    # webdriver_managerによりドライバーをインストール
+    # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+    CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+    service = fs.Service(CHROMEDRIVER)
+    driver = webdriver.Chrome(
+                              options=options,
+                              service=service
+                             )
+
     if 'download_buttons' not in st.session_state:
         st.session_state['download_buttons'] = []
 
     for start_num in range(number1, number2 + 1, 50):
         end_num = min(start_num + 49, number2)
-        crawledText = ""  # Initialize for each batch of requests
         
         for i in range(start_num, end_num + 1):
             # Construct the URL by replacing the last part with the current number
             current_url = '/'.join(part1[:-1] + [str(i)])
             
             # Make an HTTP request to the current URL
-            response = requests.get(current_url)
+                # URLで指定したwebページを開く
+            driver.get(current_url)
+            driver.refresh()
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+            html = driver.page_source
+            if html is None or "":
+                response = requests.get(current_url)
+                strSoup = str(response.text)
+                expired = "마감되었습니다"
+            else: 
+                strSoup = str(html)
+                expired = "서비스 중입니다"
+
+            if export_to_google_sheet:
+                regex_formula = regex_extract(strSoup)
+                planUrl = str(current_url)
+                data = [planUrl]
+                for regex in regex_formula:
+                    data.append(regex)
+                data.append(expired)
+                pushToSheet(data,sheet_id, range = 'Sheet1!A:B')
             
-            # Check if the request was successful (status code 200)
-            if response.status_code == 200:
-                # Parse the HTML content with BeautifulSoup
-                soup = BeautifulSoup(response.text, 'html.parser').get_text()
-                if export_to_google_sheet:
-                    regex = '\[(.*?)\]\s*(.*?)\s*\|\s*([\d,]+원)\s*\|\s*(?:.*?월\s*([.\d]+(?:GB|MB)))?(?:\s*\+\s*매일\s*([.\d]+(?:GB|MB)))?.*?(?:\(([.\d]+(?:mbps|gbps))\))?.*?(무제한|\d+분).*?(무제한|\d+건).*?(LG U\+|SKT|KT).*?(LTE|3G|4G|5G)(?:.*?(\d+개월\s*이후\s*[\d,]+원))?'
-                    strSoup = str(soup)
-                    # sheetValue = f"=REGEXEXTRACT(\"{strSoup}\", \"{regex}\")"
-                    regex_formula = regex_extract(strSoup)
-                    planUrl = str(current_url)
-                    data = [planUrl]
-                    for regex in regex_formula:
-                        data.append(regex)
-                    # data = [planUrl, sheetValue]
-                    pushToSheet(data, sheet_id, range='Sheet1!A:B')
-                crawledText += str(soup) + '\n\n'  # Append data with two newlines
-            else:
-                crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
+            # # Check if the request was successful (status code 200)
+            # if response.status_code == 200:
+            #     # Parse the HTML content with BeautifulSoup
+            #     soup = BeautifulSoup(response.text, 'html.parser').get_text()
+            #     if export_to_google_sheet:
+            #         strSoup = str(soup)
+            #         regex_formula = regex_extract(strSoup)
+            #         planUrl = str(current_url)
+            #         data = [planUrl]
+            #         for regex in regex_formula:
+            #             data.append(regex)
+            #         # data = [planUrl, sheetValue]
+            #         pushToSheet(data, sheet_id, range='Sheet1!A:B')
+            #     crawledText += str(soup) + '\n\n'  # Append data with two newlines
+            # else:
+            #     crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
         
         # if not export_to_google_sheet:
         #     button_data = {
@@ -453,7 +486,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             export_to_google_sheet = True
             sheet_id, webviewlink = create_new_google_sheet(url1, url2)
             headers = {
-                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보"]
+                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "마감 여부"]
             }
             pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
             formatHeaderTrim(sheet_id, 0)
