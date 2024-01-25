@@ -13,8 +13,7 @@ from langchain.storage import LocalFileStore
 import requests
 from bs4 import BeautifulSoup
 import re
-# import platform
-import os, sys
+import threading
 import streamlit as st
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -27,11 +26,9 @@ from webdriver_manager.chrome import ChromeDriverManager, ChromeType
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException
-
 import streamlit_extras
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
-from streamlit_gsheets import GSheetsConnection
 from Google import Create_Service
 
 
@@ -364,6 +361,9 @@ def regex_extract_for_sheet(strSoup):
     return [mvno_pattern, plan_name_pattern, monthly_fee_pattern, monthly_data_pattern, daily_data_pattern, data_speed_pattern, call_minutes_pattern, text_messages_pattern, carrier_pattern, network_type_pattern, discount_info_pattern]
 
 
+def update_google_sheet(data, sheet_id):
+    pushToSheet(data, sheet_id, range='Sheet1!A:B')
+
 def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     part1 = url1.split('/')
     part2 = url2.split('/')
@@ -380,7 +380,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-extensions')
-    prefs = {"profile.managed_default_content_settings.images": 2}
     options.add_experimental_option("prefs", prefs)
 
 
@@ -398,48 +397,125 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
 
     for start_num in range(number1, number2 + 1, 50):
         end_num = min(start_num + 49, number2)
-        
+
         for i in range(start_num, end_num + 1):
-            # Construct the URL by replacing the last part with the current number
             current_url = '/'.join(part1[:-1] + [str(i)])
-            
-            # Make an HTTP request to the current URL
-                # URLで指定したwebページを開く
             driver.get(current_url)
-            alert_present = False
+
             try:
                 WebDriverWait(driver, 10).until(EC.alert_is_present())
-                alert = driver.switch_to.alert
-                alert.accept()  # Dismiss the alert
+                driver.switch_to.alert.accept()
                 alert_present = True
             except (NoAlertPresentException, TimeoutException):
-                pass  # No alert was present
+                alert_present = False
 
-            driver.refresh()
-            html = driver.page_source
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             if alert_present:
                 response = requests.get(current_url)
                 if response.status_code == 200:
-                # Parse the HTML content with BeautifulSoup
-                    soup = BeautifulSoup(response.text, 'html.parser').get_text()
-                strSoup = str(soup)
-                expired = "종료 되었습니다"
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    strSoup = soup.get_text()
+                    expired = "종료 되었습니다"
             else: 
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                html = driver.page_source
                 strSoup = str(html)
                 expired = "서비스 중입니다"
+                driver.refresh()  # Refreshing for next iteration
                 print(f"Chrome Driver Initiated {i}")
 
             if export_to_google_sheet:
                 regex_formula = regex_extract(strSoup)
                 planUrl = str(current_url)
-                data = [planUrl]
-                for regex in regex_formula:
-                    data.append(regex)
-                data.append(expired)
-                pushToSheet(data,sheet_id, range = 'Sheet1!A:B')
+                data = [planUrl] + regex_formula + [expired]
+
+                # Start a thread for Google Sheets update
+                thread = threading.Thread(target=update_google_sheet, args=(data, sheet_id))
+                thread.start()
 
     driver.close()
+
+    # Ensure all threads complete
+    for thread in threading.enumerate():
+        if thread is not threading.currentThread():
+            thread.join()
+
+
+# def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
+#     part1 = url1.split('/')
+#     part2 = url2.split('/')
+#     try:
+#         number1 = int(part1[-1])
+#         number2 = int(part2[-1])
+#     except ValueError:
+#         return None
+#     options = ChromeOptions()
+
+#     # option設定を追加（設定する理由はメモリの削減）
+#     options.add_argument("--headless")
+#     options.add_argument('--disable-gpu')
+#     options.add_argument('--no-sandbox')
+#     options.add_argument('--disable-dev-shm-usage')
+#     options.add_argument('--disable-extensions')
+#     prefs = {"profile.managed_default_content_settings.images": 2}
+#     options.add_experimental_option("prefs", prefs)
+
+
+#     # webdriver_managerによりドライバーをインストール
+#     # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+#     CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+#     service = fs.Service(CHROMEDRIVER)
+#     driver = webdriver.Chrome(
+#                               options=options,
+#                               service=service
+#                              )
+
+#     if 'download_buttons' not in st.session_state:
+#         st.session_state['download_buttons'] = []
+
+#     for start_num in range(number1, number2 + 1, 50):
+#         end_num = min(start_num + 49, number2)
+        
+#         for i in range(start_num, end_num + 1):
+#             # Construct the URL by replacing the last part with the current number
+#             current_url = '/'.join(part1[:-1] + [str(i)])
+            
+#             # Make an HTTP request to the current URL
+#                 # URLで指定したwebページを開く
+#             driver.get(current_url)
+#             alert_present = False
+#             try:
+#                 WebDriverWait(driver, 10).until(EC.alert_is_present())
+#                 alert = driver.switch_to.alert
+#                 alert.accept()  # Dismiss the alert
+#                 alert_present = True
+#             except (NoAlertPresentException, TimeoutException):
+#                 pass  # No alert was present
+
+#             driver.refresh()
+#             html = driver.page_source
+#             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+#             if alert_present:
+#                 response = requests.get(current_url)
+#                 if response.status_code == 200:
+#                 # Parse the HTML content with BeautifulSoup
+#                     soup = BeautifulSoup(response.text, 'html.parser').get_text()
+#                 strSoup = str(soup)
+#                 expired = "종료 되었습니다"
+#             else: 
+#                 strSoup = str(html)
+#                 expired = "서비스 중입니다"
+#                 print(f"Chrome Driver Initiated {i}")
+
+#             if export_to_google_sheet:
+#                 regex_formula = regex_extract(strSoup)
+#                 planUrl = str(current_url)
+#                 data = [planUrl]
+#                 for regex in regex_formula:
+#                     data.append(regex)
+#                 data.append(expired)
+#                 pushToSheet(data,sheet_id, range = 'Sheet1!A:B')
+
+#     driver.close()
             
             # # Check if the request was successful (status code 200)
             # if response.status_code == 200:
