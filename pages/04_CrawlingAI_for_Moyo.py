@@ -407,7 +407,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             if html is None or "":
                 response = requests.get(current_url)
                 strSoup = str(response.text)
-                expired = "마감되었습니다"
+                expired = "종료 되었습니다"
+                print(f"Chrome Driver Initiated {i}")
             else: 
                 strSoup = str(html)
                 expired = "서비스 중입니다"
@@ -486,7 +487,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             export_to_google_sheet = True
             sheet_id, webviewlink = create_new_google_sheet(url1, url2)
             headers = {
-                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "마감 여부"]
+                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "종료 여부"]
             }
             pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
             formatHeaderTrim(sheet_id, 0)
