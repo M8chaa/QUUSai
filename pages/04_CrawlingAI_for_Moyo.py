@@ -380,7 +380,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-extensions')
-    options.add_experimental_option("prefs", prefs)
 
 
     # webdriver_managerによりドライバーをインストール
