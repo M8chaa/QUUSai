@@ -402,25 +402,25 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             # Make an HTTP request to the current URL
                 # URLで指定したwebページを開く
             driver.get(current_url)
-            html = driver.page_source
-            st.write(html)
+            alert_present = False
             try:
                 WebDriverWait(driver, 10).until(EC.alert_is_present())
                 alert = driver.switch_to.alert
                 alert.accept()  # Dismiss the alert
+                alert_present = True
             except (NoAlertPresentException, TimeoutException):
                 pass  # No alert was present
 
             driver.refresh()
+            html = driver.page_source
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-            if html is None or "":
+            if alert_present:
                 response = requests.get(current_url)
                 if response.status_code == 200:
                 # Parse the HTML content with BeautifulSoup
                     soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 strSoup = str(soup)
                 expired = "종료 되었습니다"
-                st.write(strSoup)
             else: 
                 strSoup = str(html)
                 expired = "서비스 중입니다"
