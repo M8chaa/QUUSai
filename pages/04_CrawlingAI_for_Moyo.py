@@ -417,10 +417,11 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 response = requests.get(current_url)
                 strSoup = str(response.text)
                 expired = "종료 되었습니다"
-                print(f"Chrome Driver Initiated {i}")
             else: 
-                strSoup = str(html)
+                soup = BeautifulSoup(response.text, 'html.parser').get_text()
+                strSoup = str(soup)
                 expired = "서비스 중입니다"
+                print(f"Chrome Driver Initiated {i}")
 
             if export_to_google_sheet:
                 regex_formula = regex_extract(strSoup)
