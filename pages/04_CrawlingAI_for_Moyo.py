@@ -414,11 +414,11 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             html = driver.page_source
             if html is None or "":
+                soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 response = requests.get(current_url)
                 strSoup = str(response.text)
                 expired = "종료 되었습니다"
             else: 
-                soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 strSoup = str(soup)
                 expired = "서비스 중입니다"
                 print(f"Chrome Driver Initiated {i}")
