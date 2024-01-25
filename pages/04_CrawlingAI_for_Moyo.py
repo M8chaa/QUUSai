@@ -406,7 +406,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             try:
                 WebDriverWait(driver, 10).until(EC.alert_is_present())
                 alert = driver.switch_to.alert
-                alert.dismiss()  # Dismiss the alert
+                alert.accept()  # Dismiss the alert
             except (NoAlertPresentException, TimeoutException):
                 pass  # No alert was present
 
@@ -415,9 +415,12 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             html = driver.page_source
             if html is None or "":
                 response = requests.get(current_url)
-                soup = BeautifulSoup(response.text, 'html.parser').get_text()
+                if response.status_code == 200:
+                # Parse the HTML content with BeautifulSoup
+                    soup = BeautifulSoup(response.text, 'html.parser').get_text()
                 strSoup = str(soup)
                 expired = "종료 되었습니다"
+                st.write(strSoup)
             else: 
                 strSoup = str(html)
                 expired = "서비스 중입니다"
