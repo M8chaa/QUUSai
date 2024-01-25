@@ -379,6 +379,10 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     options.add_argument('--disable-gpu')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-extensions')
+    prefs = {"profile.managed_default_content_settings.images": 2}
+    options.add_experimental_option("prefs", prefs)
+
 
     # webdriver_managerによりドライバーをインストール
     # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
