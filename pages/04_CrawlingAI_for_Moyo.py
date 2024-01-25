@@ -116,7 +116,6 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
     body = {
         'values': [data]
     }
-    range = 'Sheet1!A:A'
     result = serviceInstance.spreadsheets().values().append(
         spreadsheetId=sheet_id,
         range=range,
@@ -413,6 +412,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             driver.refresh()
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
             html = driver.page_source
+            st.write(str(html))
             if html is None or "":
                 response = requests.get(current_url)
                 if response.status_code == 200:
