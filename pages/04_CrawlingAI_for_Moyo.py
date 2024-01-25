@@ -402,6 +402,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             # Make an HTTP request to the current URL
                 # URLで指定したwebページを開く
             driver.get(current_url)
+            html = driver.page_source
+            st.write(html)
             try:
                 WebDriverWait(driver, 10).until(EC.alert_is_present())
                 alert = driver.switch_to.alert
@@ -411,8 +413,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
 
             driver.refresh()
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-            html = driver.page_source
-            st.write(str(html))
             if html is None or "":
                 response = requests.get(current_url)
                 if response.status_code == 200:
