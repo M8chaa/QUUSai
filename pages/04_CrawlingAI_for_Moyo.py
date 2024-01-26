@@ -188,19 +188,19 @@ def autoResizeColumns(sheet_id, sheet_index=0):
     sheetId = sheet.get('properties', {}).get('sheetId', 0)
     requests = []
 
-    # Loop through the first 12 columns
-    for i in range(12):  # Adjust the range if needed
-        auto_resize_request = {
-            "autoResizeDimensions": {
-                "dimensions": {
-                    "sheetId": sheetId,
-                    "dimension": "COLUMNS",
-                    "startIndex": i,  # Start index of the column
-                    "endIndex": i + 1  # End index (exclusive), so it's set to one more than the start index
-                }
+    # # Loop through the first 12 columns
+    # for i in range(12):  # Adjust the range if needed
+    auto_resize_request = {
+        "autoResizeDimensions": {
+            "dimensions": {
+                "sheetId": sheetId,
+                "dimension": "COLUMNS",
+                "startIndex": 0,  # Start index of the column
+                "endIndex": 1  # End index (exclusive), so it's set to one more than the start index
             }
         }
-        requests.append(auto_resize_request)
+    }
+    requests.append(auto_resize_request)
 
     body = {"requests": requests}
     response = serviceInstance.spreadsheets().batchUpdate(
@@ -394,6 +394,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     if 'download_buttons' not in st.session_state:
         st.session_state['download_buttons'] = []
 
+    threads = []
     for start_num in range(number1, number2 + 1, 50):
         end_num = min(start_num + 49, number2)
 
@@ -430,13 +431,14 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 # Start a thread for Google Sheets update
                 thread = threading.Thread(target=update_google_sheet, args=(data, sheet_id))
                 thread.start()
+                threads.append(thread)  # Add the thread to the list
 
+    for thread in threads:
+            thread.join()
     driver.close()
 
     # Ensure all threads complete
-    for thread in threading.enumerate():
-        if thread is not threading.currentThread():
-            thread.join()
+    
 
 
 # def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
