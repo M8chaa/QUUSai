@@ -423,7 +423,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 # transformed = Html2TextTransformer().transform_documents([document])
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
-                st.write(strSoup)
 
             if export_to_google_sheet:
                 try:
