@@ -420,6 +420,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 html = driver.page_source
                 strSoup = str(html)
                 expired = "서비스 중입니다"
+                st.write(strSoup)
 
             if export_to_google_sheet:
                 try:
