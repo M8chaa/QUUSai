@@ -420,14 +420,22 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 html = driver.page_source
                 strSoup = str(html)
                 expired = "서비스 중입니다"
-                driver.refresh()  # Refreshing for next iteration
-                print(f"Chrome Driver Initiated {i}")
 
             if export_to_google_sheet:
-                regex_formula = regex_extract(strSoup)
-                planUrl = str(current_url)
-                data = [planUrl] + regex_formula + [expired]
-
+                try:
+                    pattern = r"서버에 문제가 생겼어요"
+                    # Searching for the pattern in the text
+                    match = re.search(pattern, strSoup)
+                    result = match.group() if match else ""
+                except Exception as e:
+                    st.write(f"An Error Occurred: {e}")
+                if result is not "":
+                    regex_formula = regex_extract(strSoup)
+                    planUrl = str(current_url)
+                    data = [planUrl] + regex_formula + [expired]
+                else:
+                    data = ["-"*11]
+                    data.append(f"모요 {result}")
                 # Start a thread for Google Sheets update
                 thread = threading.Thread(target=update_google_sheet, args=(data, sheet_id))
                 thread.start()
@@ -579,19 +587,22 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
     if gs_button_pressed:
-        with st.spinner("Processing for Google Sheet..."):
-            export_to_google_sheet = True
-            sheet_id, webviewlink = create_new_google_sheet(url1, url2)
-            headers = {
-                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "종료 여부"]
-            }
-            pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-            formatHeaderTrim(sheet_id, 0)
-            sheetUrl = str(webviewlink)
-            st.link_button("Go to see", sheetUrl)
-            moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
-            autoResizeColumns(sheet_id, 0)
-            
+        try:
+            with st.spinner("Processing for Google Sheet..."):
+                export_to_google_sheet = True
+                sheet_id, webviewlink = create_new_google_sheet(url1, url2)
+                headers = {
+                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "종료 여부"]
+                }
+                pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+                formatHeaderTrim(sheet_id, 0)
+                sheetUrl = str(webviewlink)
+                st.link_button("Go to see", sheetUrl)
+                moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+                autoResizeColumns(sheet_id, 0)
+                st.write("Process Completed")
+        except Exception as e:
+            st.write(f"An Error Occurred: {e}")
 
 
 # Outside the sidebar, render download buttons
