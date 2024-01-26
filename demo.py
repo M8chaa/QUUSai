@@ -1,9 +1,11 @@
-from Google import Create_Service
+from Google1 import Create_Service
 
-CLIENT_SECRET_FILE = 'QUUSai_clientID_webapp.json'
-API_NAME = 'drive'
-API_VERSION = 'v3'
+CLIENT_SECRET_FILE = "CrawlingAIforMoyo.json"
+API_NAME = 'sheets'
+API_VERSION = 'v4'
 SCOPES = ['https://www.googleapis.com/auth/drive']
+serviceInstance = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+
 
 service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
 

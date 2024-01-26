@@ -18,5 +18,6 @@ Here are the apps we proudly present:
 - [x] [🖥️ Crawling AI for Moyo](/CrawlingAI_for_Moyo)
 - [x] [💼 Meeting AI](/MeetingAI)
 - [x] [📈 Investor AI](/InvestorAI)
+- [x] [📈 Nokcci AI](/Nokcci)
 """
 )
