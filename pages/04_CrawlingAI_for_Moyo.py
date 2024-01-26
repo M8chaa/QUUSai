@@ -418,7 +418,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             else: 
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
                 html = driver.page_source
-                strSoup = str(html)
+                soup = BeautifulSoup(html, 'html.parser')
+                strSoup = str(soup)
                 expired = "서비스 중입니다"
                 st.write(strSoup)
 
