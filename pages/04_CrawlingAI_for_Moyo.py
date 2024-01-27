@@ -432,10 +432,12 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     st.write("Failed to find a clickable button within the timeout period.")
 
                 try:
+                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    # st.write("Button located.")
+                    # ActionChains(driver).move_to_element(button).click(button).perform()
+                    # st.write("Button clicked.")
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    st.write("Button located.")
-                    ActionChains(driver).move_to_element(button).click(button).perform()
-                    st.write("Button clicked.")
+                    driver.execute_script("arguments[0].click();", button)
                 except Exception as e:
                     st.write(f"Failed to locate or click the button: {str(e)}")
 
