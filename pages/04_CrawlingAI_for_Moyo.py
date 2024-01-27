@@ -420,6 +420,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     soup = BeautifulSoup(response.text, 'html.parser')
                     strSoup = soup.get_text()
                     expired = "종료 되었습니다"
+                    
             else: 
                 driver.refresh()
                 WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
@@ -432,6 +433,10 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 soup = BeautifulSoup(html, 'html.parser')
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
+                번호이동_수수료 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[4]/span[2]')
+                일반유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[5]/span')
+                NFC유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[6]/span')
+                eSim = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[7]/span')
             if export_to_google_sheet:
                 try:
                     pattern = r"서버에 문제가 생겼어요"
@@ -444,10 +449,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
                     data = [planUrl] + regex_formula + [expired]
-                    번호이동_수수료 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[4]/span[2]')
-                    일반유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[5]/span')
-                    NFC유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[6]/span')
-                    eSim = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[7]/span')
+
 
                     data.extend((번호이동_수수료.text, 일반유심배송.text, NFC유심배송.text, eSim.text))
 
