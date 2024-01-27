@@ -393,7 +393,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                              )
 
     driver.set_window_size(1920, driver.execute_script("return document.body.parentNode.scrollWidth"))
-    driver.set_window_height(driver.execute_script("return document.body.parentNode.scrollHeight"))
 
 
 
