@@ -142,7 +142,7 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
                 "startRowIndex": 0,
                 "endRowIndex": 1,
                 "startColumnIndex": 0,
-                "endColumnIndex": 13
+                "endColumnIndex": 17
             },
             "cell": {
                 "userEnteredFormat": {
