@@ -309,7 +309,45 @@ st.markdown(
 """
 )
 
+# def regex_extract(strSoup):
+#     mvno_pattern = r"\[(.*?)\]"
+#     plan_name_pattern = r"\]\s*(.*?)\s*\|"
+#     monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
+#     monthly_data_pattern = r"월\s*([.\d]+(?:GB|MB))"
+#     daily_data_pattern = r"매일\s*([.\d]+(?:GB|MB))"
+#     data_speed_pattern = r"\(([.\d]+(?:mbps|gbps))\)"
+#     call_minutes_pattern = r"(\d+분|무제한)"
+#     text_messages_pattern = r"(\d+건|무제한)"
+#     carrier_pattern = r"(LG U\+|SKT|KT)"
+#     network_type_pattern = r"(LTE|3G|4G|5G)"
+#     discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
+#     mvno = re.search(mvno_pattern, strSoup)
+#     plan_name = re.search(plan_name_pattern, strSoup)
+#     monthly_fee = re.search(monthly_fee_pattern, strSoup)
+#     monthly_data = re.search(monthly_data_pattern, strSoup)
+#     daily_data = re.search(daily_data_pattern, strSoup)
+#     data_speed = re.search(data_speed_pattern, strSoup)
+#     call_minutes = re.search(call_minutes_pattern, strSoup)
+#     text_messages = re.search(text_messages_pattern, strSoup)
+#     carrier = re.search(carrier_pattern, strSoup)
+#     network_type = re.search(network_type_pattern, strSoup)
+#     discount_info = re.search(discount_info_pattern, strSoup)
+
+#     return [ mvno.group(1) if mvno else "제공안함", 
+#             plan_name.group(1) if plan_name else "제공안함", 
+#             monthly_fee.group(1) if monthly_fee else "제공안함", 
+#             monthly_data.group(1) if monthly_data else "제공안함", 
+#             daily_data.group(1) if daily_data else "제공안함", 
+#             data_speed.group(1) if data_speed else "제공안함", 
+#             call_minutes.group(1) if call_minutes else "제공안함", 
+#             text_messages.group(1) if text_messages else "제공안함", 
+#             carrier.group(1) if carrier else "제공안함", 
+#             network_type.group(1) if network_type else "제공안함", 
+#             discount_info.group(1) if discount_info else "제공안함"
+#     ]
+
 def regex_extract(strSoup):
+    # Existing patterns
     mvno_pattern = r"\[(.*?)\]"
     plan_name_pattern = r"\]\s*(.*?)\s*\|"
     monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
@@ -321,6 +359,14 @@ def regex_extract(strSoup):
     carrier_pattern = r"(LG U\+|SKT|KT)"
     network_type_pattern = r"(LTE|3G|4G|5G)"
     discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
+
+    # New patterns
+    between_contract_and_call_pattern = r"(?<=통신사 약정없음)(.*?)(?=통화)"
+    between_number_transfer_fee_and_sim_delivery_pattern = r"(?<=번호이동 수수료800원)(.*?)(?=일반 유심 배송)"
+    between_nfc_sim_and_esim_pattern = r"(?<=NFC 유심 배송지원 안 함)(.*?)(?=eSIM)"
+    between_esim_and_support_pattern = r"(?<=eSIM유료\(2,750원\))(.*?)(?=지원)"
+
+    # Extracting information using existing patterns
     mvno = re.search(mvno_pattern, strSoup)
     plan_name = re.search(plan_name_pattern, strSoup)
     monthly_fee = re.search(monthly_fee_pattern, strSoup)
@@ -333,17 +379,28 @@ def regex_extract(strSoup):
     network_type = re.search(network_type_pattern, strSoup)
     discount_info = re.search(discount_info_pattern, strSoup)
 
-    return [ mvno.group(1) if mvno else "제공안함", 
-            plan_name.group(1) if plan_name else "제공안함", 
-            monthly_fee.group(1) if monthly_fee else "제공안함", 
-            monthly_data.group(1) if monthly_data else "제공안함", 
-            daily_data.group(1) if daily_data else "제공안함", 
-            data_speed.group(1) if data_speed else "제공안함", 
-            call_minutes.group(1) if call_minutes else "제공안함", 
-            text_messages.group(1) if text_messages else "제공안함", 
-            carrier.group(1) if carrier else "제공안함", 
-            network_type.group(1) if network_type else "제공안함", 
-            discount_info.group(1) if discount_info else "제공안함"
+    # Extracting information using new patterns
+    between_contract_and_call = re.search(between_contract_and_call_pattern, strSoup)
+    between_number_transfer_fee_and_sim_delivery = re.search(between_number_transfer_fee_and_sim_delivery_pattern, strSoup)
+    between_nfc_sim_and_esim = re.search(between_nfc_sim_and_esim_pattern, strSoup)
+    between_esim_and_support = re.search(between_esim_and_support_pattern, strSoup)
+
+    return [
+        mvno.group(1) if mvno else "제공안함", 
+        plan_name.group(1) if plan_name else "제공안함", 
+        monthly_fee.group(1) if monthly_fee else "제공안함", 
+        monthly_data.group(1) if monthly_data else "제공안함", 
+        daily_data.group(1) if daily_data else "제공안함", 
+        data_speed.group(1) if data_speed else "제공안함", 
+        call_minutes.group(1) if call_minutes else "제공안함", 
+        text_messages.group(1) if text_messages else "제공안함", 
+        carrier.group(1) if carrier else "제공안함", 
+        network_type.group(1) if network_type else "제공안함", 
+        discount_info.group(1) if discount_info else "제공안함",
+        between_contract_and_call.group(1) if between_contract_and_call else "제공안함",
+        between_number_transfer_fee_and_sim_delivery.group(1) if between_number_transfer_fee_and_sim_delivery else "제공안함",
+        between_nfc_sim_and_esim.group(1) if between_nfc_sim_and_esim else "제공안함",
+        between_esim_and_support.group(1) if between_esim_and_support else "제공안함"
     ]
 
 def regex_extract_for_sheet(strSoup):
@@ -420,10 +477,10 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     soup = BeautifulSoup(response.text, 'html.parser')
                     strSoup = soup.get_text()
                     expired = "종료 되었습니다"
-                번호이동_수수료 = "제공안함"
-                일반유심배송 = "제공안함"
-                NFC유심배송 = "제공안함"
-                eSim = "제공안함"
+                # 번호이동_수수료 = "제공안함"
+                # 일반유심배송 = "제공안함"
+                # NFC유심배송 = "제공안함"
+                # eSim = "제공안함"
 
             else: 
                 driver.refresh()
@@ -618,7 +675,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 export_to_google_sheet = True
                 sheet_id, webviewlink = create_new_google_sheet(url1, url2)
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "종료 여부", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim"]
+                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "종료 여부"]
                 }
                 pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
                 formatHeaderTrim(sheet_id, 0)
