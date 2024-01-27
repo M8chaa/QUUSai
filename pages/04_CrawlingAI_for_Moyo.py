@@ -416,7 +416,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     strSoup = soup.get_text()
                     expired = "종료 되었습니다"
             else: 
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                driver.refresh()
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "css-yg1ktq")))
                 button = driver.find_element(By.CLASS_NAME, "css-yg1ktq")
                 button.click()
                 html = driver.page_source
