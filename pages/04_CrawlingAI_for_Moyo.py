@@ -449,7 +449,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     NFC유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[6]/span')
                     eSim = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[7]/span')
 
-                    data.extend((번호이동_수수료, 일반유심배송, NFC유심배송, eSim))
+                    data.extend((번호이동_수수료.text, 일반유심배송.text, NFC유심배송.text, eSim.text))
 
                 else:
                     data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
