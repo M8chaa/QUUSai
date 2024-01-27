@@ -361,10 +361,10 @@ def regex_extract(strSoup):
     discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
 
     # New patterns
-    between_contract_and_call_pattern = r"(?<=통신사 약정없음)(.*?)(?=통화)"
-    between_number_transfer_fee_and_sim_delivery_pattern = r"(?<=번호이동 수수료800원)(.*?)(?=일반 유심 배송)"
-    between_nfc_sim_and_esim_pattern = r"(?<=NFC 유심 배송지원 안 함)(.*?)(?=eSIM)"
-    between_esim_and_support_pattern = r"(?<=eSIM유료\(2,750원\))(.*?)(?=지원)"
+    between_contract_and_call_pattern = r"(?<=통신사 약정)(.*?)(?=통화)"
+    between_number_transfer_fee_and_sim_delivery_pattern = r"(?<=번호이동 수수료)(.*?)(?=일반 유심 배송)"
+    between_nfc_sim_and_esim_pattern = r"(?<=NFC 유심 배송)(.*?)(?=eSIM)"
+    between_esim_and_support_pattern = r"(?<=eSIM)(.*?)(?=지원)"
 
     # Extracting information using existing patterns
     mvno = re.search(mvno_pattern, strSoup)
