@@ -31,7 +31,7 @@ import streamlit_extras
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
 from Google import Create_Service
-
+import os
 
 st.set_page_config(
     page_title="CrawlingAI_for_Moyo",
@@ -391,6 +391,11 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                               options=options,
                               service=service
                              )
+
+    driver.set_window_size(1920, driver.execute_script("return document.body.parentNode.scrollWidth"))
+    driver.set_window_height(driver.execute_script("return document.body.parentNode.scrollHeight"))
+
+
 
     if 'download_buttons' not in st.session_state:
         st.session_state['download_buttons'] = []
