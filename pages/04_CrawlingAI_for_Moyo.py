@@ -160,13 +160,13 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
     requests.append(header_format_request)
 
     # Trimming columns if necessary
-    if totalColumns > 13:
+    if totalColumns > 17:
         trim_columns_request = {
             "deleteDimension": {
                 "range": {
                     "sheetId": sheetId,
                     "dimension": "COLUMNS",
-                    "startIndex": 13,
+                    "startIndex": 17,
                     "endIndex": totalColumns
                 }
             }
@@ -422,41 +422,16 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     expired = "종료 되었습니다"
             else: 
                 driver.refresh()
-                # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+                WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                 # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                 # ActionChains(driver).move_to_element(button).click(button).perform()
-                try:
-                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-                    st.write("Button is now clickable.")
-                except TimeoutException:
-                    st.write("Failed to find a clickable button within the timeout period.")
-
-                try:
-                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    # st.write("Button located.")
-                    # ActionChains(driver).move_to_element(button).click(button).perform()
-                    # st.write("Button clicked.")
-                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    driver.execute_script("arguments[0].click();", button)
-                except Exception as e:
-                    st.write(f"Failed to locate or click the button: {str(e)}")
-
-                try:
-                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
-                    st.write("New Div Spotted")
-                except Exception as e:
-                    st.write(f"Failed to spot new div: {str(e)}")
-                # Alternative: Use JavaScript to click
-                # driver.execute_script("arguments[0].click();", button)
+                button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                driver.execute_script("arguments[0].click();", button)
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
-                # document = Document(page_content=html)
-                # transformed = Html2TextTransformer().transform_documents([document])
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
-                st.write(str(html))
-                st.write(strSoup)
-
             if export_to_google_sheet:
                 try:
                     pattern = r"서버에 문제가 생겼어요"
@@ -469,8 +444,15 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
                     data = [planUrl] + regex_formula + [expired]
+                    번호이동_수수료 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[4]/span[2]')
+                    일반유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[5]/span')
+                    NFC유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[6]/span')
+                    eSim = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[7]/span')
+
+                    data.extend((번호이동_수수료, 일반유심배송, NFC유심배송, eSim))
+
                 else:
-                    data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-"]
+                    data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
                     data.append(f"모요 {result}")
                 # Start a thread for Google Sheets update
                 thread = threading.Thread(target=update_google_sheet, args=(data, sheet_id))
@@ -628,7 +610,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 export_to_google_sheet = True
                 sheet_id, webviewlink = create_new_google_sheet(url1, url2)
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "종료 여부"]
+                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "종료 여부", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim"]
                 }
                 pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
                 formatHeaderTrim(sheet_id, 0)
