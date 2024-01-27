@@ -26,6 +26,7 @@ from webdriver_manager.chrome import ChromeDriverManager, ChromeType
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
 import streamlit_extras
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
@@ -417,9 +418,11 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     expired = "종료 되었습니다"
             else: 
                 driver.refresh()
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "css-yg1ktq")))
+                WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                 button = driver.find_element(By.CLASS_NAME, "css-yg1ktq")
-                button.click()
+                ActionChains(driver).move_to_element(button).click(button).perform()
+                # Alternative: Use JavaScript to click
+                # driver.execute_script("arguments[0].click();", button)
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
                 # document = Document(page_content=html)
