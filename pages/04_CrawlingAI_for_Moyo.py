@@ -438,6 +438,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     st.write("Button clicked.")
                 except Exception as e:
                     st.write(f"Failed to locate or click the button: {str(e)}")
+                    st.write(str(html))
 
                 try:
                     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
