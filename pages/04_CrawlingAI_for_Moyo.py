@@ -437,10 +437,10 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 soup = BeautifulSoup(html, 'html.parser')
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
-                번호이동_수수료 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[4]/span[2]').text
-                일반유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[5]/span').text
-                NFC유심배송 = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[6]/span').text
-                eSim = driver.find_element(By.XPATH, '//*[@id="__next"]/div[2]/main/div/div[3]/div[2]/div/div[2]/div/div/div[2]/div[7]/span').text
+                번호이동_수수료 = driver.find_element(By.XPATH, "//span[contains(text(), '번호이동 수수료')]/following-sibling::span").text
+                일반유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), '일반 유심 배송')]/following-sibling::span").text 
+                NFC유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), 'NFC 유심 배송')]/following-sibling::span").text 
+                eSim = driver.find_element(By.XPATH, "//span[contains(text(), 'eSim')]/following-sibling::span").text 
             if export_to_google_sheet:
                 try:
                     pattern = r"서버에 문제가 생겼어요"
