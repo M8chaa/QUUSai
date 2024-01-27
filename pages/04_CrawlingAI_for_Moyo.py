@@ -434,13 +434,14 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 driver.execute_script("arguments[0].click();", button)
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
                 html = driver.page_source
+                st.write(html)
                 soup = BeautifulSoup(html, 'html.parser')
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
-                번호이동_수수료 = driver.find_element(By.XPATH, "//span[contains(text(), '번호이동 수수료')]/following-sibling::span").text
-                일반유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), '일반 유심 배송')]/following-sibling::span").text 
-                NFC유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), 'NFC 유심 배송')]/following-sibling::span").text 
-                eSim = driver.find_element(By.XPATH, "//span[contains(text(), 'eSim')]/following-sibling::span").text 
+                # 번호이동_수수료 = driver.find_element(By.XPATH, "//span[contains(text(), '번호이동 수수료')]/following-sibling::span").text
+                # 일반유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), '일반 유심 배송')]/following-sibling::span").text 
+                # NFC유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), 'NFC 유심 배송')]/following-sibling::span").text 
+                # eSim = driver.find_element(By.XPATH, "//span[contains(text(), 'eSim')]/following-sibling::span").text 
             if export_to_google_sheet:
                 try:
                     pattern = r"서버에 문제가 생겼어요"
@@ -455,7 +456,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     data = [planUrl] + regex_formula + [expired]
 
 
-                    data.extend((번호이동_수수료, 일반유심배송, NFC유심배송, eSim))
+                    # data.extend((번호이동_수수료, 일반유심배송, NFC유심배송, eSim))
 
                 else:
                     data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
