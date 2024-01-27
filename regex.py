@@ -208,7 +208,7 @@ def regex_extract(strSoup):
     between_contract_and_call_pattern = r"(?<=통신사 약정)(.*?)(?=통화|펼쳐보기)"
     between_number_transfer_fee_and_sim_delivery_pattern = r"(?<=번호이동 수수료)(.*?)(?=일반 유심 배송)"
     between_nfc_sim_and_esim_pattern = r"(?<=NFC 유심 배송)(.*?)(?=eSIM)"
-    between_esim_and_support_pattern = r"(?<=eSIM)(.*?)(?=지원(?! 안함))"
+    between_esim_and_support_pattern = r"(?<=eSIM)(.*?)(?=지원(?! 안 함))"
 
     # Extracting information using existing patterns
     mvno = re.search(mvno_pattern, strSoup)
