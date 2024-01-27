@@ -422,11 +422,23 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     expired = "종료 되었습니다"
             else: 
                 driver.refresh()
-                WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-                button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                ActionChains(driver).move_to_element(button).click(button).perform()
-                screenshot_path = "screenshot.png"
-                os.remove(screenshot_path)
+                # WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+                # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                # ActionChains(driver).move_to_element(button).click(button).perform()
+                try:
+                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+                    st.write("Button is now clickable.")
+                except TimeoutException:
+                    st.write("Failed to find a clickable button within the timeout period.")
+
+                try:
+                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    st.write("Button located.")
+                    ActionChains(driver).move_to_element(button).click(button).perform()
+                    st.write("Button clicked.")
+                except Exception as e:
+                    st.write(f"Failed to locate or click the button: {str(e)}")
+
                 # Alternative: Use JavaScript to click
                 # driver.execute_script("arguments[0].click();", button)
                 html = driver.page_source
