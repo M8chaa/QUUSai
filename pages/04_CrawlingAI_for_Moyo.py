@@ -438,7 +438,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     st.write("Button clicked.")
                 except Exception as e:
                     st.write(f"Failed to locate or click the button: {str(e)}")
-                    st.write(str(html))
 
                 try:
                     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
@@ -453,6 +452,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 # transformed = Html2TextTransformer().transform_documents([document])
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
+                st.write(str(html))
                 st.write(strSoup)
 
             if export_to_google_sheet:
