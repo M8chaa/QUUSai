@@ -421,6 +421,10 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                 button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                 ActionChains(driver).move_to_element(button).click(button).perform()
+                screenshot_path = "screenshot.png"
+                driver.save_screenshot(screenshot_path)
+                st.image(screenshot_path, caption='Webpage Screenshot')
+                os.remove(screenshot_path)
                 # Alternative: Use JavaScript to click
                 # driver.execute_script("arguments[0].click();", button)
                 html = driver.page_source
