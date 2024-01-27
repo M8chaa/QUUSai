@@ -428,7 +428,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 screenshot_path = "screenshot.png"
                 driver.save_screenshot(screenshot_path)
                 st.image(screenshot_path, caption='Webpage Screenshot')
-                os.remove(screenshot_path)
                 # Alternative: Use JavaScript to click
                 # driver.execute_script("arguments[0].click();", button)
                 html = driver.page_source
