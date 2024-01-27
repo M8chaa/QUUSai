@@ -417,12 +417,15 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     expired = "종료 되었습니다"
             else: 
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+                button = driver.find_element(By.CLASS_NAME, "css-yg1ktq")
+                button.click()
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
                 # document = Document(page_content=html)
                 # transformed = Html2TextTransformer().transform_documents([document])
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
+                st.write(strSoup)
 
             if export_to_google_sheet:
                 try:
