@@ -518,6 +518,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     # data.extend((번호이동_수수료, 일반유심배송, NFC유심배송, eSim))
 
                 else:
+                    planUrl = str(current_url)
                     data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
                     data.append(f"모요 {result}")
                 # Start a thread for Google Sheets update
