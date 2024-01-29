@@ -484,12 +484,15 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
 
             else: 
                 driver.refresh()
-                WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-                # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                # ActionChains(driver).move_to_element(button).click(button).perform()
-                button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                driver.execute_script("arguments[0].click();", button)
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                try: 
+                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    # ActionChains(driver).move_to_element(button).click(button).perform()
+                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    driver.execute_script("arguments[0].click();", button)
+                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                except:
+                    pass
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
                 strSoup = soup.get_text()
@@ -505,6 +508,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     match = re.search(pattern, html)
                     result = match.group() if match else ""
                 except Exception as e:
+                    print(e)
                     st.write(f"An Error Occurred: {e}")
                 if result is "":
                     regex_formula = regex_extract(strSoup)
