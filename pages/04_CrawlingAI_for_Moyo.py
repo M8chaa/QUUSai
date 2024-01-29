@@ -505,10 +505,9 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 try:
                     pattern = r"서버에 문제가 생겼어요"
                     # Searching for the pattern in the text
-                    match = re.search(pattern, html)
+                    match = re.search(pattern, strSoup)
                     result = match.group() if match else ""
                 except Exception as e:
-                    print(e)
                     st.write(f"An Error Occurred: {e}")
                 if result is "":
                     regex_formula = regex_extract(strSoup)
