@@ -506,7 +506,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     match = re.search(pattern, strSoup)
                     result = match.group() if match else ""
                 except Exception as e:
-                    st.write(f"An Error Occurred: {e}")
+                    st.write(f"An Error Occurred: {e}, {strSoup}")
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
