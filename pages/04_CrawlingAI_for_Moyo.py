@@ -507,7 +507,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     result = match.group() if match else ""
                 except Exception as e:
                     st.write(f"An Error Occurred: {e}")
-                if result == "":
+                if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
                     data = [planUrl] + regex_formula + [expired]
@@ -674,7 +674,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 export_to_google_sheet = True
                 sheet_id, webviewlink = create_new_google_sheet(url1, url2)
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "종료 여부"]
+                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "NFC 유심 배송", "eSim", "종료 여부"]
                 }
                 pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
                 formatHeaderTrim(sheet_id, 0)

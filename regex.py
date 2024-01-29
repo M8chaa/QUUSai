@@ -173,89 +173,89 @@
 # # extracted_info = match.groups() if match else tuple([None] * 11)
 # extracted_info = regex_extract(sample_text3)
 # print(extracted_info)
-
-# text = "알뜰폰 요금제 | 모요, 모두의요금제홈요금제 찾기인터넷 찾기휴대폰 찾기이벤트마이페이지서버에 문제가 생겼어요문제를 해결하기 위해 최선을 다하고 있어요. 잠시 후 다시 확인해주세요.다시 시도하기"
-# pattern = r"서버에 문제가 생겼어요"
-
-# # Searching for the pattern in the text
-# match = re.search(pattern, text)
-
-# # Checking if the pattern was found
-# result = match.group() if match else "No match found"
-
-# print(result)
-
 import re
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+text = "알뜰폰 요금제 | 모요, 모두의요금제홈요금제 찾기인터넷 찾기휴대폰 찾기이벤트마이페이지서버에 문제가 생겼어요문제를 해결하기 위해 최선을 다하고 있어요. 잠시 후 다시 확인해주세요.다시 시도하기"
+pattern = r"서버에 문제가 생겼어요"
 
-def regex_extract(strSoup):
-    # Existing patterns
-    mvno_pattern = r"\[(.*?)\]"
-    plan_name_pattern = r"\]\s*(.*?)\s*\|"
-    monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
-    monthly_data_pattern = r"월\s*([.\d]+(?:GB|MB))"
-    daily_data_pattern = r"매일\s*([.\d]+(?:GB|MB))"
-    data_speed_pattern = r"\(([.\d]+(?:mbps|gbps))\)"
-    call_minutes_pattern = r"(\d+분|무제한)"
-    text_messages_pattern = r"(\d+건|무제한)"
-    carrier_pattern = r"(LG U\+|SKT|KT)"
-    network_type_pattern = r"(LTE|3G|4G|5G)"
-    discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
+# Searching for the pattern in the text
+match = re.search(pattern, text)
 
-    # New patterns
-    between_contract_and_call_pattern = r"(?<=통신사 약정)(.*?)(?=통화|펼쳐보기)"
-    between_number_transfer_fee_and_sim_delivery_pattern = r"(?<=번호이동 수수료)(.*?)(?=일반 유심 배송)"
-    between_nfc_sim_and_esim_pattern = r"(?<=NFC 유심 배송)(.*?)(?=eSIM)"
-    between_esim_and_support_pattern = r"(?<=eSIM)(.*?)(?=지원(?! 안 함))"
+# Checking if the pattern was found
+result = match.group() if match else "No match found"
 
-    # Extracting information using existing patterns
-    mvno = re.search(mvno_pattern, strSoup)
-    plan_name = re.search(plan_name_pattern, strSoup)
-    monthly_fee = re.search(monthly_fee_pattern, strSoup)
-    monthly_data = re.search(monthly_data_pattern, strSoup)
-    daily_data = re.search(daily_data_pattern, strSoup)
-    data_speed = re.search(data_speed_pattern, strSoup)
-    call_minutes = re.search(call_minutes_pattern, strSoup)
-    text_messages = re.search(text_messages_pattern, strSoup)
-    carrier = re.search(carrier_pattern, strSoup)
-    network_type = re.search(network_type_pattern, strSoup)
-    discount_info = re.search(discount_info_pattern, strSoup)
+print(result)
 
-    # Extracting information using new patterns
-    between_contract_and_call = re.search(between_contract_and_call_pattern, strSoup)
-    between_number_transfer_fee_and_sim_delivery = re.search(between_number_transfer_fee_and_sim_delivery_pattern, strSoup)
-    between_nfc_sim_and_esim = re.search(between_nfc_sim_and_esim_pattern, strSoup)
-    between_esim_and_support = re.search(between_esim_and_support_pattern, strSoup)
+# import re
+# import requests
+# from bs4 import BeautifulSoup
+# from urllib.parse import urljoin
 
-    return [
-        mvno.group(1) if mvno else "제공안함", 
-        plan_name.group(1) if plan_name else "제공안함", 
-        monthly_fee.group(1) if monthly_fee else "제공안함", 
-        monthly_data.group(1) if monthly_data else "제공안함", 
-        daily_data.group(1) if daily_data else "제공안함", 
-        data_speed.group(1) if data_speed else "제공안함", 
-        call_minutes.group(1) if call_minutes else "제공안함", 
-        text_messages.group(1) if text_messages else "제공안함", 
-        carrier.group(1) if carrier else "제공안함", 
-        network_type.group(1) if network_type else "제공안함", 
-        discount_info.group(1) if discount_info else "제공안함",
-        between_contract_and_call.group(1) if between_contract_and_call else "제공안함",
-        between_number_transfer_fee_and_sim_delivery.group(1) if between_number_transfer_fee_and_sim_delivery else "제공안함",
-        between_nfc_sim_and_esim.group(1) if between_nfc_sim_and_esim else "제공안함",
-        between_esim_and_support.group(1) if between_esim_and_support else "제공안함"
-    ]
+# def regex_extract(strSoup):
+#     # Existing patterns
+#     mvno_pattern = r"\[(.*?)\]"
+#     plan_name_pattern = r"\]\s*(.*?)\s*\|"
+#     monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
+#     monthly_data_pattern = r"월\s*([.\d]+(?:GB|MB))"
+#     daily_data_pattern = r"매일\s*([.\d]+(?:GB|MB))"
+#     data_speed_pattern = r"\(([.\d]+(?:mbps|gbps))\)"
+#     call_minutes_pattern = r"(\d+분|무제한)"
+#     text_messages_pattern = r"(\d+건|무제한)"
+#     carrier_pattern = r"(LG U\+|SKT|KT)"
+#     network_type_pattern = r"(LTE|3G|4G|5G)"
+#     discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
 
-# # Example usage
-# strSoup = "[미니게이트] [모요only] 미니 LTE 11GB+ | 8,800원 | 모요, 모두의요금제홈요금제 찾기인터넷 찾기휴대폰 찾기이벤트마이페이지홈요금제 찾기인터넷 찾기이벤트마이페이지모요ONLY월 11GB + 매일 2GB데이터 다 써도 저화질 영상 재생 가능 (3mbps)무제한무제한KT망LTE 106,326명이 선택106,326명이 선택잘못된 정보 제보잘못된 정보 제보월 8,800원4개월 이후 48,400원신청하기꼭 확인해 주세요가입 신청 월말까지 개통이 되지 않는 경우 신청서가 취소될 수 있습니다.요금제 상세 정보 요금제 이름미니게이트 | [모요only] 미니 LTE 11GB+통신사 약정없음통화무제한문자무제한통신망KT망통신 기술LTE데이터 제공량월 11GB + 매일 2GB데이터 소진시3mbps 속도로 무제한부가통화200분번호이동 수수료800원일반 유심 배송무료NFC 유심 배송지원 안 함eSIM유료(2,750원)지원모바일 핫스팟11GB 제공데이터 쉐어링미지원인터넷 결합소액 결제해외 로밍접기통신사 리뷰4.23,480개고객센터4.1개통 과정4.4개통 후 만족도4.2정란15일 전속도나 사용경험측면에서 기존에 사용하던 대형통신사와 차이를 느낄 수 없고, 멤버쉽같은부분이 아쉬울 수 있지만 요금이 저렴하기때문에 상쇄될 수 있다고 생각합니다이정17일 전문자에서는 현재 데이터 다 썼다고 나오고, 앱에서는 현재 사용중인 데이터양이 정확하게 나오는 거 같아요. 매번 오는 문자와 정보가 틀려 혼동스럽지만 서비스는 만족합니다.이*진28일 전서울지역인데 퀵배송지역이아니라는데 이벤트는 있는데 없는듯한 부분에서 조금 맘상했는데. 일반배송으로 빠르게 유심배송받았고 개통도 일사천리되었습니다. 만족합니다.더보기사은품 및 이벤트3대 마트 상품권 3만원대상: 1월 내 바로배송/바로유심으로 개통 후 유지시지급시기: 24년 4월말, 6월말요금제 개통 절차쓰던 번호로 개통할 때새 번호로 개통할 때1. 가입 신청원하는 요금제를 찾았다면 신청 버튼을 눌러 신청서를 작성해주세요. 가입 신청을 해도 기존에 사용하던 통신사는 바로 해지되지 않아요2. 정보 확인 및 유심 배송서류를 검토한 뒤 정보가 다 올바르면 유심을 발송해요. 올바르지 않은 정보가 있었다면 통신사에서 연락을 드릴 수 있어요3. 유심 받은 후 개통 진행유심을 받으셨다면 통신사 안내에 따라 개통 요청을 해주세요. 개통이 완료되면 기존에 쓰던 통신사는 이때 자동으로 해지돼요4. 새 유심으로 갈아끼면 끝기존 통신사가 해지되고 새로운 알뜰폰 유심으로 교체하면 알뜰폰 요금제 사용이 시작돼요"
+#     # New patterns
+#     between_contract_and_call_pattern = r"(?<=통신사 약정)(.*?)(?=통화|펼쳐보기)"
+#     between_number_transfer_fee_and_sim_delivery_pattern = r"(?<=번호이동 수수료)(.*?)(?=일반 유심 배송)"
+#     between_nfc_sim_and_esim_pattern = r"(?<=NFC 유심 배송)(.*?)(?=eSIM)"
+#     between_esim_and_support_pattern = r"(?<=eSIM)(.*?)(?=지원(?! 안 함))"
+
+#     # Extracting information using existing patterns
+#     mvno = re.search(mvno_pattern, strSoup)
+#     plan_name = re.search(plan_name_pattern, strSoup)
+#     monthly_fee = re.search(monthly_fee_pattern, strSoup)
+#     monthly_data = re.search(monthly_data_pattern, strSoup)
+#     daily_data = re.search(daily_data_pattern, strSoup)
+#     data_speed = re.search(data_speed_pattern, strSoup)
+#     call_minutes = re.search(call_minutes_pattern, strSoup)
+#     text_messages = re.search(text_messages_pattern, strSoup)
+#     carrier = re.search(carrier_pattern, strSoup)
+#     network_type = re.search(network_type_pattern, strSoup)
+#     discount_info = re.search(discount_info_pattern, strSoup)
+
+#     # Extracting information using new patterns
+#     between_contract_and_call = re.search(between_contract_and_call_pattern, strSoup)
+#     between_number_transfer_fee_and_sim_delivery = re.search(between_number_transfer_fee_and_sim_delivery_pattern, strSoup)
+#     between_nfc_sim_and_esim = re.search(between_nfc_sim_and_esim_pattern, strSoup)
+#     between_esim_and_support = re.search(between_esim_and_support_pattern, strSoup)
+
+#     return [
+#         mvno.group(1) if mvno else "제공안함", 
+#         plan_name.group(1) if plan_name else "제공안함", 
+#         monthly_fee.group(1) if monthly_fee else "제공안함", 
+#         monthly_data.group(1) if monthly_data else "제공안함", 
+#         daily_data.group(1) if daily_data else "제공안함", 
+#         data_speed.group(1) if data_speed else "제공안함", 
+#         call_minutes.group(1) if call_minutes else "제공안함", 
+#         text_messages.group(1) if text_messages else "제공안함", 
+#         carrier.group(1) if carrier else "제공안함", 
+#         network_type.group(1) if network_type else "제공안함", 
+#         discount_info.group(1) if discount_info else "제공안함",
+#         between_contract_and_call.group(1) if between_contract_and_call else "제공안함",
+#         between_number_transfer_fee_and_sim_delivery.group(1) if between_number_transfer_fee_and_sim_delivery else "제공안함",
+#         between_nfc_sim_and_esim.group(1) if between_nfc_sim_and_esim else "제공안함",
+#         between_esim_and_support.group(1) if between_esim_and_support else "제공안함"
+#     ]
+
+# # # Example usage
+# # strSoup = "[미니게이트] [모요only] 미니 LTE 11GB+ | 8,800원 | 모요, 모두의요금제홈요금제 찾기인터넷 찾기휴대폰 찾기이벤트마이페이지홈요금제 찾기인터넷 찾기이벤트마이페이지모요ONLY월 11GB + 매일 2GB데이터 다 써도 저화질 영상 재생 가능 (3mbps)무제한무제한KT망LTE 106,326명이 선택106,326명이 선택잘못된 정보 제보잘못된 정보 제보월 8,800원4개월 이후 48,400원신청하기꼭 확인해 주세요가입 신청 월말까지 개통이 되지 않는 경우 신청서가 취소될 수 있습니다.요금제 상세 정보 요금제 이름미니게이트 | [모요only] 미니 LTE 11GB+통신사 약정없음통화무제한문자무제한통신망KT망통신 기술LTE데이터 제공량월 11GB + 매일 2GB데이터 소진시3mbps 속도로 무제한부가통화200분번호이동 수수료800원일반 유심 배송무료NFC 유심 배송지원 안 함eSIM유료(2,750원)지원모바일 핫스팟11GB 제공데이터 쉐어링미지원인터넷 결합소액 결제해외 로밍접기통신사 리뷰4.23,480개고객센터4.1개통 과정4.4개통 후 만족도4.2정란15일 전속도나 사용경험측면에서 기존에 사용하던 대형통신사와 차이를 느낄 수 없고, 멤버쉽같은부분이 아쉬울 수 있지만 요금이 저렴하기때문에 상쇄될 수 있다고 생각합니다이정17일 전문자에서는 현재 데이터 다 썼다고 나오고, 앱에서는 현재 사용중인 데이터양이 정확하게 나오는 거 같아요. 매번 오는 문자와 정보가 틀려 혼동스럽지만 서비스는 만족합니다.이*진28일 전서울지역인데 퀵배송지역이아니라는데 이벤트는 있는데 없는듯한 부분에서 조금 맘상했는데. 일반배송으로 빠르게 유심배송받았고 개통도 일사천리되었습니다. 만족합니다.더보기사은품 및 이벤트3대 마트 상품권 3만원대상: 1월 내 바로배송/바로유심으로 개통 후 유지시지급시기: 24년 4월말, 6월말요금제 개통 절차쓰던 번호로 개통할 때새 번호로 개통할 때1. 가입 신청원하는 요금제를 찾았다면 신청 버튼을 눌러 신청서를 작성해주세요. 가입 신청을 해도 기존에 사용하던 통신사는 바로 해지되지 않아요2. 정보 확인 및 유심 배송서류를 검토한 뒤 정보가 다 올바르면 유심을 발송해요. 올바르지 않은 정보가 있었다면 통신사에서 연락을 드릴 수 있어요3. 유심 받은 후 개통 진행유심을 받으셨다면 통신사 안내에 따라 개통 요청을 해주세요. 개통이 완료되면 기존에 쓰던 통신사는 이때 자동으로 해지돼요4. 새 유심으로 갈아끼면 끝기존 통신사가 해지되고 새로운 알뜰폰 유심으로 교체하면 알뜰폰 요금제 사용이 시작돼요"
+# # results = regex_extract(strSoup)
+# # print(results)
+
+
+# current_url = "https://www.moyoplan.com/plans/15001"
+# response = requests.get(current_url)
+# soup = BeautifulSoup(response.text, 'html.parser')
+# strSoup = soup.get_text()
 # results = regex_extract(strSoup)
-# print(results)
-
-
-current_url = "https://www.moyoplan.com/plans/15001"
-response = requests.get(current_url)
-soup = BeautifulSoup(response.text, 'html.parser')
-strSoup = soup.get_text()
-results = regex_extract(strSoup)
-print (strSoup)
+# print (strSoup)
