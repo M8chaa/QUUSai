@@ -502,11 +502,10 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 try:
                     pattern = r"서버에 문제가 생겼어요"
                     # Searching for the pattern in the text
-                    match = re.search(pattern, strSoup)
+                    match = re.search(pattern, html)
                     result = match.group() if match else ""
                 except Exception as e:
                     st.write(f"An Error Occurred: {e}")
-                    return strSoup
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
@@ -680,11 +679,11 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 formatHeaderTrim(sheet_id, 0)
                 sheetUrl = str(webviewlink)
                 st.link_button("Go to see", sheetUrl)
-                error = moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+                moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
                 autoResizeColumns(sheet_id, 0)
                 st.write("Process Completed")
         except Exception as e:
-            st.write(f"An Error Occurred: {e}, {error}")
+            st.write(f"An Error Occurred: {e}")
 
 
 # Outside the sidebar, render download buttons
