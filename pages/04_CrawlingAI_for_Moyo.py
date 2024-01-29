@@ -494,7 +494,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 soup = BeautifulSoup(html, 'html.parser')
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
-                st.write(strSoup)
                 # 번호이동_수수료 = driver.find_element(By.XPATH, "//span[contains(text(), '번호이동 수수료')]/following-sibling::span").text
                 # 일반유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), '일반 유심 배송')]/following-sibling::span").text 
                 # NFC유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), 'NFC 유심 배송')]/following-sibling::span").text 
@@ -506,7 +505,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     match = re.search(pattern, strSoup)
                     result = match.group() if match else ""
                 except Exception as e:
-                    st.write(f"An Error Occurred: {e}, {strSoup}")
+                    st.write(f"An Error Occurred: {e}")
+                    return strSoup
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
@@ -680,11 +680,11 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 formatHeaderTrim(sheet_id, 0)
                 sheetUrl = str(webviewlink)
                 st.link_button("Go to see", sheetUrl)
-                moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
+                error = moyocrawling(url1, url2, export_to_google_sheet, sheet_id)
                 autoResizeColumns(sheet_id, 0)
                 st.write("Process Completed")
         except Exception as e:
-            st.write(f"An Error Occurred: {e}")
+            st.write(f"An Error Occurred: {e}, {error}")
 
 
 # Outside the sidebar, render download buttons
