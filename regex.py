@@ -1,3 +1,8 @@
+import re
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
 # # Testing the regex pattern with the provided text
 # import re
 
@@ -173,7 +178,7 @@
 # # extracted_info = match.groups() if match else tuple([None] * 11)
 # extracted_info = regex_extract(sample_text3)
 # print(extracted_info)
-import re
+# import re
 text = "알뜰폰 요금제 | 모요, 모두의요금제홈요금제 찾기인터넷 찾기휴대폰 찾기이벤트마이페이지서버에 문제가 생겼어요문제를 해결하기 위해 최선을 다하고 있어요. 잠시 후 다시 확인해주세요.다시 시도하기"
 pattern = r"서버에 문제가 생겼어요"
 
@@ -184,11 +189,6 @@ match = re.search(pattern, text)
 result = match.group() if match else "No match found"
 
 print(result)
-
-# import re
-# import requests
-# from bs4 import BeautifulSoup
-# from urllib.parse import urljoin
 
 # def regex_extract(strSoup):
 #     # Existing patterns

@@ -142,7 +142,7 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
                 "startRowIndex": 0,
                 "endRowIndex": 1,
                 "startColumnIndex": 0,
-                "endColumnIndex": 17
+                "endColumnIndex": 20
             },
             "cell": {
                 "userEnteredFormat": {
@@ -160,18 +160,38 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
     requests.append(header_format_request)
 
     # Trimming columns if necessary
-    if totalColumns > 17:
+    if totalColumns > 20:
         trim_columns_request = {
             "deleteDimension": {
                 "range": {
                     "sheetId": sheetId,
                     "dimension": "COLUMNS",
-                    "startIndex": 17,
+                    "startIndex": 20,
                     "endIndex": totalColumns
                 }
             }
         }
         requests.append(trim_columns_request)
+
+    number_of_rows_to_freeze = 1  # Change this to the number of rows you want to freeze
+
+    # Request body to freeze rows
+    first_row_freeze_request = {
+        "requests": [
+            {
+                "updateSheetProperties": {
+                    "properties": {
+                        "sheetId": 0,  # Change if your sheet ID is different
+                        "gridProperties": {
+                            "frozenRowCount": number_of_rows_to_freeze
+                        }
+                    },
+                    "fields": "gridProperties.frozenRowCount"
+                }
+            }
+        ]
+    }
+    requests.append(first_row_freeze_request)
 
     body = {"requests": requests}
 
@@ -363,8 +383,13 @@ def regex_extract(strSoup):
     # New patterns
     between_contract_and_call_pattern = r"(?<=통신사 약정)(.*?)(?=통화|펼쳐보기)"
     between_number_transfer_fee_and_sim_delivery_pattern = r"(?<=번호이동 수수료)(.*?)(?=일반 유심 배송)"
+    between_sim_delivery_pattern_and_nfc_sim = r"(?<=일반 유심 배송)(.*?)(?=NFC 유심 배송)"
     between_nfc_sim_and_esim_pattern = r"(?<=NFC 유심 배송)(.*?)(?=eSIM)"
     between_esim_and_support_pattern = r"(?<=eSIM)(.*?)(?=지원(?! 안함| 안 함))"
+
+    # New patterns for 지원 and 미지원
+    pattern_support_with_boundary = r'지원\s*(.*?)\s*미지원'
+    pattern_no_support_with_boundary = r'미지원\s*(.*?)\s*접기'
 
     # Extracting information using existing patterns
     mvno = re.search(mvno_pattern, strSoup)
@@ -382,8 +407,35 @@ def regex_extract(strSoup):
     # Extracting information using new patterns
     between_contract_and_call = re.search(between_contract_and_call_pattern, strSoup)
     between_number_transfer_fee_and_sim_delivery = re.search(between_number_transfer_fee_and_sim_delivery_pattern, strSoup)
+    between_sim_delievery_and_nfc_sim = re.search(between_sim_delivery_pattern_and_nfc_sim, strSoup)
     between_nfc_sim_and_esim = re.search(between_nfc_sim_and_esim_pattern, strSoup)
     between_esim_and_support = re.search(between_esim_and_support_pattern, strSoup)
+
+    # Extracting 지원 and 미지원 information
+    text_support_boundary = re.search(pattern_support_with_boundary, strSoup, re.DOTALL)
+    text_no_support_boundary = re.search(pattern_no_support_with_boundary, strSoup, re.DOTALL)
+
+    # Function to format the extracted text based on the user's requirements
+    def format_extracted_categories(matches, categories):
+        formatted = []
+        for category in categories:
+            for match in matches:
+                if category in match:
+                    start_index = match.find(category)
+                    end_index = min([match.find(cat, start_index + 1) for cat in categories if cat in match[start_index + 1:]] + [len(match)])
+                    additional_text = match[start_index + len(category):end_index].strip()
+                    formatted_text = f"{category}: {additional_text}" if additional_text else category
+                    formatted.append(formatted_text)
+                    break
+        return ', '.join(formatted)
+
+    # Categories for 지원 and 미지원
+    categories_support = ['모바일 핫스팟', '소액 결제', '해외 로밍', '인터넷 결합', '데이터 쉐어링']
+    categories_no_support = ['인터넷 결합', '데이터 쉐어링']
+
+    # Formatting the support and no support texts
+    formatted_text_support = format_extracted_categories([text_support_boundary.group(1) if text_support_boundary else ""], categories_support)
+    formatted_text_no_support = format_extracted_categories([text_no_support_boundary.group(1) if text_no_support_boundary else ""], categories_no_support)
 
     return [
         mvno.group(1) if mvno else "제공안함", 
@@ -399,8 +451,11 @@ def regex_extract(strSoup):
         discount_info.group(1) if discount_info else "제공안함",
         between_contract_and_call.group(1) if between_contract_and_call else "제공안함",
         between_number_transfer_fee_and_sim_delivery.group(1) if between_number_transfer_fee_and_sim_delivery else "제공안함",
+        between_sim_delievery_and_nfc_sim.group(1) if between_sim_delievery_and_nfc_sim else "제공안함",
         between_nfc_sim_and_esim.group(1) if between_nfc_sim_and_esim else "제공안함",
-        between_esim_and_support.group(1) if between_esim_and_support else "제공안함"
+        between_esim_and_support.group(1) if between_esim_and_support else "제공안함",
+        formatted_text_support if formatted_text_support else "제공안함",
+        formatted_text_no_support if formatted_text_no_support else "제공안함"
     ]
 
 def regex_extract_for_sheet(strSoup):
@@ -519,7 +574,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
 
                 else:
                     planUrl = str(current_url)
-                    data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
+                    data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
                     data.append(f"모요 {result}")
                 # Start a thread for Google Sheets update
                 thread = threading.Thread(target=update_google_sheet, args=(data, sheet_id))
@@ -677,7 +732,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 export_to_google_sheet = True
                 sheet_id, webviewlink = create_new_google_sheet(url1, url2)
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "NFC 유심 배송", "eSim", "종료 여부"]
+                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
                 }
                 pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
                 formatHeaderTrim(sheet_id, 0)
