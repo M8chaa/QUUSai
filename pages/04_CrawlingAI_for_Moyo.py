@@ -199,6 +199,102 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
 
     return response
 
+def create_and_format_google_sheet(url1, url2):
+    # Extracting the necessary parts from the URLs
+    part1 = url1.split('/')
+    part2 = url2.split('/')
+    number1 = int(part1[-1])
+    number2 = int(part2[-1])
+
+    # Connect to Google Drive and create a new sheet
+    serviceInstanceDrive = googleDriveConnect()
+    name = f'모요 요금제 {number1} ~ {number2}'
+    file_metadata = {
+        'name': name,
+        'mimeType': 'application/vnd.google-apps.spreadsheet'
+    }
+    file = serviceInstanceDrive.files().create(body=file_metadata, fields='id, webViewLink').execute()
+    sheet_id = file.get('id')
+    sheet_web_view_link = file.get('webViewLink')
+
+    # Set permissions for the sheet
+    permission = {
+        'type': 'anyone',
+        'role': 'writer'
+    }
+    serviceInstanceDrive.permissions().create(fileId=sheet_id, body=permission).execute()
+
+    # Now format the header of the newly created sheet
+    serviceInstanceSheets = googleSheetConnect()
+    
+    # Retrieve sheet metadata
+    sheet_metadata = serviceInstanceSheets.spreadsheets().get(spreadsheetId=sheet_id).execute()
+    sheet = sheet_metadata.get('sheets', '')[0]  # Assuming first sheet
+    totalColumns = sheet.get('properties', {}).get('gridProperties', {}).get('columnCount', 0)
+    sheetId = sheet.get('properties', {}).get('sheetId', 0)
+
+    requests = []
+
+    # Formatting header row
+    header_format_request = {
+        "repeatCell": {
+            "range": {
+                "sheetId": sheetId,
+                "startRowIndex": 0,
+                "endRowIndex": 1,
+                "startColumnIndex": 0,
+                "endColumnIndex": 20
+            },
+            "cell": {
+                "userEnteredFormat": {
+                    "backgroundColor": {
+                        "red": 0.9, "green": 0.9, "blue": 0.9
+                    },
+                    "textFormat": {
+                        "bold": True
+                    }
+                }
+            },
+            "fields": "userEnteredFormat(backgroundColor,textFormat)"
+        }
+    }
+    requests.append(header_format_request)
+
+    # Trimming columns if necessary
+    if totalColumns > 20:
+        trim_columns_request = {
+            "deleteDimension": {
+                "range": {
+                    "sheetId": sheetId,
+                    "dimension": "COLUMNS",
+                    "startIndex": 20,
+                    "endIndex": totalColumns
+                }
+            }
+        }
+        requests.append(trim_columns_request)
+
+    # Freezing the first row
+    first_row_freeze_request = {
+        "updateSheetProperties": {
+            "properties": {
+                "sheetId": sheetId,  # Use the variable sheetId instead of hardcoding
+                "gridProperties": {
+                    "frozenRowCount": 1
+                }
+            },
+            "fields": "gridProperties.frozenRowCount"
+        }
+    }
+    requests.append(first_row_freeze_request)
+
+    # Sending the batchUpdate request
+    body = {"requests": requests}
+    serviceInstanceSheets.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
+
+    return sheet_id, sheet_web_view_link
+
+
 def autoResizeColumns(sheet_id, sheet_index=0):
     serviceInstance = googleSheetConnect()
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
@@ -548,12 +644,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
                 strSoup = soup.get_text()
-                st.write(strSoup)
                 expired = "서비스 중입니다"
-                # 번호이동_수수료 = driver.find_element(By.XPATH, "//span[contains(text(), '번호이동 수수료')]/following-sibling::span").text
-                # 일반유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), '일반 유심 배송')]/following-sibling::span").text 
-                # NFC유심배송 = driver.find_element(By.XPATH, "//span[contains(text(), 'NFC 유심 배송')]/following-sibling::span").text 
-                # eSim = driver.find_element(By.XPATH, "//span[contains(text(), 'eSim')]/following-sibling::span").text 
+
             if export_to_google_sheet:
                 try:
                     pattern = r"서버에 문제가 생겼어요"
@@ -563,7 +655,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 except Exception as e:
                     st.write(f"An Error Occurred: {e}")
                 if result is "":
-                    st.write(strSoup)
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
                     data = [planUrl] + regex_formula + [expired]
@@ -583,112 +674,6 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     for thread in threads:
             thread.join()
     driver.close()
-
-    # Ensure all threads complete
-    
-
-
-# def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
-#     part1 = url1.split('/')
-#     part2 = url2.split('/')
-#     try:
-#         number1 = int(part1[-1])
-#         number2 = int(part2[-1])
-#     except ValueError:
-#         return None
-#     options = ChromeOptions()
-
-#     # option設定を追加（設定する理由はメモリの削減）
-#     options.add_argument("--headless")
-#     options.add_argument('--disable-gpu')
-#     options.add_argument('--no-sandbox')
-#     options.add_argument('--disable-dev-shm-usage')
-#     options.add_argument('--disable-extensions')
-#     prefs = {"profile.managed_default_content_settings.images": 2}
-#     options.add_experimental_option("prefs", prefs)
-
-
-#     # webdriver_managerによりドライバーをインストール
-#     # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
-#     CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-#     service = fs.Service(CHROMEDRIVER)
-#     driver = webdriver.Chrome(
-#                               options=options,
-#                               service=service
-#                              )
-
-#     if 'download_buttons' not in st.session_state:
-#         st.session_state['download_buttons'] = []
-
-#     for start_num in range(number1, number2 + 1, 50):
-#         end_num = min(start_num + 49, number2)
-        
-#         for i in range(start_num, end_num + 1):
-#             # Construct the URL by replacing the last part with the current number
-#             current_url = '/'.join(part1[:-1] + [str(i)])
-            
-#             # Make an HTTP request to the current URL
-#                 # URLで指定したwebページを開く
-#             driver.get(current_url)
-#             alert_present = False
-#             try:
-#                 WebDriverWait(driver, 10).until(EC.alert_is_present())
-#                 alert = driver.switch_to.alert
-#                 alert.accept()  # Dismiss the alert
-#                 alert_present = True
-#             except (NoAlertPresentException, TimeoutException):
-#                 pass  # No alert was present
-
-#             driver.refresh()
-#             html = driver.page_source
-#             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-#             if alert_present:
-#                 response = requests.get(current_url)
-#                 if response.status_code == 200:
-#                 # Parse the HTML content with BeautifulSoup
-#                     soup = BeautifulSoup(response.text, 'html.parser').get_text()
-#                 strSoup = str(soup)
-#                 expired = "종료 되었습니다"
-#             else: 
-#                 strSoup = str(html)
-#                 expired = "서비스 중입니다"
-#                 print(f"Chrome Driver Initiated {i}")
-
-#             if export_to_google_sheet:
-#                 regex_formula = regex_extract(strSoup)
-#                 planUrl = str(current_url)
-#                 data = [planUrl]
-#                 for regex in regex_formula:
-#                     data.append(regex)
-#                 data.append(expired)
-#                 pushToSheet(data,sheet_id, range = 'Sheet1!A:B')
-
-#     driver.close()
-            
-            # # Check if the request was successful (status code 200)
-            # if response.status_code == 200:
-            #     # Parse the HTML content with BeautifulSoup
-            #     soup = BeautifulSoup(response.text, 'html.parser').get_text()
-            #     if export_to_google_sheet:
-            #         strSoup = str(soup)
-            #         regex_formula = regex_extract(strSoup)
-            #         planUrl = str(current_url)
-            #         data = [planUrl]
-            #         for regex in regex_formula:
-            #             data.append(regex)
-            #         # data = [planUrl, sheetValue]
-            #         pushToSheet(data, sheet_id, range='Sheet1!A:B')
-            #     crawledText += str(soup) + '\n\n'  # Append data with two newlines
-            # else:
-            #     crawledText += current_url + " failed" + '\n\n'  # Append failure message with two newlines
-        
-        # if not export_to_google_sheet:
-        #     button_data = {
-        #         'label': f"Text File ~ {end_num}",
-        #         'data': crawledText.encode('utf-8'),
-        #         'file_name': f"Text_File_{end_num}.txt"
-        #     }
-        #     st.session_state['download_buttons'].append(button_data)
 
 
 
