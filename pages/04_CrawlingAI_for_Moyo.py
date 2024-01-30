@@ -428,7 +428,7 @@ def regex_extract(strSoup):
 
     # Categories for 지원 and 미지원
     categories_support = ['모바일 핫스팟', '소액 결제', '해외 로밍', '인터넷 결합', '데이터 쉐어링']
-    categories_no_support = ['인터넷 결합', '데이터 쉐어링']
+    categories_no_support = ['모바일 핫스팟', '소액 결제', '해외 로밍', '인터넷 결합', '데이터 쉐어링']
 
     # Formatting the support and no support texts
     formatted_text_support = format_extracted_categories([text_support_boundary.group(1) if text_support_boundary else ""], categories_support)
