@@ -558,11 +558,11 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     pattern = r"서버에 문제가 생겼어요"
                     # Searching for the pattern in the text
                     match = re.search(pattern, strSoup)
-                    st.write(strSoup)
                     result = match.group() if match else ""
                 except Exception as e:
                     st.write(f"An Error Occurred: {e}")
                 if result is "":
+                    st.write(strSoup)
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
                     data = [planUrl] + regex_formula + [expired]
