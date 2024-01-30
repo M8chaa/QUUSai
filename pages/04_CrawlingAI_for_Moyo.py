@@ -177,20 +177,17 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
 
     # Request body to freeze rows
     first_row_freeze_request = {
-        "requests": [
-            {
-                "updateSheetProperties": {
-                    "properties": {
-                        "sheetId": 0,  # Change if your sheet ID is different
-                        "gridProperties": {
-                            "frozenRowCount": number_of_rows_to_freeze
-                        }
-                    },
-                    "fields": "gridProperties.frozenRowCount"
+        "updateSheetProperties": {
+            "properties": {
+                "sheetId": sheetId,  # Use the variable sheetId instead of hardcoding
+                "gridProperties": {
+                    "frozenRowCount": number_of_rows_to_freeze
                 }
-            }
-        ]
+            },
+            "fields": "gridProperties.frozenRowCount"
+        }
     }
+
     requests.append(first_row_freeze_request)
 
     body = {"requests": requests}
@@ -458,7 +455,7 @@ def regex_extract(strSoup):
         formatted_text_no_support if formatted_text_no_support else "제공안함"
     ]
 
-def regex_extract_for_sheet(strSoup):
+def regex_extract_for_sheet():
     mvno_pattern = r"\[(.*?)\]"
     plan_name_pattern = r"\]\s*(.*?)\s*\|"
     monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
