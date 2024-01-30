@@ -386,7 +386,7 @@ def regex_extract(strSoup):
 
     # New patterns for 지원 and 미지원
     pattern_support_with_boundary = r'지원\s*(.*?)\s*미지원'
-    pattern_no_support_with_boundary = r'미지원\s*(.*?)\s*접기'
+    pattern_no_support_with_boundary = r'미지원\s*(.*?)\s*(접기|기본)'
 
     # Extracting information using existing patterns
     mvno = re.search(mvno_pattern, strSoup)
