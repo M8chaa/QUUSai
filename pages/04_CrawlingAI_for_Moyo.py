@@ -475,6 +475,111 @@ def regex_extract_for_sheet():
 def update_google_sheet(data, sheet_id):
     pushToSheet(data, sheet_id, range='Sheet1!A:B')
 
+# def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
+#     part1 = url1.split('/')
+#     part2 = url2.split('/')
+#     try:
+#         number1 = int(part1[-1])
+#         number2 = int(part2[-1])
+#     except ValueError:
+#         return None
+#     options = ChromeOptions()
+
+#     # option設定を追加（設定する理由はメモリの削減）
+#     options.add_argument("--headless")
+#     options.add_argument('--disable-gpu')
+#     options.add_argument('--no-sandbox')
+#     options.add_argument('--disable-dev-shm-usage')
+#     options.add_argument('--disable-extensions')
+
+
+#     # webdriver_managerによりドライバーをインストール
+#     # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
+#     CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+#     service = fs.Service(CHROMEDRIVER)
+#     driver = webdriver.Chrome(
+#                               options=options,
+#                               service=service
+#                              )
+
+#     # driver.set_window_size(1920, driver.execute_script("return document.body.parentNode.scrollWidth"))
+
+
+
+#     if 'download_buttons' not in st.session_state:
+#         st.session_state['download_buttons'] = []
+
+#     threads = []
+#     for start_num in range(number1, number2 + 1, 50):
+#         end_num = min(start_num + 49, number2)
+
+#         for i in range(start_num, end_num + 1):
+#             current_url = '/'.join(part1[:-1] + [str(i)])
+#             driver.get(current_url)
+
+#             try:
+#                 WebDriverWait(driver, 10).until(EC.alert_is_present())
+#                 driver.switch_to.alert.accept()
+#                 alert_present = True
+#             except (NoAlertPresentException, TimeoutException):
+#                 alert_present = False
+
+#             if alert_present:
+#                 response = requests.get(current_url)
+#                 if response.status_code == 200:
+#                     soup = BeautifulSoup(response.text, 'html.parser')
+#                     strSoup = soup.get_text()
+#                     expired = "종료 되었습니다"
+#                 # 번호이동_수수료 = "제공안함"
+#                 # 일반유심배송 = "제공안함"
+#                 # NFC유심배송 = "제공안함"
+#                 # eSim = "제공안함"
+
+#             else: 
+#                 driver.refresh()
+#                 try: 
+#                     WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+#                     # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+#                     # ActionChains(driver).move_to_element(button).click(button).perform()
+#                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+#                     driver.execute_script("arguments[0].click();", button)
+#                     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+#                 except:
+#                     pass
+#                 html = driver.page_source
+#                 soup = BeautifulSoup(html, 'html.parser')
+#                 strSoup = soup.get_text()
+#                 expired = "서비스 중입니다"
+
+#             if export_to_google_sheet:
+#                 try:
+#                     pattern = r"서버에 문제가 생겼어요"
+#                     # Searching for the pattern in the text
+#                     match = re.search(pattern, strSoup)
+#                     result = match.group() if match else ""
+#                 except Exception as e:
+#                     st.write(f"An Error Occurred: {e}")
+#                 if result is "":
+#                     regex_formula = regex_extract(strSoup)
+#                     planUrl = str(current_url)
+#                     data = [planUrl] + regex_formula + [expired]
+
+
+#                     # data.extend((번호이동_수수료, 일반유심배송, NFC유심배송, eSim))
+
+#                 else:
+#                     planUrl = str(current_url)
+#                     data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
+#                     data.append(f"모요 {result}")
+#                 # Start a thread for Google Sheets update
+#                 thread = threading.Thread(target=update_google_sheet, args=(data, sheet_id))
+#                 thread.start()
+#                 threads.append(thread)  # Add the thread to the list
+
+#     for thread in threads:
+#             thread.join()
+#     driver.close()
+    
 def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
     part1 = url1.split('/')
     part2 = url2.split('/')
@@ -518,7 +623,7 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
             driver.get(current_url)
 
             try:
-                WebDriverWait(driver, 10).until(EC.alert_is_present())
+                WebDriverWait(driver, 1).until(EC.alert_is_present())
                 driver.switch_to.alert.accept()
                 alert_present = True
             except (NoAlertPresentException, TimeoutException):
@@ -530,43 +635,36 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                     soup = BeautifulSoup(response.text, 'html.parser')
                     strSoup = soup.get_text()
                     expired = "종료 되었습니다"
-                # 번호이동_수수료 = "제공안함"
-                # 일반유심배송 = "제공안함"
-                # NFC유심배송 = "제공안함"
-                # eSim = "제공안함"
 
             else: 
-                driver.refresh()
-                try: 
-                    WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    # ActionChains(driver).move_to_element(button).click(button).perform()
-                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    driver.execute_script("arguments[0].click();", button)
-                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
-                except:
-                    pass
-                html = driver.page_source
-                soup = BeautifulSoup(html, 'html.parser')
-                strSoup = soup.get_text()
-                expired = "서비스 중입니다"
-
-            if export_to_google_sheet:
                 try:
+                    html = driver.page_source
+                    soup = BeautifulSoup(html, 'html.parser')
+                    strSoup = soup.get_text()
                     pattern = r"서버에 문제가 생겼어요"
                     # Searching for the pattern in the text
                     match = re.search(pattern, strSoup)
                     result = match.group() if match else ""
                 except Exception as e:
                     st.write(f"An Error Occurred: {e}")
+                driver.refresh()
+                if result is "":
+                    WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    # ActionChains(driver).move_to_element(button).click(button).perform()
+                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    driver.execute_script("arguments[0].click();", button)
+                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                html = driver.page_source
+                soup = BeautifulSoup(html, 'html.parser')
+                strSoup = soup.get_text()
+                expired = "서비스 중입니다"
+
+            if export_to_google_sheet:
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(current_url)
                     data = [planUrl] + regex_formula + [expired]
-
-
-                    # data.extend((번호이동_수수료, 일반유심배송, NFC유심배송, eSim))
-
                 else:
                     planUrl = str(current_url)
                     data = [ planUrl, "-", "-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
