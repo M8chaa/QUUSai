@@ -628,7 +628,8 @@ def moyocrawling(url1, url2, export_to_google_sheet, sheet_id):
                 alert_present = True
             except (NoAlertPresentException, TimeoutException):
                 alert_present = False
-
+            expired = None
+            result = ""
             if alert_present:
                 response = requests.get(current_url)
                 if response.status_code == 200:
