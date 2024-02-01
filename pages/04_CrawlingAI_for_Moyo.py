@@ -814,17 +814,17 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         st.session_state['moyocrawling_error'] = None
         try:
             export_to_google_sheet = True
-            sheet_id, webviewlink = create_new_google_sheet(url1, url2)
             headers = {
                 'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
             }
-            pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-            formatHeaderTrim(sheet_id, 0)
-            sheetUrl = str(webviewlink)
-            st.link_button("Go to see", sheetUrl)
-            threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
-            autoResizeColumns(sheet_id, 0)
             with st.spinner("Processing for Google Sheet..."):
+                sheet_id, webviewlink = create_new_google_sheet(url1, url2)
+                pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+                formatHeaderTrim(sheet_id, 0)
+                sheetUrl = str(webviewlink)
+                st.link_button("Go to see", sheetUrl)
+                threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
+                autoResizeColumns(sheet_id, 0)
                 while not st.session_state.get('moyocrawling_completed', False):
                     time.sleep(0.1)
 
