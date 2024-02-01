@@ -542,10 +542,14 @@ def fetch_data(driver, url_queue, data_queue):
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
-                    pattern = r"서버에 문제가 생겼어요"
+                    pattern1 = r"서버에 문제가 생겼어요"
                     pattern2 = r"존재하지 않는 요금제에요"
-                    # Searching for the pattern in the text
-                    match = re.search(pattern2, strSoup)
+
+                    # Combine patterns with | which acts as logical OR
+                    combined_pattern = pattern1 + "|" + pattern2
+
+                    # Searching for the combined pattern in the text
+                    match = re.search(combined_pattern, strSoup)
                     result = match.group() if match else ""
                 except Exception as e:
                     st.write(f"An Error Occurred: {e}")
@@ -574,10 +578,13 @@ def fetch_data(driver, url_queue, data_queue):
             # Put the processed data into the data queue
             data_queue.put(data)
             url_queue.task_done()
+    except Exception as e:
+        # Log the exception or handle it as needed
+        st.write(f"An error occurred when fetching data of {url}: {e}")
     finally:
         driver.quit()
 
-PER_MINUTE_LIMIT = 60
+PER_MINUTE_LIMIT = 300
 @sleep_and_retry
 @limits(calls=PER_MINUTE_LIMIT, period=60)
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
@@ -590,6 +597,7 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id):
             pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
             # time.sleep(1)
         data_queue.task_done()
+
 
 def moyocrawling(url1, url2, sheet_id):
     part1 = url1.split('/')
@@ -627,7 +635,7 @@ def moyocrawling(url1, url2, sheet_id):
 
     # Start data fetching threads
     fetch_threads = []
-    for _ in range(2):
+    for _ in range(3):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
@@ -649,6 +657,7 @@ def moyocrawling(url1, url2, sheet_id):
     # Wait for update threads to finish
     for thread in update_threads:
         thread.join()
+    st.session_state['moyocrawling_completed'] = True
 
 
     
@@ -787,23 +796,31 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
     if gs_button_pressed:
+        st.session_state['moyocrawling_completed'] = False
         try:
-            with st.spinner("Processing for Google Sheet..."):
-                export_to_google_sheet = True
-                sheet_id, webviewlink = create_new_google_sheet(url1, url2)
-                headers = {
-                    'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
-                }
-                pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-                formatHeaderTrim(sheet_id, 0)
-                sheetUrl = str(webviewlink)
-                st.link_button("Go to see", sheetUrl)
-                moyocrawling(url1, url2, sheet_id)
-                autoResizeColumns(sheet_id, 0)
-                st.write("Process Completed")
+            # with st.spinner("Processing for Google Sheet..."):
+            export_to_google_sheet = True
+            sheet_id, webviewlink = create_new_google_sheet(url1, url2)
+            headers = {
+                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+            }
+            pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+            formatHeaderTrim(sheet_id, 0)
+            sheetUrl = str(webviewlink)
+            # st.link_button("Go to see", sheetUrl)
+            # moyocrawling(url1, url2, sheet_id)
+            threading.Thread(target=moyocrawling, args=(url1, url2, export_to_google_sheet, sheet_id)).start()
+            autoResizeColumns(sheet_id, 0)
+            placeholder = st.empty()
+            while not st.session_state.get('moyocrawling_completed', False):
+                with placeholder.container():
+                    st.spinner("Processing for Google Sheet...")
+                    time.sleep(0.1)  # Check every 100ms
+            placeholder.empty()
+            st.link_button("Go to see", sheetUrl)
+            st.write("Process Completed")
         except Exception as e:
             st.write(f"An Error Occurred: {e}")
-
 
 # Outside the sidebar, render download buttons
 for button in st.session_state.get('download_buttons', []):
