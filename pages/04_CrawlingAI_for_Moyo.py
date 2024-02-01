@@ -796,7 +796,9 @@ with st.sidebar:
 
 def moyocrawling_wrapper(url1, url2, sheet_id):
     try:
+        st.write("starting moyocrawling...")
         moyocrawling(url1, url2, sheet_id)
+        st.write("moyocrawling ended")
         st.session_state['moyocrawling_completed'] = True
         st.session_state['moyocrawling_error'] = None
     except Exception as e:
