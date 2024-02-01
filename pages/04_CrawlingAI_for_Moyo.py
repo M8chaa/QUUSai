@@ -35,7 +35,7 @@ import os
 from queue import Queue
 import time
 from ratelimit import limits, sleep_and_retry
-
+import traceback
 
 st.set_page_config(
     page_title="CrawlingAI_for_Moyo",
@@ -788,6 +788,16 @@ with st.sidebar:
         else:
             st.warning("Please enter at least one end parameter.")
 
+def moyocrawling_wrapper(url1, url2, sheet_id):
+    try:
+        moyocrawling(url1, url2, sheet_id)
+        st.session_state['moyocrawling_completed'] = True
+        st.session_state['moyocrawling_error'] = None
+    except Exception as e:
+        error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
+        st.session_state['moyocrawling_completed'] = True
+        st.session_state['moyocrawling_error'] = error_message
+
 
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
     url1 = st.session_state.get('url1')
@@ -797,19 +807,20 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
     if gs_button_pressed:
         st.session_state['moyocrawling_completed'] = False
+        st.session_state['moyocrawling_error'] = None
         try:
             # with st.spinner("Processing for Google Sheet..."):
             export_to_google_sheet = True
             sheet_id, webviewlink = create_new_google_sheet(url1, url2)
             headers = {
-                'values': ["url", "MVNO", "요금제명", "월요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+                'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
             }
             pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
             formatHeaderTrim(sheet_id, 0)
             sheetUrl = str(webviewlink)
-            # st.link_button("Go to see", sheetUrl)
+            st.link_button("Go to see", sheetUrl)
             # moyocrawling(url1, url2, sheet_id)
-            threading.Thread(target=moyocrawling, args=(url1, url2, export_to_google_sheet, sheet_id)).start()
+            threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
             autoResizeColumns(sheet_id, 0)
             placeholder = st.empty()
             while not st.session_state.get('moyocrawling_completed', False):
@@ -817,8 +828,10 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                     st.spinner("Processing for Google Sheet...")
                     time.sleep(0.1)  # Check every 100ms
             placeholder.empty()
-            st.link_button("Go to see", sheetUrl)
-            st.write("Process Completed")
+            if st.session_state.get('moyocrawling_error'):
+                st.write(st.session_state['moyocrawling_error'])
+            else:
+                st.write("Process Completed")
         except Exception as e:
             st.write(f"An Error Occurred: {e}")
 
