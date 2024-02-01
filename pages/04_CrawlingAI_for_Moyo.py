@@ -557,7 +557,7 @@ def fetch_data(driver, url_queue, data_queue):
                     result = match.group() if match else ""
                 except Exception as e:
                     error_message = f"An error occurred when fetching data of: {e}"
-                    st.session_state['error_messages'].append(error_message)
+                    error_queue.put(error_message)
                 driver.refresh()
                 if result is "":
                     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
@@ -586,7 +586,7 @@ def fetch_data(driver, url_queue, data_queue):
     except Exception as e:
         # Log the exception or handle it as needed
         error_message = f"An error occurred when fetching data of {url}: {e}"
-        st.session_state['error_messages'].append(error_message)
+        error_queue.put(error_message)
     finally:
         driver.quit()
 
@@ -604,7 +604,7 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id):
             except Exception as e:
                 error_message = f"An error occurred while updating the sheet: {e}"
                 # Handle the error as needed (e.g., retry, log, notify)
-                st.session_state['error_messages'].append(error_message)
+                error_queue.put(error_message)
 
             finally:
                 data_queue.task_done()
