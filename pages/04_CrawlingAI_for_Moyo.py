@@ -33,6 +33,9 @@ from streamlit_extras.row import row
 from Google import Create_Service
 import os
 from queue import Queue
+import time
+
+
 
 st.set_page_config(
     page_title="CrawlingAI_for_Moyo",
@@ -520,7 +523,7 @@ def fetch_data(driver, url_queue, data_queue):
             driver.get(url)
 
             try:
-                WebDriverWait(driver, 1).until(EC.alert_is_present())
+                WebDriverWait(driver, 3).until(EC.alert_is_present())
                 driver.switch_to.alert.accept()
                 alert_present = True
             except (NoAlertPresentException, TimeoutException):
@@ -547,7 +550,7 @@ def fetch_data(driver, url_queue, data_queue):
                     st.write(f"An Error Occurred: {e}")
                 driver.refresh()
                 if result is "":
-                    WebDriverWait(driver, 3).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                     # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     # ActionChains(driver).move_to_element(button).click(button).perform()
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
@@ -581,6 +584,7 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id):
         with sheet_update_lock:
             # Update Google Sheet with processed_data
             pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
+            time.sleep(1)
         data_queue.task_done()
 
 def moyocrawling(url1, url2, sheet_id):
