@@ -570,7 +570,7 @@ def fetch_data(driver, url_queue, data_queue):
                 else:
                     planUrl = str(url)
                     data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
-                    data.append(f"모요 {result}")
+                    data.append(f"{result}")
             # Put the processed data into the data queue
             data_queue.put(data)
             url_queue.task_done()
