@@ -114,18 +114,20 @@ def create_new_google_sheet(url1, url2):
 
 
 def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
-    serviceInstance = googleSheetConnect()
-    body = {
-        'values': [data]
-    }
-    result = serviceInstance.spreadsheets().values().append(
-        spreadsheetId=sheet_id,
-        range=range,
-        valueInputOption='USER_ENTERED',  # or 'RAW'
-        body=body
-    ).execute()
+    try:
+        serviceInstance = googleSheetConnect()
+        body = {'values': [data]}
+        result = serviceInstance.spreadsheets().values().append(
+            spreadsheetId=sheet_id,
+            range=range,
+            valueInputOption='USER_ENTERED',  # or 'RAW'
+            body=body
+        ).execute()
+        return result
+    except Exception as e:
+        # Re-raise the exception to be caught in the calling function
+        raise Exception(f"Failed to push data to sheet: {e}")
 
-    return result
 
 def formatHeaderTrim(sheet_id, sheet_index=0):
     serviceInstance = googleSheetConnect()
@@ -584,7 +586,7 @@ def fetch_data(driver, url_queue, data_queue):
     finally:
         driver.quit()
 
-PER_MINUTE_LIMIT = 300
+PER_MINUTE_LIMIT = 60
 @sleep_and_retry
 @limits(calls=PER_MINUTE_LIMIT, period=60)
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
@@ -593,10 +595,13 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id):
         if processed_data is None:  # Sentinel value to indicate completion
             break
         with sheet_update_lock:
-            # Update Google Sheet with processed_data
-            pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
-            # time.sleep(1)
-        data_queue.task_done()
+            try:
+                pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
+            except Exception as e:
+                print(f"An error occurred while updating the sheet: {e}")
+                # Handle the error as needed (e.g., retry, log, notify)
+            finally:
+                data_queue.task_done()
 
 
 def moyocrawling(url1, url2, sheet_id):
@@ -635,7 +640,7 @@ def moyocrawling(url1, url2, sheet_id):
 
     # Start data fetching threads
     fetch_threads = []
-    for _ in range(6):
+    for _ in range(5):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
