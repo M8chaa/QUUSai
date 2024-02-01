@@ -489,6 +489,8 @@ def regex_extract_for_sheet():
 
     return [mvno_pattern, plan_name_pattern, monthly_fee_pattern, monthly_data_pattern, daily_data_pattern, data_speed_pattern, call_minutes_pattern, text_messages_pattern, carrier_pattern, network_type_pattern, discount_info_pattern]
 
+if 'error_messages' not in st.session_state:
+    st.session_state['error_messages'] = []
 
 def update_google_sheet(data, sheet_id):
     pushToSheet(data, sheet_id, range='Sheet1!A:B')
@@ -582,7 +584,8 @@ def fetch_data(driver, url_queue, data_queue):
             url_queue.task_done()
     except Exception as e:
         # Log the exception or handle it as needed
-        st.write(f"An error occurred when fetching data of {url}: {e}")
+        error_message = f"An error occurred when fetching data of {url}: {e}"
+        st.session_state['error_messages'].append(error_message)
     finally:
         driver.quit()
 
@@ -598,8 +601,10 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id):
             try:
                 pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
             except Exception as e:
-                print(f"An error occurred while updating the sheet: {e}")
+                error_message = f"An error occurred while updating the sheet: {e}"
                 # Handle the error as needed (e.g., retry, log, notify)
+                st.session_state['error_messages'].append(error_message)
+
             finally:
                 data_queue.task_done()
 
@@ -796,9 +801,7 @@ with st.sidebar:
 
 def moyocrawling_wrapper(url1, url2, sheet_id):
     try:
-        st.write("starting moyocrawling...")
         moyocrawling(url1, url2, sheet_id)
-        st.write("moyocrawling ended")
         st.session_state['moyocrawling_completed'] = True
         st.session_state['moyocrawling_error'] = None
     except Exception as e:
