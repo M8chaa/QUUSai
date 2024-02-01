@@ -573,7 +573,7 @@ def fetch_data(driver, url_queue, data_queue):
                     data = [planUrl] + regex_formula + [expired]
                 else:
                     planUrl = str(url)
-                    data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
+                    data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
                     data.append(f"{result}")
             # Put the processed data into the data queue
             data_queue.put(data)
@@ -635,7 +635,7 @@ def moyocrawling(url1, url2, sheet_id):
 
     # Start data fetching threads
     fetch_threads = []
-    for _ in range(3):
+    for _ in range(6):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
@@ -643,7 +643,7 @@ def moyocrawling(url1, url2, sheet_id):
 
     # Start sheet updating threads
     update_threads = []
-    for _ in range(10):
+    for _ in range(20):
         t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
         t.start()
         update_threads.append(t)
@@ -651,7 +651,7 @@ def moyocrawling(url1, url2, sheet_id):
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(10):
+    for _ in range(20):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
@@ -798,7 +798,6 @@ def moyocrawling_wrapper(url1, url2, sheet_id):
         st.session_state['moyocrawling_completed'] = True
         st.session_state['moyocrawling_error'] = error_message
 
-
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
     url1 = st.session_state.get('url1')
     url2 = st.session_state.get('url2')
@@ -809,7 +808,6 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         st.session_state['moyocrawling_completed'] = False
         st.session_state['moyocrawling_error'] = None
         try:
-            # with st.spinner("Processing for Google Sheet..."):
             export_to_google_sheet = True
             sheet_id, webviewlink = create_new_google_sheet(url1, url2)
             headers = {
@@ -819,21 +817,21 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             formatHeaderTrim(sheet_id, 0)
             sheetUrl = str(webviewlink)
             st.link_button("Go to see", sheetUrl)
-            # moyocrawling(url1, url2, sheet_id)
             threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
             autoResizeColumns(sheet_id, 0)
-            placeholder = st.empty()
-            while not st.session_state.get('moyocrawling_completed', False):
-                with placeholder.container():
-                    st.spinner("Processing for Google Sheet...")
-                    time.sleep(0.1)  # Check every 100ms
-            placeholder.empty()
+            with st.spinner("Processing for Google Sheet..."):
+                while not st.session_state.get('moyocrawling_completed', False):
+                    time.sleep(0.1)
+
             if st.session_state.get('moyocrawling_error'):
-                st.write(st.session_state['moyocrawling_error'])
+                st.error(st.session_state['moyocrawling_error'])
             else:
-                st.write("Process Completed")
+                st.success("Process Completed")
+
         except Exception as e:
-            st.write(f"An Error Occurred: {e}")
+            st.error(f"An Error Occurred: {e}")
+
+
 
 # Outside the sidebar, render download buttons
 for button in st.session_state.get('download_buttons', []):
