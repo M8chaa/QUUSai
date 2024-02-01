@@ -34,7 +34,7 @@ from Google import Create_Service
 import os
 from queue import Queue
 import time
-
+from ratelimit import limits, sleep_and_retry
 
 
 st.set_page_config(
@@ -227,7 +227,7 @@ def autoResizeColumns(sheet_id, sheet_index=0):
     sort_request = [{
         "sortRange": {
             "range": {
-                "sheetId": sheet_id,
+                "sheetId": sheetId,
                 "startRowIndex": 1,  # Assuming the first row is headers
             },
             "sortSpecs": [{
@@ -543,8 +543,9 @@ def fetch_data(driver, url_queue, data_queue):
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
                     pattern = r"서버에 문제가 생겼어요"
+                    pattern2 = r"존재하지 않는 요금제에요"
                     # Searching for the pattern in the text
-                    match = re.search(pattern, strSoup)
+                    match = re.search(pattern2, strSoup)
                     result = match.group() if match else ""
                 except Exception as e:
                     st.write(f"An Error Occurred: {e}")
@@ -576,6 +577,9 @@ def fetch_data(driver, url_queue, data_queue):
     finally:
         driver.quit()
 
+PER_MINUTE_LIMIT = 60
+@sleep_and_retry
+@limits(calls=PER_MINUTE_LIMIT, period=60)
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
     while True:
         processed_data = data_queue.get()
@@ -584,7 +588,7 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id):
         with sheet_update_lock:
             # Update Google Sheet with processed_data
             pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
-            time.sleep(1)
+            # time.sleep(1)
         data_queue.task_done()
 
 def moyocrawling(url1, url2, sheet_id):
