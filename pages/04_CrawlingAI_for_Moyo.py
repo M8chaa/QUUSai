@@ -663,6 +663,7 @@ def moyocrawling(url1, url2, sheet_id):
     for thread in update_threads:
         thread.join()
     st.session_state['moyocrawling_completed'] = True
+    autoResizeColumns(sheet_id, 0)
 
 
     
@@ -824,7 +825,6 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 sheetUrl = str(webviewlink)
                 st.link_button("Go to see", sheetUrl)
                 threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
-                autoResizeColumns(sheet_id, 0)
                 while not st.session_state.get('moyocrawling_completed', False):
                     time.sleep(0.1)
 
