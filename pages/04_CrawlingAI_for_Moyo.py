@@ -221,7 +221,19 @@ def autoResizeColumns(sheet_id, sheet_index=0):
         }
     }
     requests.append(auto_resize_request)
-
+    sort_request = [{
+        "sortRange": {
+            "range": {
+                "sheetId": sheet_id,
+                "startRowIndex": 1,  # Assuming the first row is headers
+            },
+            "sortSpecs": [{
+                "dimensionIndex": 0,
+                "sortOrder": "ASCENDING"
+            }]
+        }
+    }]
+    requests.append(sort_request)
     body = {"requests": requests}
     response = serviceInstance.spreadsheets().batchUpdate(
         spreadsheetId=sheet_id, 
@@ -475,6 +487,30 @@ def regex_extract_for_sheet():
 
 def update_google_sheet(data, sheet_id):
     pushToSheet(data, sheet_id, range='Sheet1!A:B')
+
+def sort_sheet_by_column(sheet_id, column_index=0):
+    serviceInstance = googleSheetConnect()
+
+    # Specify the sort request
+    requests = [{
+        "sortRange": {
+            "range": {
+                "sheetId": sheet_id,
+                "startRowIndex": 1,  # Assuming the first row is headers
+            },
+            "sortSpecs": [{
+                "dimensionIndex": column_index,
+                "sortOrder": "ASCENDING"
+            }]
+        }
+    }]
+
+    # Send the request
+    body = {
+        'requests': requests
+    }
+    serviceInstance.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
+
 
 def fetch_data(driver, url_queue, data_queue):
     try:
