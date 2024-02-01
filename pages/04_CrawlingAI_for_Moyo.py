@@ -13,7 +13,7 @@ from langchain.storage import LocalFileStore
 import requests
 from bs4 import BeautifulSoup
 import re
-import threading
+from threading import Thread, Event
 import streamlit as st
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -519,6 +519,8 @@ def sort_sheet_by_column(sheet_id, column_index=0):
     serviceInstance.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
 
 error_queue = Queue()
+thread_completed = Event()
+
 def fetch_data(driver, url_queue, data_queue):
     try:
         while not url_queue.empty():
@@ -668,8 +670,8 @@ def moyocrawling(url1, url2, sheet_id):
     # Wait for update threads to finish
     for thread in update_threads:
         thread.join()
-    st.session_state['moyocrawling_completed'] = True
     autoResizeColumns(sheet_id, 0)
+    thread_completed.set()
 
 
 
@@ -716,8 +718,6 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
     if gs_button_pressed:
-        st.session_state['moyocrawling_completed'] = False
-        st.session_state['moyocrawling_error'] = None
         try:
             export_to_google_sheet = True
             headers = {
@@ -732,23 +732,23 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 st.link_button("Go to see", sheetUrl)
 
                 # Start the moyocrawling process in a separate thread
-                threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
+                Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
 
                 # Wait for the completion of the moyocrawling process
-                while not error_queue.empty() or not st.session_state.get('moyocrawling_completed', False):
+                while not thread_completed.is_set():
                     if not error_queue.empty():
                         error_message = error_queue.get()
-                        st.session_state['moyocrawling_error'] = error_message
+                        st.error(error_message)
                     time.sleep(0.1)
 
-            # After the while loop ends, update the session state
-            st.session_state['moyocrawling_completed'] = True
 
-            # Display any error messages or success message
-            if st.session_state.get('moyocrawling_error'):
-                st.error(st.session_state['moyocrawling_error'])
+            if not error_queue.empty():
+            # If there are any remaining errors in the queue, display them
+                while not error_queue.empty():
+                    st.error(error_queue.get())
             else:
                 st.success("Process Completed")
+
 
 
         except Exception as e:
