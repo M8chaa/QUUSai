@@ -799,15 +799,14 @@ with st.sidebar:
         else:
             st.warning("Please enter at least one end parameter.")
 
+error_queue = Queue()
 def moyocrawling_wrapper(url1, url2, sheet_id):
     try:
         moyocrawling(url1, url2, sheet_id)
-        st.session_state['moyocrawling_completed'] = True
-        st.session_state['moyocrawling_error'] = None
     except Exception as e:
         error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
-        st.session_state['moyocrawling_completed'] = True
-        st.session_state['moyocrawling_error'] = error_message
+        error_queue.put(error_message)
+
 
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
     url1 = st.session_state.get('url1')
@@ -830,7 +829,11 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 sheetUrl = str(webviewlink)
                 st.link_button("Go to see", sheetUrl)
                 threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
-                while not st.session_state.get('moyocrawling_completed', False):
+                while not error_queue.empty() or not st.session_state.get('moyocrawling_completed', False):
+                    if not error_queue.empty():
+                        error_message = error_queue.get()
+                        st.error(error_message)
+                        st.session_state['moyocrawling_error'] = error_message
                     time.sleep(0.1)
 
             if st.session_state.get('moyocrawling_error'):
