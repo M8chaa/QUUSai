@@ -523,7 +523,7 @@ def moyocrawling(url1, url2, sheet_id):
 
     # Start data fetching threads
     fetch_threads = []
-    for _ in range(3):
+    for _ in range(6):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
