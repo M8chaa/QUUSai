@@ -458,24 +458,35 @@ PER_MINUTE_LIMIT = 60
 @limits(calls=PER_MINUTE_LIMIT, period=60)
 def update_sheet(data_queue, sheet_update_lock, sheet_id, fetching_completed):
     while not fetching_completed.is_set() or not data_queue.empty():
-        batch_data = []
         try:
-            while len(batch_data) < 10:
-                processed_data = data_queue.get(timeout=1)  # Adjust timeout as needed
-                if processed_data is None:
-                    continue  # Ignore sentinel values
-                batch_data.append(processed_data)
-                data_queue.task_done()
-        except queue.Empty:
-            pass  # Handle timeout by attempting to process collected batch data
-
-        if batch_data:
+            data = data_queue.get(timeout=1)
+            if data is None: continue  # Ignore sentinel if used
             with sheet_update_lock:
-                try:
-                    pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
-                except Exception as e:
-                    error_message = f"An error occurred while updating the sheet in batch: {e}"
-                    error_queue.put(error_message)
+                # Adjust this call according to how your pushToSheet handles data
+                pushToSheet([data], sheet_id, range='Sheet1!A:B')
+            data_queue.task_done()
+        except queue.Empty:
+            continue
+# def update_sheet(data_queue, sheet_update_lock, sheet_id, fetching_completed):
+#     while not fetching_completed.is_set() or not data_queue.empty():
+#         batch_data = []
+#         try:
+#             while len(batch_data) < 10:
+#                 processed_data = data_queue.get(timeout=1)  # Adjust timeout as needed
+#                 if processed_data is None:
+#                     continue  # Ignore sentinel values
+#                 batch_data.append(processed_data)
+#                 data_queue.task_done()
+#         except data_queue.empty:
+#             pass  # Handle timeout by attempting to process collected batch data
+
+#         if batch_data:
+#             with sheet_update_lock:
+#                 try:
+#                     pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
+#                 except Exception as e:
+#                     error_message = f"An error occurred while updating the sheet in batch: {e}"
+#                     error_queue.put(error_message)
 
 # def update_sheet(data_queue, sheet_update_lock, sheet_id):
 #     while True:
