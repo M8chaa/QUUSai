@@ -558,24 +558,24 @@ def moyocrawling(url1, url2, sheet_id):
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
         fetch_threads.append(t)
-
+    fetching_completed = threading.Event()
+    for thread in fetch_threads:
+        thread.join()
+    fetching_completed.set()
     # Start sheet updating threads
     update_threads = []
     for _ in range(1):
         t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
         t.start()
         update_threads.append(t)
-
-    # Wait for data fetching threads to finish and signal update threads to finish
-    for thread in fetch_threads:
-        thread.join()
-    for _ in range(6):
-        data_queue.put(None)  # Sentinel value for each update thread
+        
+    for _ in range(len(update_threads)):  # Send a sentinel for each update thread
+        data_queue.put(None)
 
     # Wait for update threads to finish
     for thread in update_threads:
         thread.join()
-    thread_completed.set()
+
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
 
