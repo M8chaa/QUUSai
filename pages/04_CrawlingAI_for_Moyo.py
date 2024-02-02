@@ -453,9 +453,9 @@ def fetch_data(driver, url_queue, data_queue):
 #             finally:
 #                 data_queue.task_done()
 
-PER_MINUTE_LIMIT = 10
+PER_MINUTE_LIMIT = 60
 @sleep_and_retry
-@limits(calls=PER_MINUTE_LIMIT, period=10)
+@limits(calls=PER_MINUTE_LIMIT, period=60)
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
     while True:
         batch_data = []  # Initialize the batch
