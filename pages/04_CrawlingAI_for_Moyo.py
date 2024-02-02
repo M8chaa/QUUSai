@@ -565,10 +565,10 @@ def moyocrawling(url1, url2, sheet_id):
     # Start sheet updating threads
     update_threads = []
     for _ in range(1):
-        t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
+        t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id, fetching_completed))
         t.start()
         update_threads.append(t)
-        
+
     for _ in range(len(update_threads)):  # Send a sentinel for each update thread
         data_queue.put(None)
 
