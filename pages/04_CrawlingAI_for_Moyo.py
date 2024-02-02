@@ -439,19 +439,33 @@ PER_MINUTE_LIMIT = 10
 @limits(calls=PER_MINUTE_LIMIT, period=10)
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
     while True:
-        processed_data = data_queue.get()
-        if processed_data is None:  # Sentinel value to indicate completion
-            break
+        batch_data = []  # Accumulate data here
+        while len(batch_data) < 2:  # Wait until we have 2 records
+            processed_data = data_queue.get()
+            if processed_data is None:  # Sentinel value to indicate completion
+                if len(batch_data) > 0:  # Push any remaining records
+                    with sheet_update_lock:
+                        try:
+                            # Assuming pushToSheet can handle a list of data
+                            pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
+                        except Exception as e:
+                            error_message = f"An error occurred while updating the sheet: {e}"
+                            error_queue.put(error_message)
+                return  # Exit after processing all data
+            batch_data.append(processed_data)  # Add data to the batch
+
+        # Push batch_data to Google Sheet
         with sheet_update_lock:
             try:
-                pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
+                # Ensure pushToSheet is adjusted to handle batch updates if necessary
+                pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
             except Exception as e:
                 error_message = f"An error occurred while updating the sheet: {e}"
-                # Handle the error as needed (e.g., retry, log, notify)
                 error_queue.put(error_message)
-
             finally:
-                data_queue.task_done()
+                for _ in batch_data:  # Acknowledge each item in the batch
+                    data_queue.task_done()
+
 
 
 
