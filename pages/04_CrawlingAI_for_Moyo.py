@@ -510,6 +510,8 @@ def moyocrawling(url1, url2, sheet_id):
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-extensions')
+        prefs = {"profile.managed_default_content_settings.images": 2}
+        options.add_experimental_option("prefs", prefs)
 
         CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
         service = fs.Service(CHROMEDRIVER)
