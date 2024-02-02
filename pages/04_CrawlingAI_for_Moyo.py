@@ -20,7 +20,6 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome import service as fs
 from selenium.webdriver import ChromeOptions
-# from webdriver_manager.core.utils import ChromeType
 from webdriver_manager.core.os_manager import ChromeType
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager, ChromeType
@@ -28,11 +27,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
-import streamlit_extras
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
 from Google import Create_Service
-import os
 from queue import Queue
 import time
 from ratelimit import limits, sleep_and_retry
@@ -43,37 +40,7 @@ st.set_page_config(
     page_icon="🖥️",
 )
 
-llm = ChatOpenAI(
-    temperature=0.1,
-)
 
-answers_prompt = ChatPromptTemplate.from_template(
-    """
-    Using ONLY the following context answer the user's question. If you can't just say you don't know, don't make anything up.
-                                                  
-    Then, give a score to the answer between 0 and 5.
-
-    If the answer answers the user question the score should be high, else it should be low.
-
-    Make sure to always include the answer's score even if it's 0.
-
-    Context: {context}
-                                                  
-    Examples:
-                                                  
-    Question: How far away is the moon?
-    Answer: The moon is 384,400 km away.
-    Score: 5
-                                                  
-    Question: How far away is the sun?
-    Answer: I don't know
-    Score: 0
-                                                  
-    Your turn!
-
-    Question: {question}
-"""
-)
 def googleDriveConnect():
     CLIENT_SECRETS = st.secrets["GoogleDriveAPISecrets"]
     # CLIENT_SECRETS = "QUUSai_clientID_desktop.json"
@@ -117,7 +84,7 @@ def create_new_google_sheet(url1, url2):
 def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
     try:
         serviceInstance = googleSheetConnect()
-        body = {'values': [data]}
+        body = {'values': data}
         result = serviceInstance.spreadsheets().values().append(
             spreadsheetId=sheet_id,
             range=range,
@@ -249,62 +216,6 @@ def autoResizeColumns(sheet_id, sheet_index=0):
     return response
 
 
-
-
-def get_answers(inputs):
-    docs = inputs["docs"]
-    question = inputs["question"]
-    answers_chain = answers_prompt | llm
-    return {
-        "question": question,
-        "answers": [
-            {
-                "answer": answers_chain.invoke(
-                    {"question": question, "context": doc.page_content}
-                ).content,
-                "source": doc.metadata["source"],
-                "date": doc.metadata["lastmod"],
-            }
-            for doc in docs
-        ],
-    }
-
-
-choose_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
-            Use ONLY the following pre-existing answers to answer the user's question.
-
-            Use the answers that have the highest score (more helpful) and favor the most recent ones.
-
-            Cite sources and return the sources of the answers as they are, do not change them.
-
-            Answers: {answers}
-            """,
-        ),
-        ("human", "{question}"),
-    ]
-)
-
-
-def choose_answer(inputs):
-    answers = inputs["answers"]
-    question = inputs["question"]
-    choose_chain = choose_prompt | llm
-    condensed = "\n\n".join(
-        f"{answer['answer']}\nSource:{answer['source']}\nDate:{answer['date']}\n"
-        for answer in answers
-    )
-    return choose_chain.invoke(
-        {
-            "question": question,
-            "answers": condensed,
-        }
-    )
-
-
 def parse_page(soup):
     header = soup.find("header")
     footer = soup.find("footer")
@@ -320,22 +231,6 @@ def parse_page(soup):
     )
 
 
-@st.cache_data(show_spinner="Loading website...")
-def load_sitemap(url):
-    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=1000,
-        chunk_overlap=200,
-    )
-    loader = SitemapLoader(
-        url,
-        parsing_function=parse_page,
-    )
-    loader.requests_per_second = 2
-    docs = loader.load_and_split(text_splitter=splitter)
-    vector_store = FAISS.from_documents(docs, OpenAIEmbeddings())
-    return vector_store.as_retriever()
-    
-
 st.markdown(
     """
     # CrawlingAI for Moyo
@@ -345,43 +240,6 @@ st.markdown(
     Enter plan numbers at the sidebar and export data to text files or google sheet! 
 """
 )
-
-# def regex_extract(strSoup):
-#     mvno_pattern = r"\[(.*?)\]"
-#     plan_name_pattern = r"\]\s*(.*?)\s*\|"
-#     monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
-#     monthly_data_pattern = r"월\s*([.\d]+(?:GB|MB))"
-#     daily_data_pattern = r"매일\s*([.\d]+(?:GB|MB))"
-#     data_speed_pattern = r"\(([.\d]+(?:mbps|gbps))\)"
-#     call_minutes_pattern = r"(\d+분|무제한)"
-#     text_messages_pattern = r"(\d+건|무제한)"
-#     carrier_pattern = r"(LG U\+|SKT|KT)"
-#     network_type_pattern = r"(LTE|3G|4G|5G)"
-#     discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
-#     mvno = re.search(mvno_pattern, strSoup)
-#     plan_name = re.search(plan_name_pattern, strSoup)
-#     monthly_fee = re.search(monthly_fee_pattern, strSoup)
-#     monthly_data = re.search(monthly_data_pattern, strSoup)
-#     daily_data = re.search(daily_data_pattern, strSoup)
-#     data_speed = re.search(data_speed_pattern, strSoup)
-#     call_minutes = re.search(call_minutes_pattern, strSoup)
-#     text_messages = re.search(text_messages_pattern, strSoup)
-#     carrier = re.search(carrier_pattern, strSoup)
-#     network_type = re.search(network_type_pattern, strSoup)
-#     discount_info = re.search(discount_info_pattern, strSoup)
-
-#     return [ mvno.group(1) if mvno else "제공안함", 
-#             plan_name.group(1) if plan_name else "제공안함", 
-#             monthly_fee.group(1) if monthly_fee else "제공안함", 
-#             monthly_data.group(1) if monthly_data else "제공안함", 
-#             daily_data.group(1) if daily_data else "제공안함", 
-#             data_speed.group(1) if data_speed else "제공안함", 
-#             call_minutes.group(1) if call_minutes else "제공안함", 
-#             text_messages.group(1) if text_messages else "제공안함", 
-#             carrier.group(1) if carrier else "제공안함", 
-#             network_type.group(1) if network_type else "제공안함", 
-#             discount_info.group(1) if discount_info else "제공안함"
-#     ]
 
 def regex_extract(strSoup):
     # Existing patterns
@@ -475,24 +333,6 @@ def regex_extract(strSoup):
         formatted_text_no_support if formatted_text_no_support else "제공안함"
     ]
 
-def regex_extract_for_sheet():
-    mvno_pattern = r"\[(.*?)\]"
-    plan_name_pattern = r"\]\s*(.*?)\s*\|"
-    monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
-    monthly_data_pattern = r"월\s*([.\d]+(?:GB|MB))"
-    daily_data_pattern = r"매일\s*([.\d]+(?:GB|MB))"
-    data_speed_pattern = r"\(([.\d]+(?:mbps|gbps))\)"
-    call_minutes_pattern = r"(\d+분|무제한)"
-    text_messages_pattern = r"(\d+건|무제한)"
-    carrier_pattern = r"(LG U\+|SKT|KT)"
-    network_type_pattern = r"(LTE|3G|4G|5G)"
-    discount_info_pattern = r"(\d+개월\s*이후\s*[\d,]+원)"
-
-    return [mvno_pattern, plan_name_pattern, monthly_fee_pattern, monthly_data_pattern, daily_data_pattern, data_speed_pattern, call_minutes_pattern, text_messages_pattern, carrier_pattern, network_type_pattern, discount_info_pattern]
-
-if 'error_messages' not in st.session_state:
-    st.session_state['error_messages'] = []
-
 def update_google_sheet(data, sheet_id):
     pushToSheet(data, sheet_id, range='Sheet1!A:B')
 
@@ -585,6 +425,7 @@ def fetch_data(driver, url_queue, data_queue):
                     data.append(f"{result}")
             # Put the processed data into the data queue
             data_queue.put(data)
+            driver.delete_all_cookies()
             url_queue.task_done()
     except Exception as e:
         # Log the exception or handle it as needed
@@ -593,24 +434,55 @@ def fetch_data(driver, url_queue, data_queue):
     finally:
         driver.quit()
 
+# PER_MINUTE_LIMIT = 10
+# @sleep_and_retry
+# @limits(calls=PER_MINUTE_LIMIT, period=10)
+# def update_sheet(data_queue, sheet_update_lock, sheet_id):
+#     while True:
+#         processed_data = data_queue.get()
+#         if processed_data is None:  # Sentinel value to indicate completion
+#             break
+#         with sheet_update_lock:
+#             try:
+#                 pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
+#             except Exception as e:
+#                 error_message = f"An error occurred while updating the sheet: {e}"
+#                 # Handle the error as needed (e.g., retry, log, notify)
+#                 error_queue.put(error_message)
+
+#             finally:
+#                 data_queue.task_done()
+
 PER_MINUTE_LIMIT = 10
 @sleep_and_retry
 @limits(calls=PER_MINUTE_LIMIT, period=10)
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
     while True:
-        processed_data = data_queue.get()
-        if processed_data is None:  # Sentinel value to indicate completion
+        batch_data = []  # Initialize the batch
+        while len(batch_data) < 10:
+            processed_data = data_queue.get()
+            if processed_data is None:  # Check for sentinel value indicating completion
+                break  # Exit the loop to process what's left in the batch
+            batch_data.append(processed_data)
+            data_queue.task_done()
+
+        if not batch_data:  # If the batch is empty, exit the loop
             break
+
+        # Lock the sheet update to ensure thread-safe operations
         with sheet_update_lock:
             try:
-                pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
+                # Assuming pushToSheet can accept a list of lists (batch update)
+                # Adjust the 'range' parameter as needed based on how pushToSheet is implemented
+                pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
             except Exception as e:
-                error_message = f"An error occurred while updating the sheet: {e}"
+                error_message = f"An error occurred while updating the sheet in batch: {e}"
                 # Handle the error as needed (e.g., retry, log, notify)
                 error_queue.put(error_message)
 
             finally:
                 data_queue.task_done()
+
 
 
 def moyocrawling(url1, url2, sheet_id):
@@ -673,8 +545,6 @@ def moyocrawling(url1, url2, sheet_id):
         thread.join()
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
-
-
 
 
 with st.sidebar:
@@ -754,16 +624,4 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
         except Exception as e:
             st.error(f"An Error Occurred: {e}")
-
-
-
-# Outside the sidebar, render download buttons
-for button in st.session_state.get('download_buttons', []):
-    st.download_button(
-        label=button['label'],
-        data=button['data'],
-        file_name=button['file_name'],
-        mime="text/plain",
-    )
-
 
