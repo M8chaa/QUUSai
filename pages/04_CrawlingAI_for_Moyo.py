@@ -13,6 +13,7 @@ from langchain.storage import LocalFileStore
 import requests
 from bs4 import BeautifulSoup
 import re
+import threading
 from threading import Thread, Event
 import streamlit as st
 from selenium import webdriver
@@ -732,7 +733,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 st.link_button("Go to see", sheetUrl)
 
                 # Start the moyocrawling process in a separate thread
-                Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
+                threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
 
                 # Wait for the completion of the moyocrawling process
                 while not thread_completed.is_set():
@@ -766,153 +767,3 @@ for button in st.session_state.get('download_buttons', []):
     )
 
 
-
-# @st.cache_data(show_spinner="Getting Screenshot")
-def start_chromium(url):
-    # ドライバのオプション
-    options = ChromeOptions()
-
-    # option設定を追加（設定する理由はメモリの削減）
-    options.add_argument("--headless")
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-
-    # webdriver_managerによりドライバーをインストール
-    # chromiumを使用したいのでchrome_type引数でchromiumを指定しておく
-    CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-    service = fs.Service(CHROMEDRIVER)
-    driver = webdriver.Chrome(
-                              options=options,
-                              service=service
-                             )
-
-    # URLで指定したwebページを開く
-    driver.get(url)
-    driver.refresh()
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-
-    html = driver.page_source
-
-    soup = BeautifulSoup(html, 'html.parser')
-
-    # Find all clickable elements (links and buttons)
-    clickable_elements = soup.find_all(['a', 'button'])
-    clickable_elements_content = []
-    # Process the elements
-    for element in clickable_elements:
-        tag_name = element.name
-        text = element.get_text()
-        href = element.get('href') if tag_name == 'a' else "Not an anchor tag"
-        clickable_elements_content.append((tag_name, text, href))
-        # Do something with the information
-
-    button_locator = (By.CSS_SELECTOR, "button.tw-w-40.tw-h-40.tw-inline-flex.tw-justify-center.tw-items-center.tw-text-gray-500.tw-font-medium.tw-rounded-8.hover\\:tw-bg-gray-100")
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(button_locator))
-
-    # Click the button
-    button = driver.find_element(*button_locator)
-    button.click()
-
-    # Retrieve the updated HTML
-    html2 = driver.page_source
-
-
-    driver.close()
-    return html, clickable_elements_content, html2
-
-
-import pandas as pd
-
-def convert_html_to_csv(html):
-    # This function should convert HTML table data to CSV. 
-    df = pd.read_html(html)[0]  # Adjust this to fit the HTML structure
-    return df.to_csv(index=False)
-
-
-
-url = ''
-if url:
-    if ".xml" not in url:
-        result, clickable_elements_content, html2 = start_chromium(url)
-        document = Document(page_content=result)
-        transformed = Html2TextTransformer().transform_documents([document])
-
-
-        
-        add_vertical_space(1)        
-        st.markdown("#### Raw HTML")
-        links_row = row(2, vertical_align="left")
-        links_row.download_button(
-            label="Text File",
-            data=result,
-            file_name="raw_html.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
-        links_row.link_button("Google Sheet","",use_container_width=True,)
-        # if links_row.link_button("Google Sheet", "", use_container_width=True):
-        #     googleDriveConnect()  # Trigger the function when button is clicked
-
-
-        with st.expander("Click to see"):
-            st.text_area("", result, height=300)
-        
-        # Adding a gap
-        st.divider()
-
-        st.markdown("#### Text Content")
-        st.download_button(
-            label="Text File",
-            data=str(transformed),
-            file_name="html_text.txt",
-            mime="text/plain"
-        )
-        with st.expander("Click to see"):
-            st.text_area("", transformed, height=300)
-        
-        st.divider()
-
-        st.markdown("#### Clickable Elements")
-        with st.expander("Click to see"):
-            st.text_area("", clickable_elements_content, height=300)
-
-        st.divider()
-
-        st.markdown("#### Second page clicked")
-        with st.expander("Click to see"):
-            st.text_area("", html2, height=300)
-
-        # st.divider()
-
-        # st.markdown("#### XPath")
-        # st.download_button(
-        #     label="XPath",
-        #     data=str(transformed),
-        #     file_name="html_text.txt",
-        #     mime="text/plain"
-        # )
-        # with st.expander("Click to see"):
-        #     st.text_area("", transformed, height=300)
-            
-        # st.divider()
-        # if os.path.exists(screenshot_path):
-        #     st.image(screenshot_path)
-        # else:
-        #     st.error("Screenshot not found.")
-
-
-    else:
-        retriever = load_sitemap(url)
-        query = st.text_input("Ask a question to the website.")
-        if query:
-            chain = (
-                {
-                    "docs": retriever,
-                    "question": RunnablePassthrough(),
-                }
-                | RunnableLambda(get_answers)
-                | RunnableLambda(choose_answer)
-            )
-            result = chain.invoke(query)
-            st.markdown(result.content.replace("$", "\$"))
