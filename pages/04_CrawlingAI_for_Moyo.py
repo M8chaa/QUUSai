@@ -457,26 +457,18 @@ PER_MINUTE_LIMIT = 60
 @sleep_and_retry
 @limits(calls=PER_MINUTE_LIMIT, period=60)
 def update_sheet(data_queue, sheet_update_lock, sheet_id, fetching_completed):
-    while True:
+    while not fetching_completed.is_set() or not data_queue.empty():
         batch_data = []
-        # Modified loop condition to wait for signal or data in the queue
-        while not fetching_completed.is_set() or not data_queue.empty():
-            try:
+        try:
+            while len(batch_data) < 10:
                 processed_data = data_queue.get(timeout=1)  # Adjust timeout as needed
                 if processed_data is None:
-                    # Handle sentinel value if used to signal individual thread completion
-                    data_queue.task_done()
-                    continue
+                    continue  # Ignore sentinel values
                 batch_data.append(processed_data)
                 data_queue.task_done()
-                if len(batch_data) >= 10:
-                    break
-            except queue.Empty:
-                # Check if fetching is completed and break the loop if no data is expected
-                if fetching_completed.is_set():
-                    break
+        except queue.Empty:
+            pass  # Handle timeout by attempting to process collected batch data
 
-        # Process collected batch data
         if batch_data:
             with sheet_update_lock:
                 try:
@@ -484,8 +476,7 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, fetching_completed):
                 except Exception as e:
                     error_message = f"An error occurred while updating the sheet in batch: {e}"
                     error_queue.put(error_message)
-        elif fetching_completed.is_set():
-            break
+
 # def update_sheet(data_queue, sheet_update_lock, sheet_id):
 #     while True:
 #         batch_data = []  # Initialize the batch
@@ -558,10 +549,11 @@ def moyocrawling(url1, url2, sheet_id):
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
         fetch_threads.append(t)
-    fetching_completed = threading.Event()
+
     for thread in fetch_threads:
         thread.join()
-    fetching_completed.set()
+    fetching_completed = threading.Event()
+
     # Start sheet updating threads
     update_threads = []
     for _ in range(1):
@@ -569,12 +561,15 @@ def moyocrawling(url1, url2, sheet_id):
         t.start()
         update_threads.append(t)
 
-    for _ in range(len(update_threads)):  # Send a sentinel for each update thread
+    fetching_completed.set()
+
+    for _ in update_threads:
         data_queue.put(None)
 
     # Wait for update threads to finish
     for thread in update_threads:
         thread.join()
+
 
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
