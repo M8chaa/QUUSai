@@ -440,7 +440,7 @@ PER_MINUTE_LIMIT = 10
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
     while True:
         batch_data = []  # Accumulate data here
-        while len(batch_data) < 2:  # Wait until we have 2 records
+        while len(batch_data) < 10:  # Wait until we have 10 records
             processed_data = data_queue.get()
             if processed_data is None:  # Sentinel value to indicate completion
                 if len(batch_data) > 0:  # Push any remaining records
