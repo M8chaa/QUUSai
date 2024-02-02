@@ -434,86 +434,25 @@ def fetch_data(driver, url_queue, data_queue):
     finally:
         driver.quit()
 
-# PER_MINUTE_LIMIT = 10
-# @sleep_and_retry
-# @limits(calls=PER_MINUTE_LIMIT, period=10)
-# def update_sheet(data_queue, sheet_update_lock, sheet_id):
-#     while True:
-#         processed_data = data_queue.get()
-#         if processed_data is None:  # Sentinel value to indicate completion
-#             break
-#         with sheet_update_lock:
-#             try:
-#                 pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
-#             except Exception as e:
-#                 error_message = f"An error occurred while updating the sheet: {e}"
-#                 # Handle the error as needed (e.g., retry, log, notify)
-#                 error_queue.put(error_message)
-
-#             finally:
-#                 data_queue.task_done()
-
-PER_MINUTE_LIMIT = 60
+PER_MINUTE_LIMIT = 10
 @sleep_and_retry
-@limits(calls=PER_MINUTE_LIMIT, period=60)
-def update_sheet(data_queue, sheet_update_lock, sheet_id, fetching_completed):
-    while not fetching_completed.is_set() or not data_queue.empty():
-        try:
-            data = data_queue.get(timeout=1)
-            if data is None: continue  # Ignore sentinel if used
-            with sheet_update_lock:
-                # Adjust this call according to how your pushToSheet handles data
-                pushToSheet([data], sheet_id, range='Sheet1!A:B')
-            data_queue.task_done()
-        except queue.Empty:
-            continue
-# def update_sheet(data_queue, sheet_update_lock, sheet_id, fetching_completed):
-#     while not fetching_completed.is_set() or not data_queue.empty():
-#         batch_data = []
-#         try:
-#             while len(batch_data) < 10:
-#                 processed_data = data_queue.get(timeout=1)  # Adjust timeout as needed
-#                 if processed_data is None:
-#                     continue  # Ignore sentinel values
-#                 batch_data.append(processed_data)
-#                 data_queue.task_done()
-#         except data_queue.empty:
-#             pass  # Handle timeout by attempting to process collected batch data
+@limits(calls=PER_MINUTE_LIMIT, period=10)
+def update_sheet(data_queue, sheet_update_lock, sheet_id):
+    while True:
+        processed_data = data_queue.get()
+        if processed_data is None:  # Sentinel value to indicate completion
+            break
+        with sheet_update_lock:
+            try:
+                pushToSheet(processed_data, sheet_id, range='Sheet1!A:B')
+            except Exception as e:
+                error_message = f"An error occurred while updating the sheet: {e}"
+                # Handle the error as needed (e.g., retry, log, notify)
+                error_queue.put(error_message)
 
-#         if batch_data:
-#             with sheet_update_lock:
-#                 try:
-#                     pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
-#                 except Exception as e:
-#                     error_message = f"An error occurred while updating the sheet in batch: {e}"
-#                     error_queue.put(error_message)
+            finally:
+                data_queue.task_done()
 
-# def update_sheet(data_queue, sheet_update_lock, sheet_id):
-#     while True:
-#         batch_data = []  # Initialize the batch
-#         while len(batch_data) < 10:
-#             processed_data = data_queue.get()
-#             if processed_data is None:  # Check for sentinel value indicating completion
-#                 break  # Exit the loop to process what's left in the batch
-#             batch_data.append(processed_data)
-#             data_queue.task_done()
-
-#         if not batch_data:  # If the batch is empty, exit the loop
-#             break
-
-#         # Lock the sheet update to ensure thread-safe operations
-#         with sheet_update_lock:
-#             try:
-#                 # Assuming pushToSheet can accept a list of lists (batch update)
-#                 # Adjust the 'range' parameter as needed based on how pushToSheet is implemented
-#                 pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
-#             except Exception as e:
-#                 error_message = f"An error occurred while updating the sheet in batch: {e}"
-#                 # Handle the error as needed (e.g., retry, log, notify)
-#                 error_queue.put(error_message)
-
-#             finally:
-#                 data_queue.task_done()
 
 
 
@@ -553,35 +492,30 @@ def moyocrawling(url1, url2, sheet_id):
                                 )
         return driver
 
-    # Start data fetching threads
+     # Start data fetching threads
     fetch_threads = []
-    for _ in range(6):
+    for _ in range(3):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
         fetch_threads.append(t)
 
-    for thread in fetch_threads:
-        thread.join()
-    fetching_completed = threading.Event()
-
     # Start sheet updating threads
     update_threads = []
-    for _ in range(1):
-        t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id, fetching_completed))
+    for _ in range(3):
+        t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
         t.start()
         update_threads.append(t)
 
-    fetching_completed.set()
-
-    for _ in update_threads:
-        data_queue.put(None)
+    # Wait for data fetching threads to finish and signal update threads to finish
+    for thread in fetch_threads:
+        thread.join()
+    for _ in range(3):
+        data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
     for thread in update_threads:
         thread.join()
-
-
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
 
