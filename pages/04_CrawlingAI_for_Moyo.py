@@ -458,30 +458,50 @@ PER_MINUTE_LIMIT = 60
 @limits(calls=PER_MINUTE_LIMIT, period=60)
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
     while True:
-        batch_data = []  # Initialize the batch
+        batch_data = []
         while len(batch_data) < 10:
             processed_data = data_queue.get()
-            if processed_data is None:  # Check for sentinel value indicating completion
-                break  # Exit the loop to process what's left in the batch
+            if processed_data is None:  # Sentinel value indicating a producer has finished
+                data_queue.task_done()  # Acknowledge the sentinel if processing it
+                return  # Exit the thread after processing the sentinel
             batch_data.append(processed_data)
-            data_queue.task_done()
+            data_queue.task_done()  # Acknowledge regular data item
+        
+        if batch_data:  # Process the last batch, even if it's not full
+            with sheet_update_lock:
+                try:
+                    pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
+                except Exception as e:
+                    error_message = f"An error occurred while updating the sheet in batch: {e}"
+                    error_queue.put(error_message)
+        else:
+            break  # Exit if no data left to process
+# def update_sheet(data_queue, sheet_update_lock, sheet_id):
+#     while True:
+#         batch_data = []  # Initialize the batch
+#         while len(batch_data) < 10:
+#             processed_data = data_queue.get()
+#             if processed_data is None:  # Check for sentinel value indicating completion
+#                 break  # Exit the loop to process what's left in the batch
+#             batch_data.append(processed_data)
+#             data_queue.task_done()
 
-        if not batch_data:  # If the batch is empty, exit the loop
-            break
+#         if not batch_data:  # If the batch is empty, exit the loop
+#             break
 
-        # Lock the sheet update to ensure thread-safe operations
-        with sheet_update_lock:
-            try:
-                # Assuming pushToSheet can accept a list of lists (batch update)
-                # Adjust the 'range' parameter as needed based on how pushToSheet is implemented
-                pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
-            except Exception as e:
-                error_message = f"An error occurred while updating the sheet in batch: {e}"
-                # Handle the error as needed (e.g., retry, log, notify)
-                error_queue.put(error_message)
+#         # Lock the sheet update to ensure thread-safe operations
+#         with sheet_update_lock:
+#             try:
+#                 # Assuming pushToSheet can accept a list of lists (batch update)
+#                 # Adjust the 'range' parameter as needed based on how pushToSheet is implemented
+#                 pushToSheet(batch_data, sheet_id, range='Sheet1!A:B')
+#             except Exception as e:
+#                 error_message = f"An error occurred while updating the sheet in batch: {e}"
+#                 # Handle the error as needed (e.g., retry, log, notify)
+#                 error_queue.put(error_message)
 
-            finally:
-                data_queue.task_done()
+#             finally:
+#                 data_queue.task_done()
 
 
 
@@ -531,7 +551,7 @@ def moyocrawling(url1, url2, sheet_id):
 
     # Start sheet updating threads
     update_threads = []
-    for _ in range(3):
+    for _ in range(1):
         t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
         t.start()
         update_threads.append(t)
@@ -539,7 +559,7 @@ def moyocrawling(url1, url2, sheet_id):
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(3):
+    for _ in range(6):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
