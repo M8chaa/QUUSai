@@ -560,6 +560,11 @@ with st.sidebar:
         else:
             st.warning("Please enter at least one end parameter.")
 
+    if st.button("Just Moyos"):
+        st.session_state['show_download_buttons'] = True
+        st.session_state['Just_Moyos'] = True
+
+
 
 def moyocrawling_wrapper(url1, url2, sheet_id):
     try:

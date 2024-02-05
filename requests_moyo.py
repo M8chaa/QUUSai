@@ -2,13 +2,19 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-current_url = "https://www.moyoplan.com/plans/18234"
+current_url = "https://www.moyoplan.com/plans/"
 response = requests.get(current_url)
 soup = BeautifulSoup(response.text, 'html.parser')
 strSoup = soup.get_text()
 print(strSoup)
 
+# Find the <a> tag
+a_tags = soup.find_all('a', class_='e3509g015')
 
+# Extract the href attribute
+links = [a_tag['href'] for a_tag in a_tags]
+
+print(links)
 
 
 # import requests
