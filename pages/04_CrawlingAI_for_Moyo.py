@@ -434,9 +434,9 @@ def fetch_data(driver, url_queue, data_queue):
     finally:
         driver.quit()
 
-PER_MINUTE_LIMIT = 10
+PER_MINUTE_LIMIT = 60
 @sleep_and_retry
-@limits(calls=PER_MINUTE_LIMIT, period=10)
+@limits(calls=PER_MINUTE_LIMIT, period=60)
 def update_sheet(data_queue, sheet_update_lock, sheet_id):
     while True:
         batch_data = []  # Accumulate data here
@@ -524,7 +524,7 @@ def moyocrawling(url1, url2, sheet_id):
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(1):
+    for _ in range(2):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
