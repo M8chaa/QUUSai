@@ -639,8 +639,11 @@ def moyocrawling_Just_Moyos(url_list, sheet_id):
         return driver
 
     fetch_url_threads = []
-    for _ in range(6):
-        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue))
+    for _ in range(1):
+        # t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
+        # t.start()
+        # fetch_url_threads.append(t)
+        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
         t.start()
         fetch_url_threads.append(t)
 
