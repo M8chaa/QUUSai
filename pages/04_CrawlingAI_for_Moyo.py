@@ -1,4 +1,5 @@
 # coding:utf-8
+from email.mime import base
 from operator import call
 from langchain.document_loaders import SitemapLoader
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
@@ -562,6 +563,7 @@ with st.sidebar:
 
     if st.button("Just Moyos"):
         st.session_state['show_download_buttons'] = True
+        st.session_state['BaseUrl'] = base_url
         st.session_state['Just_Moyos'] = True
 
 
@@ -581,39 +583,63 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
     if gs_button_pressed:
-        try:
-            export_to_google_sheet = True
-            headers = {
-                'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
-            }
-            with st.spinner("Processing for Google Sheet..."):
-                # Create new Google Sheet and push headers
-                sheet_id, webviewlink = create_new_google_sheet(url1, url2)
-                pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-                formatHeaderTrim(sheet_id, 0)
-                sheetUrl = str(webviewlink)
-                st.link_button("Go to see", sheetUrl)
+        if st.session_state['Just_Moyos'] is False:
+            try:
+                export_to_google_sheet = True
+                headers = {
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+                }
+                with st.spinner("Processing for Google Sheet..."):
+                    # Create new Google Sheet and push headers
+                    sheet_id, webviewlink = create_new_google_sheet(url1, url2)
+                    pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+                    formatHeaderTrim(sheet_id, 0)
+                    sheetUrl = str(webviewlink)
+                    st.link_button("Go to see", sheetUrl)
 
-                # Start the moyocrawling process in a separate thread
-                threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
+                    # Start the moyocrawling process in a separate thread
+                    threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
 
-                # Wait for the completion of the moyocrawling process
-                while not thread_completed.is_set():
-                    if not error_queue.empty():
-                        error_message = error_queue.get()
-                        st.error(error_message)
-                    time.sleep(0.1)
-
-
-            if not error_queue.empty():
-            # If there are any remaining errors in the queue, display them
-                while not error_queue.empty():
-                    st.error(error_queue.get())
-            else:
-                st.success("Process Completed")
+                    # Wait for the completion of the moyocrawling process
+                    while not thread_completed.is_set():
+                        if not error_queue.empty():
+                            error_message = error_queue.get()
+                            st.error(error_message)
+                        time.sleep(0.1)
 
 
+                if not error_queue.empty():
+                # If there are any remaining errors in the queue, display them
+                    while not error_queue.empty():
+                        st.error(error_queue.get())
+                else:
+                    st.success("Process Completed")
 
-        except Exception as e:
-            st.error(f"An Error Occurred: {e}")
+            except Exception as e:
+                st.error(f"An Error Occurred: {e}")
+        
+        else:
+            end_of_list = False
+            url_queue = Queue()
+            i = 1
+            while not end_of_list:
+                BaseUrl = st.session_state.get('BaseUrl')
+                planListUrl = f"{BaseUrl}page={i}"
+                response = requests.get(planListUrl)
+                soup = BeautifulSoup(response.text, 'html.parser')
+                a_tags = soup.find_all('a', class_='e3509g015')
+                if not a_tags:  # If no a_tags found, possibly end of list
+                    end_of_list = True
+                for a_tag in a_tags:
+                    link = a_tag['href']
+                    url_queue.put(link)  # Put each link into the queue individually
+                i += 1  # Increment page number
+
+            url_list = []
+            while not url_queue.empty():
+                url = url_queue.get()
+                url_list.append(url)
+            st.write(url_list)
+            
+
 
