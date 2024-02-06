@@ -35,6 +35,10 @@ from queue import Queue
 import time
 from ratelimit import limits, sleep_and_retry
 import traceback
+from datetime import datetime
+import pytz
+
+
 
 st.set_page_config(
     page_title="CrawlingAI_for_Moyo",
@@ -66,6 +70,26 @@ def create_new_google_sheet(url1, url2):
     number2 = int(part2[-1])
     serviceInstance = googleDriveConnect()
     name = f'모요 요금제 {number1} ~ {number2}'
+    file_metadata = {
+        'name': name,
+        'mimeType': 'application/vnd.google-apps.spreadsheet'
+    }
+    file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
+    sheet_id = file.get('id')
+    sheet_web_view_link = file.get('webViewLink')
+    permission = {
+            'type': 'anyone',
+            'role': 'writer'
+        }
+    serviceInstance.permissions().create(fileId=sheet_id, body=permission).execute()
+
+    return sheet_id, sheet_web_view_link
+
+def create_new_google_sheet_just_moyos():
+    serviceInstance = googleDriveConnect()
+    kst = pytz.timezone('Asia/Seoul')
+    current_date = datetime.now(kst).strftime("%Y-%m-%d")
+    name = f'모요 요금제 {current_date}'
     file_metadata = {
         'name': name,
         'mimeType': 'application/vnd.google-apps.spreadsheet'
@@ -724,7 +748,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
-                    sheet_id, webviewlink = create_new_google_sheet(url1, url2)
+                    sheet_id, webviewlink = create_new_google_sheet_just_moyos()
                     pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
                     formatHeaderTrim(sheet_id, 0)
                     sheetUrl = str(webviewlink)
