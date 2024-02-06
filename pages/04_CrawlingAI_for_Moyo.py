@@ -638,8 +638,8 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             url_list = []
             while not url_queue.empty():
                 url = url_queue.get()
-                url_list.append(url)
+                url_list.append(str(url))
             st.write(url_list)
-            
+
 
 
