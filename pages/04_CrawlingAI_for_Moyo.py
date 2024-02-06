@@ -561,8 +561,9 @@ def moyocrawling(url1, url2, sheet_id):
 def fetch_url_Just_Moyos(url_fetch_queue):
     end_of_list = False
     i = 1
+    base_url = "https://www.moyoplan.com"
     while not end_of_list:
-        BaseUrl = st.session_state.get('BaseUrl').rstrip('/')  # Remove any trailing slash
+        BaseUrl = "https://www.moyoplan.com/plans"  # Remove any trailing slash
         planListUrl = f"{BaseUrl}?page={i}"  
         response = requests.get(planListUrl)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -571,7 +572,8 @@ def fetch_url_Just_Moyos(url_fetch_queue):
             end_of_list = True
         for a_tag in a_tags:
             link = a_tag['href']
-            url_fetch_queue.put(link)  # Put each link into the queue individually
+            plan_detail_url = f"{base_url}{link}"
+            url_fetch_queue.put(plan_detail_url)  # Put each link into the queue individually
         i += 1  # Increment page number
 
 
@@ -609,16 +611,14 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
     finally:
         driver.quit()
 
-def moyocrawling_Just_Moyos(url_list, sheet_id):
-    
-    base_url = "https://www.moyoplan.com"
+def moyocrawling_Just_Moyos(sheet_id):
 
     url_fetch_queue = Queue()
     data_queue = Queue()
     sheet_update_lock = threading.Lock()
-    for url in url_list:
-        plan_detail_url = f"{base_url}{url}"
-        url_fetch_queue.put(plan_detail_url)
+    # for url in url_list:
+    #     plan_detail_url = f"{base_url}{url}"
+    #     url_fetch_queue.put(plan_detail_url)
 
     def setup_driver():
         options = ChromeOptions()
@@ -721,9 +721,9 @@ def moyocrawling_wrapper(url1, url2, sheet_id):
         error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
         error_queue.put(error_message)
 
-def moyocrawling_just_moyos_wrapper(url_list, sheet_id):
+def moyocrawling_just_moyos_wrapper(sheet_id):
     try:
-        moyocrawling_Just_Moyos(url_list, sheet_id)
+        moyocrawling_Just_Moyos(sheet_id)
     except Exception as e:
         error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
         error_queue.put(error_message)
@@ -785,24 +785,24 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                     formatHeaderTrim(sheet_id, 0)
                     sheetUrl = str(webviewlink)
                     st.link_button("Go to see", sheetUrl)
-                    while not end_of_list:
-                        BaseUrl = st.session_state.get('BaseUrl').rstrip('/')  # Remove any trailing slash
-                        planListUrl = f"{BaseUrl}?page={i}"  
-                        response = requests.get(planListUrl)
-                        soup = BeautifulSoup(response.text, 'html.parser')
-                        a_tags = soup.find_all('a', class_='e3509g015')
-                        if not a_tags:  # If no a_tags found, possibly end of list
-                            end_of_list = True
-                        for a_tag in a_tags:
-                            link = a_tag['href']
-                            url_queue.put(link)  # Put each link into the queue individually
-                        i += 1  # Increment page number
+                    # while not end_of_list:
+                    #     BaseUrl = st.session_state.get('BaseUrl').rstrip('/')  # Remove any trailing slash
+                    #     planListUrl = f"{BaseUrl}?page={i}"  
+                    #     response = requests.get(planListUrl)
+                    #     soup = BeautifulSoup(response.text, 'html.parser')
+                    #     a_tags = soup.find_all('a', class_='e3509g015')
+                    #     if not a_tags:  # If no a_tags found, possibly end of list
+                    #         end_of_list = True
+                    #     for a_tag in a_tags:
+                    #         link = a_tag['href']
+                    #         url_queue.put(link)  # Put each link into the queue individually
+                    #     i += 1  # Increment page number
 
-                    url_list = []
-                    while not url_queue.empty():
-                        url = url_queue.get()
-                        url_list.append(str(url))
-                    threading.Thread(target=moyocrawling_just_moyos_wrapper, args=(url_list, sheet_id)).start()
+                    # url_list = []
+                    # while not url_queue.empty():
+                    #     url = url_queue.get()
+                    #     url_list.append(str(url))
+                    threading.Thread(target=moyocrawling_just_moyos_wrapper, args=(sheet_id)).start()
                     while not thread_completed.is_set():
                             if not error_queue.empty():
                                 error_message = error_queue.get()
