@@ -558,6 +558,23 @@ def moyocrawling(url1, url2, sheet_id):
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
 
+def fetch_url_Just_Moyos(url_fetch_queue):
+    end_of_list = False
+    i = 1
+    while not end_of_list:
+        BaseUrl = st.session_state.get('BaseUrl').rstrip('/')  # Remove any trailing slash
+        planListUrl = f"{BaseUrl}?page={i}"  
+        response = requests.get(planListUrl)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        a_tags = soup.find_all('a', class_='e3509g015')
+        if not a_tags:  # If no a_tags found, possibly end of list
+            end_of_list = True
+        for a_tag in a_tags:
+            link = a_tag['href']
+            url_fetch_queue.put(link)  # Put each link into the queue individually
+        i += 1  # Increment page number
+
+
 def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
     try:
         while not url_fetch_queue.empty():
@@ -584,7 +601,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
             # Put the processed data into the data queue
             data_queue.put(data)
             driver.delete_all_cookies()
-            url_queue.task_done()
+            url_fetch_queue.task_done()
     except Exception as e:
         # Log the exception or handle it as needed
         error_message = f"An error occurred when fetching data of {url}: {e}"
@@ -621,6 +638,12 @@ def moyocrawling_Just_Moyos(url_list, sheet_id):
                                 )
         return driver
 
+    fetch_url_threads = []
+    for _ in range(6):
+        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue))
+        t.start()
+        fetch_url_threads.append(t)
+
      # Start data fetching threads
     fetch_threads = []
     for _ in range(6):
@@ -636,10 +659,16 @@ def moyocrawling_Just_Moyos(url_list, sheet_id):
         t.start()
         update_threads.append(t)
 
+    # Wait for data url fetching threads to finish and signal fetch threads to finish
+    for thread in fetch_url_threads:
+        thread.join()
+    for _ in range(1):
+        url_fetch_queue.put(None)
+
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(2):
+    for _ in range(1):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
