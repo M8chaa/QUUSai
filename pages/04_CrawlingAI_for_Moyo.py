@@ -623,8 +623,8 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             url_queue = Queue()
             i = 1
             while not end_of_list:
-                BaseUrl = st.session_state.get('BaseUrl')
-                planListUrl = f"{BaseUrl}page={i}"
+                BaseUrl = st.session_state.get('BaseUrl').rstrip('/')  # Remove any trailing slash
+                planListUrl = f"{BaseUrl}?page={i}"  
                 response = requests.get(planListUrl)
                 soup = BeautifulSoup(response.text, 'html.parser')
                 a_tags = soup.find_all('a', class_='e3509g015')
