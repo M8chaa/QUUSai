@@ -667,7 +667,7 @@ def moyocrawling_wrapper(url1, url2, sheet_id):
 
 def moyocrawling_just_moyos_wrapper(url_list, sheet_id):
     try:
-        moyocrawling_just_moyos_wrapper(url_list, sheet_id)
+        moyocrawling_Just_Moyos(url_list, sheet_id)
     except Exception as e:
         error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
         error_queue.put(error_message)
