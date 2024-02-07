@@ -579,6 +579,8 @@ def fetch_url_Just_Moyos(url_fetch_queue):
 
 def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
     try:
+        base_url = "https://www.moyoplan.com/plans"
+        driver.get(base_url)
         while not url_fetch_queue.empty():
             url = url_fetch_queue.get()
             # Fetch and process data from the URL
@@ -589,22 +591,25 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                 try: 
                     driver.get(url)
 
-                    driver.refresh()
-
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                     # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     # ActionChains(driver).move_to_element(button).click(button).perform()
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     driver.execute_script("arguments[0].click();", button)
                     WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                    svg_element = driver.find_element(By.XPATH, "//div[@class='css-1b8xqgi']/svg[1]")
+                    hover = ActionChains(driver).move_to_element(svg_element)
+                    hover.perform()
+                    tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
                     expired = "서비스 중입니다"
-
+                    tooltip_text = tooltip.text
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
-                    data = [planUrl] + regex_formula + [expired]
+                    # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
+                    data = [planUrl] + regex_formula + [tooltip_text]
                     # Put the processed data into the data queue
                     data_queue.put(data)
                     fetch_success = True
@@ -656,7 +661,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
 
      # Start data fetching threads
     fetch_threads = []
-    for _ in range(5):
+    for _ in range(3):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data_Just_Moyos, args=(driver, url_fetch_queue, data_queue))
         t.start()
@@ -678,7 +683,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(5):
+    for _ in range(2):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
@@ -780,7 +785,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         else:
             try:
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "개통 가능 시간"]
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
