@@ -581,31 +581,6 @@ def fetch_url_Just_Moyos(url_fetch_queue):
         if stop_signal.is_set():
             break  
 
-'''
-mousehover event
-
-let svgElement = document.querySelector('svg'); // Adjust the selector as needed to target the SVG
-let tooltipDiv = document.getElementById('portal-tooltip'); span, role = tooltip, css-nswaq2
-
-// Function to simulate hover
-function simulateHover(element) {
-    let event = new MouseEvent('mouseover', {
-        'view': window,
-        'bubbles': true,
-        'cancelable': true
-    });
-    element.dispatchEvent(event);
-}
-
-// Simulate hover on the SVG element
-simulateHover(svgElement);
-
-// Wait a bit for the tooltip to be populated (adjust timing as necessary)
-setTimeout(() => {
-    console.log(tooltipDiv.textContent); // Log or process the tooltip content
-}, 500); // Delay in milliseconds to allow tooltip to appear
-
-'''
 
 
 
