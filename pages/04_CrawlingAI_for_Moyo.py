@@ -577,6 +577,8 @@ def fetch_url_Just_Moyos(url_fetch_queue):
             plan_detail_url = f"{base_url}{link}"
             url_fetch_queue.put(plan_detail_url)  # Put each link into the queue individually
         i += 1  # Increment page number
+        if stop_signal.is_set():
+            break  
 
 
 def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
@@ -588,7 +590,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
             # Fetch and process data from the URL
             attempts = 0
             fetch_success = False
-
+            
             while attempts < 5 and not fetch_success:
                 try: 
                     driver.get(url)
@@ -621,6 +623,8 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     if attempts == 5:
                         error_message = f"Failed to fetch data after 5 attempts for URL: {url}"
                         error_queue.put(error_message)
+            if stop_signal.is_set():
+                break  
 
             driver.delete_all_cookies()
             url_fetch_queue.task_done()
@@ -649,49 +653,50 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
                                     service=service
                                     )
             return driver
-    while not stop_signal.is_set():
-        url_fetch_queue = Queue()
-        data_queue = Queue()
-        sheet_update_lock = threading.Lock()
+    url_fetch_queue = Queue()
+    data_queue = Queue()
+    sheet_update_lock = threading.Lock()
 
-        fetch_url_threads = []
-        for _ in range(1):
-            t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
-            t.start()
-            fetch_url_threads.append(t)
+    fetch_url_threads = []
+    for _ in range(1):
+        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
+        t.start()
+        fetch_url_threads.append(t)
 
-        # Start data fetching threads
-        fetch_threads = []
-        for _ in range(3):
-            driver = setup_driver()  # Each thread gets its own driver instance
-            t = threading.Thread(target=fetch_data_Just_Moyos, args=(driver, url_fetch_queue, data_queue))
-            t.start()
-            fetch_threads.append(t)
+    # Start data fetching threads
+    fetch_threads = []
+    for _ in range(3):
+        driver = setup_driver()  # Each thread gets its own driver instance
+        t = threading.Thread(target=fetch_data_Just_Moyos, args=(driver, url_fetch_queue, data_queue))
+        t.start()
+        fetch_threads.append(t)
 
-        # Start sheet updating threads
-        update_threads = []
-        for _ in range(1):
-            t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
-            t.start()
-            update_threads.append(t)
+    # Start sheet updating threads
+    update_threads = []
+    for _ in range(1):
+        t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
+        t.start()
+        update_threads.append(t)
 
-        # Wait for data url fetching threads to finish and signal fetch threads to finish
-        for thread in fetch_url_threads:
-            thread.join()
-        for _ in range(1):
-            url_fetch_queue.put(None)
+    # Wait for data url fetching threads to finish and signal fetch threads to finish
+    for thread in fetch_url_threads:
+        thread.join()
+    for _ in range(1):
+        url_fetch_queue.put(None)
 
-        # Wait for data fetching threads to finish and signal update threads to finish
-        for thread in fetch_threads:
-            thread.join()
-        for _ in range(2):
-            data_queue.put(None)  # Sentinel value for each update thread
+    # Wait for data fetching threads to finish and signal update threads to finish
+    for thread in fetch_threads:
+        thread.join()
+    for _ in range(2):
+        data_queue.put(None)  # Sentinel value for each update thread
 
-        # Wait for update threads to finish
-        for thread in update_threads:
-            thread.join()
-        autoResizeColumns(sheet_id, 0)
-        thread_completed.set()
+    # Wait for update threads to finish
+    for thread in update_threads:
+        thread.join()
+    autoResizeColumns(sheet_id, 0)
+    thread_completed.set()
+    
+
 
 
 with st.sidebar:
