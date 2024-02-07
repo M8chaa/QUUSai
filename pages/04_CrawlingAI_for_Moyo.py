@@ -523,6 +523,7 @@ def moyocrawling(url1, url2, sheet_id):
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-extensions')
+        options.add_argument("window-size=800x2000")
         prefs = {"profile.managed_default_content_settings.images": 2}
         options.add_experimental_option("prefs", prefs)
 
@@ -536,7 +537,7 @@ def moyocrawling(url1, url2, sheet_id):
 
      # Start data fetching threads
     fetch_threads = []
-    for _ in range(6):
+    for _ in range(3):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
