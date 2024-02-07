@@ -611,7 +611,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
     finally:
         driver.quit()
 
-def moyocrawling_Just_Moyos(sheet_id):
+def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
 
     url_fetch_queue = Queue()
     data_queue = Queue()
@@ -640,10 +640,7 @@ def moyocrawling_Just_Moyos(sheet_id):
 
     fetch_url_threads = []
     for _ in range(1):
-        # t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
-        # t.start()
-        # fetch_url_threads.append(t)
-        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue))
+        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
         t.start()
         fetch_url_threads.append(t)
 
@@ -721,9 +718,9 @@ def moyocrawling_wrapper(url1, url2, sheet_id):
         error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
         error_queue.put(error_message)
 
-def moyocrawling_just_moyos_wrapper(sheet_id):
+def moyocrawling_just_moyos_wrapper(sheet_id, sheetUrl):
     try:
-        moyocrawling_Just_Moyos(sheet_id)
+        moyocrawling_Just_Moyos(sheet_id, sheetUrl)
     except Exception as e:
         error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
         error_queue.put(error_message)
@@ -772,9 +769,6 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         
         else:
             try:
-                end_of_list = False
-                url_queue = Queue()
-                i = 1
                 headers = {
                     'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
                 }
@@ -802,7 +796,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                     # while not url_queue.empty():
                     #     url = url_queue.get()
                     #     url_list.append(str(url))
-                    threading.Thread(target=moyocrawling_just_moyos_wrapper, args=(sheet_id)).start()
+                    threading.Thread(target=moyocrawling_just_moyos_wrapper, args=(sheet_id, sheetUrl)).start()
                     while not thread_completed.is_set():
                             if not error_queue.empty():
                                 error_message = error_queue.get()
