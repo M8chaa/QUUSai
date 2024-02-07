@@ -582,26 +582,39 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
         while not url_fetch_queue.empty():
             url = url_fetch_queue.get()
             # Fetch and process data from the URL
-            driver.get(url)
+            attempts = 0
+            fetch_success = False
 
-            driver.refresh()
+            while attempts < 5 and not fetch_success:
+                try: 
+                    driver.get(url)
 
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-            # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-            # ActionChains(driver).move_to_element(button).click(button).perform()
-            button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-            driver.execute_script("arguments[0].click();", button)
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
-            html = driver.page_source
-            soup = BeautifulSoup(html, 'html.parser')
-            strSoup = soup.get_text()
-            expired = "서비스 중입니다"
+                    driver.refresh()
 
-            regex_formula = regex_extract(strSoup)
-            planUrl = str(url)
-            data = [planUrl] + regex_formula + [expired]
-            # Put the processed data into the data queue
-            data_queue.put(data)
+                    WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    # ActionChains(driver).move_to_element(button).click(button).perform()
+                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    driver.execute_script("arguments[0].click();", button)
+                    WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                    html = driver.page_source
+                    soup = BeautifulSoup(html, 'html.parser')
+                    strSoup = soup.get_text()
+                    expired = "서비스 중입니다"
+
+                    regex_formula = regex_extract(strSoup)
+                    planUrl = str(url)
+                    data = [planUrl] + regex_formula + [expired]
+                    # Put the processed data into the data queue
+                    data_queue.put(data)
+                    fetch_success = True
+                except TimeoutException as e:
+                    attempts += 1
+                    error_queue.put(f"Timeout occurred for {url}, attempt {attempts}. Retrying...")
+                    if attempts == 5:
+                        error_message = f"Failed to fetch data after 5 attempts for URL: {url}"
+                        error_queue.put(error_message)
+
             driver.delete_all_cookies()
             url_fetch_queue.task_done()
     except Exception as e:
@@ -616,9 +629,6 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
     url_fetch_queue = Queue()
     data_queue = Queue()
     sheet_update_lock = threading.Lock()
-    # for url in url_list:
-    #     plan_detail_url = f"{base_url}{url}"
-    #     url_fetch_queue.put(plan_detail_url)
 
     def setup_driver():
         options = ChromeOptions()
