@@ -646,6 +646,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
             options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
             options.add_argument('--disable-extensions')
+            options.add_argument('window-size=800x2000')  # Adjust as needed
             prefs = {"profile.managed_default_content_settings.images": 2}
             options.add_experimental_option("prefs", prefs)
 
