@@ -614,6 +614,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
                     expired = "서비스 중입니다"
+                    tooltip_text = 'no pass'
                     if svg_element is '':
                         tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
