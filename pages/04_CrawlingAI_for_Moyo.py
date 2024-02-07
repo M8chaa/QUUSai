@@ -1,6 +1,7 @@
 # coding:utf-8
 from email.mime import base
 from operator import call
+from os import eventfd
 from langchain.document_loaders import SitemapLoader
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -580,6 +581,33 @@ def fetch_url_Just_Moyos(url_fetch_queue):
         if stop_signal.is_set():
             break  
 
+'''
+mousehover event
+
+let svgElement = document.querySelector('svg'); // Adjust the selector as needed to target the SVG
+let tooltipDiv = document.getElementById('portal-tooltip'); span, role = tooltip, css-nswaq2
+
+// Function to simulate hover
+function simulateHover(element) {
+    let event = new MouseEvent('mouseover', {
+        'view': window,
+        'bubbles': true,
+        'cancelable': true
+    });
+    element.dispatchEvent(event);
+}
+
+// Simulate hover on the SVG element
+simulateHover(svgElement);
+
+// Wait a bit for the tooltip to be populated (adjust timing as necessary)
+setTimeout(() => {
+    console.log(tooltipDiv.textContent); // Log or process the tooltip content
+}, 500); // Delay in milliseconds to allow tooltip to appear
+
+'''
+
+
 
 def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
     try:
@@ -599,8 +627,9 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     driver.execute_script("arguments[0].click();", button)
                     WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
-                    svg_xpath = "//svg[@xmlns='http://www.w3.org/2000/svg' and @viewBox='0 0 20 20' and @fill='currentColor' and @aria-hidden='true' and @width='20' and @height='20' and @color = '#495057' ]"
-                    svg_element = driver.find_element(By.XPATH, svg_xpath)
+                    div_css_selector = ".css-1b8xqgi"
+                    div_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, div_css_selector)))
+                    svg_element = div_element.find_element(By.XPATH, ".//div/div/svg")
                     hover = ActionChains(driver).move_to_element(svg_element)
                     hover.perform()
                     tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
