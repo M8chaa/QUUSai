@@ -656,7 +656,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
 
      # Start data fetching threads
     fetch_threads = []
-    for _ in range(4):
+    for _ in range(3):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data_Just_Moyos, args=(driver, url_fetch_queue, data_queue))
         t.start()
@@ -678,7 +678,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(2):
+    for _ in range(3):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
