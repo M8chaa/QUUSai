@@ -643,7 +643,7 @@ def moyocrawling_Just_Moyos(sheet_id):
         # t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
         # t.start()
         # fetch_url_threads.append(t)
-        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
+        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue))
         t.start()
         fetch_url_threads.append(t)
 
