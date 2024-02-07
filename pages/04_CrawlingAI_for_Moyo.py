@@ -596,12 +596,11 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     driver.get(url)
 
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    # ActionChains(driver).move_to_element(button).click(button).perform()
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     driver.execute_script("arguments[0].click();", button)
                     WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
-                    svg_element = driver.find_element(By.XPATH, "//div[@class='css-1b8xqgi']/svg[1]")
+                    svg_xpath = "//svg[@xmlns='http://www.w3.org/2000/svg' and @viewBox='0 0 20 20' and @fill='currentColor' and @aria-hidden='true' and @width='20' and @height='20' and @color = '#495057' ]"
+                    svg_element = driver.find_element(By.XPATH, svg_xpath)
                     hover = ActionChains(driver).move_to_element(svg_element)
                     hover.perform()
                     tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
@@ -840,6 +839,6 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
     if stop_button_pressed:
         stop_signal.set()  # Signal threads to stop
-        st.write("Stopping all processes...")
+        st.write("Stopped all processes...")
 
 
