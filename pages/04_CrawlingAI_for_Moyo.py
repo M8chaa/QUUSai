@@ -386,6 +386,8 @@ def sort_sheet_by_column(sheet_id, column_index=0):
 
 error_queue = Queue()
 thread_completed = Event()
+stop_signal = Event()
+
 
 def fetch_data(driver, url_queue, data_queue):
     try:
@@ -630,67 +632,66 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
         driver.quit()
 
 def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
-
-    url_fetch_queue = Queue()
-    data_queue = Queue()
-    sheet_update_lock = threading.Lock()
-
     def setup_driver():
-        options = ChromeOptions()
-        options.add_argument("--headless")
-        options.add_argument('--disable-gpu')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-extensions')
-        prefs = {"profile.managed_default_content_settings.images": 2}
-        options.add_experimental_option("prefs", prefs)
+            options = ChromeOptions()
+            options.add_argument("--headless")
+            options.add_argument('--disable-gpu')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-extensions')
+            prefs = {"profile.managed_default_content_settings.images": 2}
+            options.add_experimental_option("prefs", prefs)
 
-        CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-        service = fs.Service(CHROMEDRIVER)
-        driver = webdriver.Chrome(
-                                options=options,
-                                service=service
-                                )
-        return driver
+            CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+            service = fs.Service(CHROMEDRIVER)
+            driver = webdriver.Chrome(
+                                    options=options,
+                                    service=service
+                                    )
+            return driver
+    while not stop_signal.is_set():
+        url_fetch_queue = Queue()
+        data_queue = Queue()
+        sheet_update_lock = threading.Lock()
 
-    fetch_url_threads = []
-    for _ in range(1):
-        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
-        t.start()
-        fetch_url_threads.append(t)
+        fetch_url_threads = []
+        for _ in range(1):
+            t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
+            t.start()
+            fetch_url_threads.append(t)
 
-     # Start data fetching threads
-    fetch_threads = []
-    for _ in range(3):
-        driver = setup_driver()  # Each thread gets its own driver instance
-        t = threading.Thread(target=fetch_data_Just_Moyos, args=(driver, url_fetch_queue, data_queue))
-        t.start()
-        fetch_threads.append(t)
+        # Start data fetching threads
+        fetch_threads = []
+        for _ in range(3):
+            driver = setup_driver()  # Each thread gets its own driver instance
+            t = threading.Thread(target=fetch_data_Just_Moyos, args=(driver, url_fetch_queue, data_queue))
+            t.start()
+            fetch_threads.append(t)
 
-    # Start sheet updating threads
-    update_threads = []
-    for _ in range(1):
-        t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
-        t.start()
-        update_threads.append(t)
+        # Start sheet updating threads
+        update_threads = []
+        for _ in range(1):
+            t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
+            t.start()
+            update_threads.append(t)
 
-    # Wait for data url fetching threads to finish and signal fetch threads to finish
-    for thread in fetch_url_threads:
-        thread.join()
-    for _ in range(1):
-        url_fetch_queue.put(None)
+        # Wait for data url fetching threads to finish and signal fetch threads to finish
+        for thread in fetch_url_threads:
+            thread.join()
+        for _ in range(1):
+            url_fetch_queue.put(None)
 
-    # Wait for data fetching threads to finish and signal update threads to finish
-    for thread in fetch_threads:
-        thread.join()
-    for _ in range(2):
-        data_queue.put(None)  # Sentinel value for each update thread
+        # Wait for data fetching threads to finish and signal update threads to finish
+        for thread in fetch_threads:
+            thread.join()
+        for _ in range(2):
+            data_queue.put(None)  # Sentinel value for each update thread
 
-    # Wait for update threads to finish
-    for thread in update_threads:
-        thread.join()
-    autoResizeColumns(sheet_id, 0)
-    thread_completed.set()
+        # Wait for update threads to finish
+        for thread in update_threads:
+            thread.join()
+        autoResizeColumns(sheet_id, 0)
+        thread_completed.set()
 
 
 with st.sidebar:
@@ -745,7 +746,10 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
     url2 = st.session_state.get('url2')
     col1, col2 = st.columns(2)
 
-    gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
+    with col1:
+        gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
+    with col2:
+        stop_button_pressed = st.button("Stop Processing", key="stop_button")
     if gs_button_pressed:
         if st.session_state['Just_Moyos'] is False:
             try:
@@ -828,5 +832,9 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
             except Exception as e:
                 st.error(f"An Error Occurred: {e}")
+
+    if stop_button_pressed:
+        stop_signal.set()  # Signal threads to stop
+        st.write("Stopping all processes...")
 
 
