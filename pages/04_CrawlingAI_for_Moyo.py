@@ -607,14 +607,15 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # div_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, div_css_selector)))
 
                     svg_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/main/div/section[4]/div/div/div/div/div/div[1]/div[1]/div")))
-                    hover = ActionChains(driver).move_to_element(svg_element)
-                    hover.perform()
-                    tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
+                    # hover = ActionChains(driver).move_to_element(svg_element)
+                    # hover.perform()
+                    # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
                     expired = "서비스 중입니다"
-                    tooltip_text = tooltip.text
+                    if svg_element is '':
+                        tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
                     # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
