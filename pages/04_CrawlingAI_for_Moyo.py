@@ -598,7 +598,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
             while attempts < 5 and not fetch_success:
                 try: 
                     driver.get(url)
-
+                    driver.refresh()
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     driver.execute_script("arguments[0].click();", button)
