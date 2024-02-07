@@ -656,7 +656,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
 
      # Start data fetching threads
     fetch_threads = []
-    for _ in range(5):
+    for _ in range(4):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data_Just_Moyos, args=(driver, url_fetch_queue, data_queue))
         t.start()
