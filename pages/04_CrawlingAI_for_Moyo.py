@@ -1,4 +1,5 @@
 # coding:utf-8
+from email.mime import base
 from operator import call
 from langchain.document_loaders import SitemapLoader
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
@@ -34,6 +35,10 @@ from queue import Queue
 import time
 from ratelimit import limits, sleep_and_retry
 import traceback
+from datetime import datetime
+import pytz
+
+
 
 st.set_page_config(
     page_title="CrawlingAI_for_Moyo",
@@ -65,6 +70,26 @@ def create_new_google_sheet(url1, url2):
     number2 = int(part2[-1])
     serviceInstance = googleDriveConnect()
     name = f'모요 요금제 {number1} ~ {number2}'
+    file_metadata = {
+        'name': name,
+        'mimeType': 'application/vnd.google-apps.spreadsheet'
+    }
+    file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
+    sheet_id = file.get('id')
+    sheet_web_view_link = file.get('webViewLink')
+    permission = {
+            'type': 'anyone',
+            'role': 'writer'
+        }
+    serviceInstance.permissions().create(fileId=sheet_id, body=permission).execute()
+
+    return sheet_id, sheet_web_view_link
+
+def create_new_google_sheet_just_moyos():
+    serviceInstance = googleDriveConnect()
+    kst = pytz.timezone('Asia/Seoul')
+    current_date = datetime.now(kst).strftime("%Y-%m-%d")
+    name = f'모요 요금제 {current_date}'
     file_metadata = {
         'name': name,
         'mimeType': 'application/vnd.google-apps.spreadsheet'
@@ -533,6 +558,135 @@ def moyocrawling(url1, url2, sheet_id):
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
 
+def fetch_url_Just_Moyos(url_fetch_queue):
+    end_of_list = False
+    i = 1
+    base_url = "https://www.moyoplan.com"
+    while not end_of_list:
+        BaseUrl = "https://www.moyoplan.com/plans"  # Remove any trailing slash
+        planListUrl = f"{BaseUrl}?page={i}"  
+        response = requests.get(planListUrl)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        a_tags = soup.find_all('a', class_='e3509g015')
+        if not a_tags:  # If no a_tags found, possibly end of list
+            end_of_list = True
+        for a_tag in a_tags:
+            link = a_tag['href']
+            plan_detail_url = f"{base_url}{link}"
+            url_fetch_queue.put(plan_detail_url)  # Put each link into the queue individually
+        i += 1  # Increment page number
+
+
+def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
+    try:
+        while not url_fetch_queue.empty():
+            url = url_fetch_queue.get()
+            # Fetch and process data from the URL
+            attempts = 0
+            fetch_success = False
+
+            while attempts < 5 and not fetch_success:
+                try: 
+                    driver.get(url)
+
+                    driver.refresh()
+
+                    WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    # ActionChains(driver).move_to_element(button).click(button).perform()
+                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+                    driver.execute_script("arguments[0].click();", button)
+                    WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                    html = driver.page_source
+                    soup = BeautifulSoup(html, 'html.parser')
+                    strSoup = soup.get_text()
+                    expired = "서비스 중입니다"
+
+                    regex_formula = regex_extract(strSoup)
+                    planUrl = str(url)
+                    data = [planUrl] + regex_formula + [expired]
+                    # Put the processed data into the data queue
+                    data_queue.put(data)
+                    fetch_success = True
+                except TimeoutException as e:
+                    attempts += 1
+                    error_queue.put(f"Timeout occurred for {url}, attempt {attempts}. Retrying...")
+                    if attempts == 5:
+                        error_message = f"Failed to fetch data after 5 attempts for URL: {url}"
+                        error_queue.put(error_message)
+
+            driver.delete_all_cookies()
+            url_fetch_queue.task_done()
+    except Exception as e:
+        # Log the exception or handle it as needed
+        error_message = f"An error occurred when fetching data of {url}: {e}"
+        error_queue.put(error_message)
+    finally:
+        driver.quit()
+
+def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
+
+    url_fetch_queue = Queue()
+    data_queue = Queue()
+    sheet_update_lock = threading.Lock()
+
+    def setup_driver():
+        options = ChromeOptions()
+        options.add_argument("--headless")
+        options.add_argument('--disable-gpu')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-extensions')
+        prefs = {"profile.managed_default_content_settings.images": 2}
+        options.add_experimental_option("prefs", prefs)
+
+        CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+        service = fs.Service(CHROMEDRIVER)
+        driver = webdriver.Chrome(
+                                options=options,
+                                service=service
+                                )
+        return driver
+
+    fetch_url_threads = []
+    for _ in range(1):
+        t = threading.Thread(target=fetch_url_Just_Moyos, args=(url_fetch_queue,))
+        t.start()
+        fetch_url_threads.append(t)
+
+     # Start data fetching threads
+    fetch_threads = []
+    for _ in range(5):
+        driver = setup_driver()  # Each thread gets its own driver instance
+        t = threading.Thread(target=fetch_data_Just_Moyos, args=(driver, url_fetch_queue, data_queue))
+        t.start()
+        fetch_threads.append(t)
+
+    # Start sheet updating threads
+    update_threads = []
+    for _ in range(1):
+        t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id))
+        t.start()
+        update_threads.append(t)
+
+    # Wait for data url fetching threads to finish and signal fetch threads to finish
+    for thread in fetch_url_threads:
+        thread.join()
+    for _ in range(1):
+        url_fetch_queue.put(None)
+
+    # Wait for data fetching threads to finish and signal update threads to finish
+    for thread in fetch_threads:
+        thread.join()
+    for _ in range(5):
+        data_queue.put(None)  # Sentinel value for each update thread
+
+    # Wait for update threads to finish
+    for thread in update_threads:
+        thread.join()
+    autoResizeColumns(sheet_id, 0)
+    thread_completed.set()
+
 
 with st.sidebar:
     base_url = "https://www.moyoplan.com/plans/"
@@ -560,6 +714,12 @@ with st.sidebar:
         else:
             st.warning("Please enter at least one end parameter.")
 
+    if st.button("Just Moyos"):
+        st.session_state['show_download_buttons'] = True
+        st.session_state['BaseUrl'] = base_url
+        st.session_state['Just_Moyos'] = True
+
+
 
 def moyocrawling_wrapper(url1, url2, sheet_id):
     try:
@@ -568,6 +728,12 @@ def moyocrawling_wrapper(url1, url2, sheet_id):
         error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
         error_queue.put(error_message)
 
+def moyocrawling_just_moyos_wrapper(sheet_id, sheetUrl):
+    try:
+        moyocrawling_Just_Moyos(sheet_id, sheetUrl)
+    except Exception as e:
+        error_message = f"An error occurred in moyocrawling: {e}\n{traceback.format_exc()}"
+        error_queue.put(error_message)
 
 if 'show_download_buttons' in st.session_state and st.session_state['show_download_buttons']:
     url1 = st.session_state.get('url1')
@@ -576,39 +742,86 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
     gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
     if gs_button_pressed:
-        try:
-            export_to_google_sheet = True
-            headers = {
-                'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
-            }
-            with st.spinner("Processing for Google Sheet..."):
-                # Create new Google Sheet and push headers
-                sheet_id, webviewlink = create_new_google_sheet(url1, url2)
-                pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
-                formatHeaderTrim(sheet_id, 0)
-                sheetUrl = str(webviewlink)
-                st.link_button("Go to see", sheetUrl)
+        if st.session_state['Just_Moyos'] is False:
+            try:
+                export_to_google_sheet = True
+                headers = {
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+                }
+                with st.spinner("Processing for Google Sheet..."):
+                    # Create new Google Sheet and push headers
+                    sheet_id, webviewlink = create_new_google_sheet(url1, url2)
+                    pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+                    formatHeaderTrim(sheet_id, 0)
+                    sheetUrl = str(webviewlink)
+                    st.link_button("Go to see", sheetUrl)
 
-                # Start the moyocrawling process in a separate thread
-                threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
+                    # Start the moyocrawling process in a separate thread
+                    threading.Thread(target=moyocrawling_wrapper, args=(url1, url2, sheet_id)).start()
 
-                # Wait for the completion of the moyocrawling process
-                while not thread_completed.is_set():
+                    # Wait for the completion of the moyocrawling process
+                    while not thread_completed.is_set():
+                        if not error_queue.empty():
+                            error_message = error_queue.get()
+                            st.error(error_message)
+                        time.sleep(0.1)
+
+
+                if not error_queue.empty():
+                # If there are any remaining errors in the queue, display them
+                    while not error_queue.empty():
+                        st.error(error_queue.get())
+                else:
+                    st.success("Process Completed")
+
+            except Exception as e:
+                st.error(f"An Error Occurred: {e}")
+        
+        else:
+            try:
+                headers = {
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+                }
+                with st.spinner("Processing for Google Sheet..."):
+                    # Create new Google Sheet and push headers
+                    sheet_id, webviewlink = create_new_google_sheet_just_moyos()
+                    pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
+                    formatHeaderTrim(sheet_id, 0)
+                    sheetUrl = str(webviewlink)
+                    st.link_button("Go to see", sheetUrl)
+                    # while not end_of_list:
+                    #     BaseUrl = st.session_state.get('BaseUrl').rstrip('/')  # Remove any trailing slash
+                    #     planListUrl = f"{BaseUrl}?page={i}"  
+                    #     response = requests.get(planListUrl)
+                    #     soup = BeautifulSoup(response.text, 'html.parser')
+                    #     a_tags = soup.find_all('a', class_='e3509g015')
+                    #     if not a_tags:  # If no a_tags found, possibly end of list
+                    #         end_of_list = True
+                    #     for a_tag in a_tags:
+                    #         link = a_tag['href']
+                    #         url_queue.put(link)  # Put each link into the queue individually
+                    #     i += 1  # Increment page number
+
+                    # url_list = []
+                    # while not url_queue.empty():
+                    #     url = url_queue.get()
+                    #     url_list.append(str(url))
+                    threading.Thread(target=moyocrawling_just_moyos_wrapper, args=(sheet_id, sheetUrl)).start()
+                    while not thread_completed.is_set():
+                            if not error_queue.empty():
+                                error_message = error_queue.get()
+                                st.error(error_message)
+                            time.sleep(0.1)
+
+
                     if not error_queue.empty():
-                        error_message = error_queue.get()
-                        st.error(error_message)
-                    time.sleep(0.1)
+                    # If there are any remaining errors in the queue, display them
+                        while not error_queue.empty():
+                            st.error(error_queue.get())
+                    else:
+                        st.success("Process Completed")
 
+            except Exception as e:
+                st.error(f"An Error Occurred: {e}")
 
-            if not error_queue.empty():
-            # If there are any remaining errors in the queue, display them
-                while not error_queue.empty():
-                    st.error(error_queue.get())
-            else:
-                st.success("Process Completed")
-
-
-
-        except Exception as e:
-            st.error(f"An Error Occurred: {e}")
 
