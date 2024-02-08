@@ -339,10 +339,11 @@ def regex_extract(strSoup):
     formatted_text_no_support = format_extracted_categories([text_no_support_boundary.group(1) if text_no_support_boundary else ""], categories_no_support)
 
     사은품_pattern = {
-        "사은품 및 이벤트": r"사은품 및 이벤트\s*([^대]+)",
-        "대상": r"대상:\s*([^지]+)",
-        "지급시기": r"지급시기:\s*([^\n]+?)(?=요금제 개통 절차)"
+        "사은품 및 이벤트": r"사은품 및 이벤트\s*([^대상]+)",  # Adjusted to ensure capturing stops before "대상"
+        "대상": r"대상:\s*([^지급]+)",  # Adjusted to ensure capturing stops before "지급시기"
+        "지급시기": r"지급시기:\s*([^\n]+?)(?=요금제 개통 절차)"  # Adjusted to stop capturing right before "요금제 개통 절차"
     }
+    
     def extract_and_format_info(text, patterns):
         formatted_results = []
         for key, pattern in patterns.items():
