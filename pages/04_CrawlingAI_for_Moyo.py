@@ -383,7 +383,7 @@ def regex_extract(strSoup):
         formatted_text_support if formatted_text_support else "제공안함",
         formatted_text_no_support if formatted_text_no_support else "제공안함",
         formatted_사은품_info,
-        카드_할인_정보.group(1) + "할인" if mvno else "제공안함", 
+        카드_할인_정보.group(1) + "할인" if 카드_할인_정보 else "제공안함", 
     ]
 
 def update_google_sheet(data, sheet_id):
