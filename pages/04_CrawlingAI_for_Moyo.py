@@ -345,15 +345,16 @@ def regex_extract(strSoup):
     }
 
     def extract_and_format_info(text, patterns):
-        formatted_results = []
         for key, pattern in patterns.items():
             match = re.search(pattern, text, re.DOTALL)
+            if key == "사은품 및 이벤트" and not match:
+                return "없음"  # Return "없음" immediately if "사은품 및 이벤트" is not found
             if match and match.group(1).strip():
                 value = match.group(1).strip()
-            else:
-                value = "없음"  # Set to "없음" if the match is empty or not found
-            formatted_results.append(f"{key}: {value}")
-        return ', '.join(formatted_results)
+                return f"{key}: {value}"  # Return the key and its value if found, then exit the loop
+
+        # If the loop completes without finding "사은품 및 이벤트", it implies other keys were not processed
+        return "없음"  
 
     formatted_사은품_info = extract_and_format_info(strSoup, 사은품_pattern)
 
