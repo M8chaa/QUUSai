@@ -29,6 +29,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoSuchElementException
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
 from Google import Create_Service
@@ -351,7 +352,7 @@ def regex_extract(strSoup):
             if match and match.group(1).strip():
                 value = match.group(1).strip()
             else:
-                formatted_results.append("제공 안함")
+                formatted_results.append("제공안함")
                 break
             formatted_results.append(f"{key}: {value}")
         return ', '.join(formatted_results)
@@ -466,6 +467,19 @@ def fetch_data(driver, url_queue, data_queue):
                     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
+                try:
+                    사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
+                    사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
+                except NoSuchElementException:
+                    사은품_링크 = None
+
+
+                try:
+                    카드할인_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
+                    카드할인_링크 = 카드할인_링크.get_attribute('href') if 카드할인_링크 else None
+                except NoSuchElementException:
+                    카드할인_링크 = None
+                
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
 
@@ -473,10 +487,14 @@ def fetch_data(driver, url_queue, data_queue):
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
+                    if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
+                        regex_formula[18] += (f", link:{사은품_링크}")
+                    if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
+                        regex_formula[19] += (f", link:{카드할인_링크}")
                     data = [planUrl] + regex_formula + [expired]
                 else:
                     planUrl = str(url)
-                    data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
+                    data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
                     data.append(f"{result}")
             # Put the processed data into the data queue
             data_queue.put(data)
@@ -635,10 +653,22 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     driver.execute_script("arguments[0].click();", button)
+                    # WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                    # div_css_selector = ".css-1b8xqgi"
+                    # div_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, div_css_selector)))
+
+                    # svg_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/main/div/section[4]/div/div/div/div/div/div[1]/div[1]/div")))
+                    # hover = ActionChains(driver).move_to_element(svg_element)
+                    # hover.perform()
+                    # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
                     regex_formula = regex_extract(strSoup)
+                    if regex_formula[18] is not "제공안함":
+                        regex_formula[18] += (f", link:{사은품_링크}")
+                    if regex_formula[19] is not "제공안함":
+                        regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
                     data = [planUrl] + regex_formula
                     data_queue.put(data)
@@ -790,7 +820,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             try:
                 export_to_google_sheet = True
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트", "카드 할인"]
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트", "카드 할인", "서비스 현황"]
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
