@@ -352,7 +352,7 @@ def regex_extract(strSoup):
             if match and match.group(1).strip():
                 value = match.group(1).strip()
             else:
-                formatted_results.append("제공 안함")
+                formatted_results.append("제공안함")
                 break
             formatted_results.append(f"{key}: {value}")
         return ', '.join(formatted_results)
@@ -480,7 +480,7 @@ def fetch_data(driver, url_queue, data_queue):
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
-                    if regex_formula[19] is not "없음":
+                    if regex_formula[19] is not "제공안함":
                         regex_formula[19] += (f", link:{link_url}")
                     data = [planUrl] + regex_formula + [expired]
                 else:
@@ -653,10 +653,17 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # hover.perform()
                     # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     try:
-                        link_element = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
-                        link_url = link_element.get_attribute('href') if link_element else None
+                        사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf e17wbb0s4')
+                        사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
                     except NoSuchElementException:
-                        link_url = None
+                        사은품_링크 = None
+
+
+                    try:
+                        카드할인_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
+                        카드할인_링크 = 카드할인_링크.get_attribute('href') if 카드할인_링크 else None
+                    except NoSuchElementException:
+                        카드할인_링크 = None
 
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
@@ -666,8 +673,10 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # if svg_element is '':
                     #     tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
-                    if regex_formula[19] is not "없음":
-                        regex_formula[19] += (f", link:{link_url}")
+                    if regex_formula[18] is not "제공안함":
+                        regex_formula[19] += (f", link:{사은품_링크}")
+                    if regex_formula[19] is not "제공안함":
+                        regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
                     # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
                     # data = [planUrl] + regex_formula + [expired]
