@@ -635,26 +635,26 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     driver.execute_script("arguments[0].click();", button)
-                    WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                    # WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
                     # div_css_selector = ".css-1b8xqgi"
                     # div_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, div_css_selector)))
 
-                    svg_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/main/div/section[4]/div/div/div/div/div/div[1]/div[1]/div")))
+                    # svg_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/main/div/section[4]/div/div/div/div/div/div[1]/div[1]/div")))
                     # hover = ActionChains(driver).move_to_element(svg_element)
                     # hover.perform()
                     # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
-                    expired = "서비스 중입니다"
-                    tooltip_text = 'no pass'
-                    if svg_element is '':
-                        tooltip_text = 'pass'
+                    # expired = "서비스 중입니다"
+                    # tooltip_text = 'no pass'
+                    # if svg_element is '':
+                    #     tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
                     # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
                     # data = [planUrl] + regex_formula + [expired]
-                    data = [planUrl] + regex_formula + [tooltip_text]
+                    data = [planUrl] + regex_formula
                     # Put the processed data into the data queue
                     data_queue.put(data)
                     fetch_success = True
