@@ -748,6 +748,7 @@ with st.sidebar:
             st.session_state['show_download_buttons'] = True
             st.session_state['url1'] = url1
             st.session_state['url2'] = url2
+            st.session_state['Just_Moyos'] = False
             st.write("Starting URL: ", url1)
             st.write("Last URL: ", url2)
         else:
