@@ -662,8 +662,6 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # hover = ActionChains(driver).move_to_element(svg_element)
                     # hover.perform()
                     # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
-<<<<<<< HEAD
-=======
                     try:
                         사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
                         사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
@@ -677,7 +675,6 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     except NoSuchElementException:
                         카드할인_링크 = None
 
->>>>>>> test2
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
