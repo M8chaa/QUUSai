@@ -351,7 +351,7 @@ def regex_extract(strSoup):
             if match and match.group(1).strip():
                 value = match.group(1).strip()
             else:
-                formatted_results.append("없음")
+                formatted_results.append("제공 안함")
                 break
             formatted_results.append(f"{key}: {value}")
         return ', '.join(formatted_results)
