@@ -468,7 +468,7 @@ def fetch_data(driver, url_queue, data_queue):
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
                 try:
-                    사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf e17wbb0s4')
+                    사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
                     사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
                 except NoSuchElementException:
                     사은품_링크 = None
@@ -487,9 +487,9 @@ def fetch_data(driver, url_queue, data_queue):
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
-                    if regex_formula[18] is not "제공안함":
+                    if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
                         regex_formula[18] += (f", link:{사은품_링크}")
-                    if regex_formula[19] is not "제공안함":
+                    if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
                         regex_formula[19] += (f", link:{카드할인_링크}")
                     data = [planUrl] + regex_formula + [expired]
                 else:
