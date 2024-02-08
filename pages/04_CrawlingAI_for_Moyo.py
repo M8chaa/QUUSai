@@ -1,6 +1,7 @@
 # coding:utf-8
 from email.mime import base
 from operator import call
+from os import eventfd
 from langchain.document_loaders import SitemapLoader
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -337,6 +338,27 @@ def regex_extract(strSoup):
     formatted_text_support = format_extracted_categories([text_support_boundary.group(1) if text_support_boundary else ""], categories_support)
     formatted_text_no_support = format_extracted_categories([text_no_support_boundary.group(1) if text_no_support_boundary else ""], categories_no_support)
 
+    사은품_pattern = {
+        "사은품 및 이벤트": r"사은품 및 이벤트\s*([^\n]+?)(?=대상:)",  # Adjusted to ensure full capture up to "대상:"
+        "대상": r"대상:\s*([^지급시기]+)",  # Ensure capturing stops correctly before "지급시기"
+        "지급시기": r"지급시기:\s*([^\n]+?)(?=요금제 개통 절차)"  # Ensure capturing stops correctly before "요금제 개통 절차"
+    }
+
+    def extract_and_format_info(text, patterns):
+        for key, pattern in patterns.items():
+            match = re.search(pattern, text, re.DOTALL)
+            if key == "사은품 및 이벤트" and not match:
+                return "없음"  # Return "없음" immediately if "사은품 및 이벤트" is not found
+            if match and match.group(1).strip():
+                value = match.group(1).strip()
+                return f"{key}: {value}"  # Return the key and its value if found, then exit the loop
+
+        # If the loop completes without finding "사은품 및 이벤트", it implies other keys were not processed
+        return "없음"  
+
+    formatted_사은품_info = extract_and_format_info(strSoup, 사은품_pattern)
+
+
     return [
         mvno.group(1) if mvno else "제공안함", 
         plan_name.group(1) if plan_name else "제공안함", 
@@ -355,7 +377,8 @@ def regex_extract(strSoup):
         between_nfc_sim_and_esim.group(1) if between_nfc_sim_and_esim else "제공안함",
         between_esim_and_support.group(1) if between_esim_and_support else "제공안함",
         formatted_text_support if formatted_text_support else "제공안함",
-        formatted_text_no_support if formatted_text_no_support else "제공안함"
+        formatted_text_no_support if formatted_text_no_support else "제공안함",
+        formatted_사은품_info
     ]
 
 def update_google_sheet(data, sheet_id):
@@ -386,6 +409,8 @@ def sort_sheet_by_column(sheet_id, column_index=0):
 
 error_queue = Queue()
 thread_completed = Event()
+stop_signal = Event()
+
 
 def fetch_data(driver, url_queue, data_queue):
     try:
@@ -452,6 +477,8 @@ def fetch_data(driver, url_queue, data_queue):
             data_queue.put(data)
             driver.delete_all_cookies()
             url_queue.task_done()
+            if stop_signal.is_set():
+                break
     except Exception as e:
         # Log the exception or handle it as needed
         error_message = f"An error occurred when fetching data of {url}: {e}"
@@ -490,6 +517,8 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id):
             finally:
                 for _ in batch_data:  # Acknowledge each item in the batch
                     data_queue.task_done()
+        if stop_signal.is_set():
+                break
 
 
 
@@ -520,6 +549,7 @@ def moyocrawling(url1, url2, sheet_id):
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-extensions')
+        # options.add_argument("window-size=800x2000")
         prefs = {"profile.managed_default_content_settings.images": 2}
         options.add_experimental_option("prefs", prefs)
 
@@ -533,7 +563,7 @@ def moyocrawling(url1, url2, sheet_id):
 
      # Start data fetching threads
     fetch_threads = []
-    for _ in range(6):
+    for _ in range(3):
         driver = setup_driver()  # Each thread gets its own driver instance
         t = threading.Thread(target=fetch_data, args=(driver, url_queue, data_queue))
         t.start()
@@ -557,6 +587,8 @@ def moyocrawling(url1, url2, sheet_id):
         thread.join()
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
+    if stop_signal.is_set():
+        return
 
 def fetch_url_Just_Moyos(url_fetch_queue):
     end_of_list = False
@@ -575,36 +607,49 @@ def fetch_url_Just_Moyos(url_fetch_queue):
             plan_detail_url = f"{base_url}{link}"
             url_fetch_queue.put(plan_detail_url)  # Put each link into the queue individually
         i += 1  # Increment page number
+        if stop_signal.is_set():
+            break  
+
+
 
 
 def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
     try:
+        base_url = "https://www.moyoplan.com/plans"
+        driver.get(base_url)
         while not url_fetch_queue.empty():
             url = url_fetch_queue.get()
             # Fetch and process data from the URL
             attempts = 0
             fetch_success = False
-
+            
             while attempts < 5 and not fetch_success:
                 try: 
                     driver.get(url)
-
                     driver.refresh()
-
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    # ActionChains(driver).move_to_element(button).click(button).perform()
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     driver.execute_script("arguments[0].click();", button)
                     WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                    # div_css_selector = ".css-1b8xqgi"
+                    # div_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, div_css_selector)))
+
+                    svg_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/main/div/section[4]/div/div/div/div/div/div[1]/div[1]/div")))
+                    # hover = ActionChains(driver).move_to_element(svg_element)
+                    # hover.perform()
+                    # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
                     expired = "서비스 중입니다"
-
+                    tooltip_text = 'no pass'
+                    if svg_element is '':
+                        tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
-                    data = [planUrl] + regex_formula + [expired]
+                    # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
+                    # data = [planUrl] + regex_formula + [expired]
+                    data = [planUrl] + regex_formula + [tooltip_text]
                     # Put the processed data into the data queue
                     data_queue.put(data)
                     fetch_success = True
@@ -614,6 +659,8 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     if attempts == 5:
                         error_message = f"Failed to fetch data after 5 attempts for URL: {url}"
                         error_queue.put(error_message)
+            if stop_signal.is_set():
+                break  
 
             driver.delete_all_cookies()
             url_fetch_queue.task_done()
@@ -625,28 +672,27 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
         driver.quit()
 
 def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
+    def setup_driver():
+            options = ChromeOptions()
+            options.add_argument("--headless")
+            options.add_argument('--disable-gpu')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-extensions')
+            options.add_argument('window-size=800x2000')  # Adjust as needed
+            prefs = {"profile.managed_default_content_settings.images": 2}
+            options.add_experimental_option("prefs", prefs)
 
+            CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+            service = fs.Service(CHROMEDRIVER)
+            driver = webdriver.Chrome(
+                                    options=options,
+                                    service=service
+                                    )
+            return driver
     url_fetch_queue = Queue()
     data_queue = Queue()
     sheet_update_lock = threading.Lock()
-
-    def setup_driver():
-        options = ChromeOptions()
-        options.add_argument("--headless")
-        options.add_argument('--disable-gpu')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-extensions')
-        prefs = {"profile.managed_default_content_settings.images": 2}
-        options.add_experimental_option("prefs", prefs)
-
-        CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-        service = fs.Service(CHROMEDRIVER)
-        driver = webdriver.Chrome(
-                                options=options,
-                                service=service
-                                )
-        return driver
 
     fetch_url_threads = []
     for _ in range(1):
@@ -654,7 +700,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
         t.start()
         fetch_url_threads.append(t)
 
-     # Start data fetching threads
+    # Start data fetching threads
     fetch_threads = []
     for _ in range(3):
         driver = setup_driver()  # Each thread gets its own driver instance
@@ -678,7 +724,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(1):
+    for _ in range(5):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
@@ -686,6 +732,10 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
         thread.join()
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
+    if stop_signal.is_set():
+        return
+    
+
 
 
 with st.sidebar:
@@ -709,6 +759,7 @@ with st.sidebar:
             st.session_state['show_download_buttons'] = True
             st.session_state['url1'] = url1
             st.session_state['url2'] = url2
+            st.session_state['Just_Moyos'] = False
             st.write("Starting URL: ", url1)
             st.write("Last URL: ", url2)
         else:
@@ -740,13 +791,16 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
     url2 = st.session_state.get('url2')
     col1, col2 = st.columns(2)
 
-    gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
+    with col1:
+        gs_button_pressed = st.button("Google Sheet", key="gs_button", use_container_width=True)
+    with col2:
+        stop_button_pressed = st.button("Stop Processing", key="stop_button")
     if gs_button_pressed:
         if st.session_state['Just_Moyos'] is False:
             try:
                 export_to_google_sheet = True
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트"]
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
@@ -780,7 +834,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         else:
             try:
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트"]
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
@@ -823,5 +877,9 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
 
             except Exception as e:
                 st.error(f"An Error Occurred: {e}")
+
+    if stop_button_pressed:
+        stop_signal.set()  # Signal threads to stop
+        st.write("Stopped all processes...")
 
 
