@@ -2,6 +2,7 @@
 from email.mime import base
 from operator import call
 from os import eventfd
+from tkinter import NO
 from langchain.document_loaders import SitemapLoader
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -662,7 +663,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # hover.perform()
                     # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     try:
-                        사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf e17wbb0s4')
+                        사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
                         사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
                     except NoSuchElementException:
                         사은품_링크 = None
@@ -682,9 +683,9 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # if svg_element is '':
                     #     tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
-                    if regex_formula[18] is not "제공안함":
+                    if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
                         regex_formula[18] += (f", link:{사은품_링크}")
-                    if regex_formula[19] is not "제공안함":
+                    if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
                         regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
                     # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
