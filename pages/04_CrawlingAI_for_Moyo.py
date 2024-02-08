@@ -468,7 +468,7 @@ def fetch_data(driver, url_queue, data_queue):
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
                 try:
-                    link_element = driver.find_element_by_css_selector('a.css-pnutty.ema3yz60')
+                    link_element = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
                     link_url = link_element.get_attribute('href') if link_element else None
                 except NoSuchElementException:
                     link_url = None
@@ -653,7 +653,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # hover.perform()
                     # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     try:
-                        link_element = driver.find_element_by_css_selector('a.css-pnutty.ema3yz60')
+                        link_element = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
                         link_url = link_element.get_attribute('href') if link_element else None
                     except NoSuchElementException:
                         link_url = None
