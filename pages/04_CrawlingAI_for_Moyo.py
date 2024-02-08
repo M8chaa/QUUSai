@@ -142,7 +142,7 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
                 "startRowIndex": 0,
                 "endRowIndex": 1,
                 "startColumnIndex": 0,
-                "endColumnIndex": 20
+                "endColumnIndex": 21
             },
             "cell": {
                 "userEnteredFormat": {
@@ -160,13 +160,13 @@ def formatHeaderTrim(sheet_id, sheet_index=0):
     requests.append(header_format_request)
 
     # Trimming columns if necessary
-    if totalColumns > 20:
+    if totalColumns > 21:
         trim_columns_request = {
             "deleteDimension": {
                 "range": {
                     "sheetId": sheetId,
                     "dimension": "COLUMNS",
-                    "startIndex": 20,
+                    "startIndex": 21,
                     "endIndex": totalColumns
                 }
             }
@@ -343,20 +343,24 @@ def regex_extract(strSoup):
         "대상": r"대상:\s*([^지급시기]+)",  # Ensure capturing stops correctly before "지급시기"
         "지급시기": r"지급시기:\s*([^\n]+?)(?=요금제 개통 절차)"  # Ensure capturing stops correctly before "요금제 개통 절차"
     }
-
+    
     def extract_and_format_info(text, patterns):
+        formatted_results = []
         for key, pattern in patterns.items():
             match = re.search(pattern, text, re.DOTALL)
-            if key == "사은품 및 이벤트" and not match:
-                return "없음"  # Return "없음" immediately if "사은품 및 이벤트" is not found
             if match and match.group(1).strip():
                 value = match.group(1).strip()
-                return f"{key}: {value}"  # Return the key and its value if found, then exit the loop
+            else:
+                formatted_results.append("없음")
+                break
+            formatted_results.append(f"{key}: {value}")
+        return ', '.join(formatted_results)
 
-        # If the loop completes without finding "사은품 및 이벤트", it implies other keys were not processed
-        return "없음"  
 
     formatted_사은품_info = extract_and_format_info(strSoup, 사은품_pattern)
+
+    카드_할인 = r"카드 결합 할인\s*(.*?)할인"
+    카드_할인_정보 = re.search(카드_할인, strSoup)
 
 
     return [
@@ -378,7 +382,8 @@ def regex_extract(strSoup):
         between_esim_and_support.group(1) if between_esim_and_support else "제공안함",
         formatted_text_support if formatted_text_support else "제공안함",
         formatted_text_no_support if formatted_text_no_support else "제공안함",
-        formatted_사은품_info
+        formatted_사은품_info,
+        카드_할인_정보.group(1) + "할인" if 카드_할인_정보 else "제공안함", 
     ]
 
 def update_google_sheet(data, sheet_id):
@@ -785,7 +790,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             try:
                 export_to_google_sheet = True
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트"]
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트", "카드 할인"]
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
@@ -819,7 +824,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         else:
             try:
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트"]
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트", "카드 할인"]
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
