@@ -468,10 +468,17 @@ def fetch_data(driver, url_queue, data_queue):
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
                 try:
-                    link_element = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
-                    link_url = link_element.get_attribute('href') if link_element else None
+                    사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf e17wbb0s4')
+                    사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
                 except NoSuchElementException:
-                    link_url = None
+                    사은품_링크 = None
+
+
+                try:
+                    카드할인_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
+                    카드할인_링크 = 카드할인_링크.get_attribute('href') if 카드할인_링크 else None
+                except NoSuchElementException:
+                    카드할인_링크 = None
                 
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
@@ -480,8 +487,10 @@ def fetch_data(driver, url_queue, data_queue):
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
+                    if regex_formula[18] is not "제공안함":
+                        regex_formula[18] += (f", link:{사은품_링크}")
                     if regex_formula[19] is not "제공안함":
-                        regex_formula[19] += (f", link:{link_url}")
+                        regex_formula[19] += (f", link:{카드할인_링크}")
                     data = [planUrl] + regex_formula + [expired]
                 else:
                     planUrl = str(url)
@@ -674,7 +683,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     #     tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
                     if regex_formula[18] is not "제공안함":
-                        regex_formula[19] += (f", link:{사은품_링크}")
+                        regex_formula[18] += (f", link:{사은품_링크}")
                     if regex_formula[19] is not "제공안함":
                         regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
