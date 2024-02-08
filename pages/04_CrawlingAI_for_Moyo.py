@@ -480,8 +480,8 @@ def fetch_data(driver, url_queue, data_queue):
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
-                    if regex_formula[20] is not "없음":
-                        regex_formula[20].append(f", link:{link_url}")
+                    if regex_formula[19] is not "없음":
+                        regex_formula[19].append(f", link:{link_url}")
                     data = [planUrl] + regex_formula + [expired]
                 else:
                     planUrl = str(url)
@@ -666,8 +666,8 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # if svg_element is '':
                     #     tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
-                    if regex_formula[20] is not "없음":
-                        regex_formula[20].append(f", link:{link_url}")
+                    if regex_formula[19] is not "없음":
+                        regex_formula[19].append(f", link:{link_url}")
                     planUrl = str(url)
                     # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
                     # data = [planUrl] + regex_formula + [expired]
