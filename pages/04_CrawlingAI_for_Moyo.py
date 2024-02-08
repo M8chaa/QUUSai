@@ -338,6 +338,25 @@ def regex_extract(strSoup):
     formatted_text_support = format_extracted_categories([text_support_boundary.group(1) if text_support_boundary else ""], categories_support)
     formatted_text_no_support = format_extracted_categories([text_no_support_boundary.group(1) if text_no_support_boundary else ""], categories_no_support)
 
+    사은품_pattern = {
+        "사은품 및 이벤트": r"사은품 및 이벤트\s*([^대]+)",
+        "대상": r"대상:\s*([^지]+)",
+        "지급시기": r"지급시기:\s*([^\n]+?)(?=요금제 개통 절차)"
+    }
+    def extract_and_format_info(text, patterns):
+        formatted_results = []
+        for key, pattern in patterns.items():
+            match = re.search(pattern, text, re.DOTALL)
+            if match and match.group(1).strip():
+                value = match.group(1).strip()
+            else:
+                value = "없음"  # Set to "없음" if the match is empty or not found
+            formatted_results.append(f"{key}: {value}")
+        return '\n'.join(formatted_results)
+
+    formatted_사은품_info = extract_and_format_info(strSoup, 사은품_pattern)
+
+
     return [
         mvno.group(1) if mvno else "제공안함", 
         plan_name.group(1) if plan_name else "제공안함", 
@@ -356,7 +375,8 @@ def regex_extract(strSoup):
         between_nfc_sim_and_esim.group(1) if between_nfc_sim_and_esim else "제공안함",
         between_esim_and_support.group(1) if between_esim_and_support else "제공안함",
         formatted_text_support if formatted_text_support else "제공안함",
-        formatted_text_no_support if formatted_text_no_support else "제공안함"
+        formatted_text_no_support if formatted_text_no_support else "제공안함",
+        formatted_사은품_info
     ]
 
 def update_google_sheet(data, sheet_id):
@@ -768,7 +788,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             try:
                 export_to_google_sheet = True
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "종료 여부"]
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트"]
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
@@ -802,7 +822,7 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         else:
             try:
                 headers = {
-                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "개통 가능 시간"]
+                    'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트"]
                 }
                 with st.spinner("Processing for Google Sheet..."):
                     # Create new Google Sheet and push headers
