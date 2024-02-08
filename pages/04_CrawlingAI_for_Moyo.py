@@ -353,7 +353,7 @@ def regex_extract(strSoup):
             else:
                 value = "없음"  # Set to "없음" if the match is empty or not found
             formatted_results.append(f"{key}: {value}")
-        return '\n'.join(formatted_results)
+        return ', '.join(formatted_results)
 
     formatted_사은품_info = extract_and_format_info(strSoup, 사은품_pattern)
 
