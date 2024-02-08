@@ -709,7 +709,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(5):
+    for _ in range(1):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
