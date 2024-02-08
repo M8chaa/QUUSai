@@ -475,6 +475,8 @@ def fetch_data(driver, url_queue, data_queue):
             data_queue.put(data)
             driver.delete_all_cookies()
             url_queue.task_done()
+            if stop_signal.is_set():
+                break
     except Exception as e:
         # Log the exception or handle it as needed
         error_message = f"An error occurred when fetching data of {url}: {e}"
@@ -513,6 +515,8 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id):
             finally:
                 for _ in batch_data:  # Acknowledge each item in the batch
                     data_queue.task_done()
+        if stop_signal.is_set():
+                break
 
 
 
@@ -581,6 +585,8 @@ def moyocrawling(url1, url2, sheet_id):
         thread.join()
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
+    if stop_signal.is_set():
+        return
 
 def fetch_url_Just_Moyos(url_fetch_queue):
     end_of_list = False
@@ -640,6 +646,7 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
                     # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
+                    # data = [planUrl] + regex_formula + [expired]
                     data = [planUrl] + regex_formula + [tooltip_text]
                     # Put the processed data into the data queue
                     data_queue.put(data)
@@ -723,6 +730,8 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl):
         thread.join()
     autoResizeColumns(sheet_id, 0)
     thread_completed.set()
+    if stop_signal.is_set():
+        return
     
 
 
