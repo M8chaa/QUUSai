@@ -29,6 +29,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoSuchElementException
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
 from Google import Create_Service
@@ -351,7 +352,7 @@ def regex_extract(strSoup):
             if match and match.group(1).strip():
                 value = match.group(1).strip()
             else:
-                formatted_results.append("없음")
+                formatted_results.append("제공 안함")
                 break
             formatted_results.append(f"{key}: {value}")
         return ', '.join(formatted_results)
@@ -466,6 +467,12 @@ def fetch_data(driver, url_queue, data_queue):
                     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
                 html = driver.page_source
                 soup = BeautifulSoup(html, 'html.parser')
+                try:
+                    link_element = driver.find_element_by_css_selector('a.css-pnutty.ema3yz60')
+                    link_url = link_element.get_attribute('href') if link_element else None
+                except NoSuchElementException:
+                    link_url = None
+                
                 strSoup = soup.get_text()
                 expired = "서비스 중입니다"
 
@@ -473,10 +480,12 @@ def fetch_data(driver, url_queue, data_queue):
                 if result is "":
                     regex_formula = regex_extract(strSoup)
                     planUrl = str(url)
+                    if regex_formula[20] is not "없음":
+                        regex_formula[20].append(f", link:{link_url}")
                     data = [planUrl] + regex_formula + [expired]
                 else:
                     planUrl = str(url)
-                    data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
+                    data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
                     data.append(f"{result}")
             # Put the processed data into the data queue
             data_queue.put(data)
@@ -643,6 +652,12 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # hover = ActionChains(driver).move_to_element(svg_element)
                     # hover.perform()
                     # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
+                    try:
+                        link_element = driver.find_element_by_css_selector('a.css-pnutty.ema3yz60')
+                        link_url = link_element.get_attribute('href') if link_element else None
+                    except NoSuchElementException:
+                        link_url = None
+
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
@@ -651,6 +666,8 @@ def fetch_data_Just_Moyos(driver, url_fetch_queue, data_queue):
                     # if svg_element is '':
                     #     tooltip_text = 'pass'
                     regex_formula = regex_extract(strSoup)
+                    if regex_formula[20] is not "없음":
+                        regex_formula[20].append(f", link:{link_url}")
                     planUrl = str(url)
                     # data = [planUrl] + regex_formula + [tooltip_text] + [expired]
                     # data = [planUrl] + regex_formula + [expired]
