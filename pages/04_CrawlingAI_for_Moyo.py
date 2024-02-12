@@ -2,7 +2,7 @@
 from email.mime import base
 from operator import call
 from os import eventfd
-from tkinter import N
+# from tkinter import N
 from langchain.document_loaders import SitemapLoader
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.text_splitter import RecursiveCharacterTextSplitter
