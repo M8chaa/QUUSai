@@ -926,24 +926,24 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
                             if not error_queue.empty():
                                 error_message = error_queue.get()
                                 st.error(error_message)
-                        # CPU usage
-                        cpu_percent = psutil.cpu_percent()
+                            # CPU usage
+                            cpu_percent = psutil.cpu_percent()
 
-                        # Virtual (Physical) Memory
-                        memory_info = psutil.virtual_memory()
-                        memory_percent = memory_info.percent  # Memory usage in percent
-                        memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
-                        memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
+                            # Virtual (Physical) Memory
+                            memory_info = psutil.virtual_memory()
+                            memory_percent = memory_info.percent  # Memory usage in percent
+                            memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
+                            memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
 
-                        # Swap Memory
-                        swap_info = psutil.swap_memory()
-                        swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
-                        swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
+                            # Swap Memory
+                            swap_info = psutil.swap_memory()
+                            swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
+                            swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
 
-                        st.write(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
-                        st.write(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
-                        st.write(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
-                        time.sleep(0.1)
+                            st.write(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
+                            st.write(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
+                            st.write(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
+                            time.sleep(0.1)
 
 
                     if not error_queue.empty():
