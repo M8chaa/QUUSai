@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-current_url = "https://www.moyoplan.com/plans/10431"
+current_url = "https://www.moyoplan.com/plans/19291"
 response = requests.get(current_url)
 soup = BeautifulSoup(response.text, 'html.parser')
 strSoup = soup.get_text()

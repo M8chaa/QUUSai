@@ -40,7 +40,8 @@ from ratelimit import limits, sleep_and_retry
 import traceback
 from datetime import datetime
 import pytz
-
+from multiprocessing import Process, Manager
+import psutil
 
 
 st.set_page_config(
@@ -119,9 +120,27 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A'):
             valueInputOption='USER_ENTERED',  # or 'RAW'
             body=body
         ).execute()
+                # CPU usage
+        cpu_percent = psutil.cpu_percent()
+
+        # Virtual (Physical) Memory
+        memory_info = psutil.virtual_memory()
+        memory_percent = memory_info.percent  # Memory usage in percent
+        memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
+        memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+        # Swap Memory
+        swap_info = psutil.swap_memory()
+        swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
+        swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+        print(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
+        print(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
+        print(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
         return result
     except Exception as e:
         # Re-raise the exception to be caught in the calling function
+        print(f"Failed to push data to sheet: {e}")
         raise Exception(f"Failed to push data to sheet: {e}")
 
 
