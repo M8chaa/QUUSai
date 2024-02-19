@@ -928,4 +928,4 @@ while True:
     memory_placeholder.write(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
     swap_placeholder.write(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
 
-    time.sleep(0.1)
+    time.sleep(2)
