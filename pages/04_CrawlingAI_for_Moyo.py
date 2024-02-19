@@ -897,6 +897,9 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         try:
             print("Processing Google Sheet.../////////////////////////////////////////////////////////////////")
             process_google_sheet(st.session_state['Just_Moyos'], url1, url2)
+            cpu_placeholder = st.empty()
+            memory_placeholder = st.empty()
+            swap_placeholder = st.empty()
             while True:
                 # CPU usage
                 cpu_percent = psutil.cpu_percent()
