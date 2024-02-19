@@ -897,38 +897,10 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
         try:
             print("Processing Google Sheet.../////////////////////////////////////////////////////////////////")
             process_google_sheet(st.session_state['Just_Moyos'], url1, url2)
-            cpu_placeholder = st.empty()
-            memory_placeholder = st.empty()
-            swap_placeholder = st.empty()
-            while True:
-                # CPU usage
-                cpu_percent = psutil.cpu_percent()
-
-                # Virtual (Physical) Memory
-                memory_info = psutil.virtual_memory()
-                memory_percent = memory_info.percent  # Memory usage in percent
-                memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
-                memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
-
-                # Swap Memory
-                swap_info = psutil.swap_memory()
-                swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
-                swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
-
-                # Update the placeholders
-                cpu_placeholder.write(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
-                memory_placeholder.write(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
-                swap_placeholder.write(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
-
-                time.sleep(2)
         except Exception as e:
             st.error(f"An Error Occurred: {e}")
 
     if stop_button_pressed:
         stop_signal.set()  # Signal threads to stop
         st.write("Stopped all processes...")
-
-cpu_placeholder = st.empty()
-memory_placeholder = st.empty()
-swap_placeholder = st.empty()
 
