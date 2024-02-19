@@ -109,26 +109,6 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A', serviceInstance=None):
             body=body
         ).execute()
 
-        # CPU usage
-        cpu_percent = psutil.cpu_percent()
-
-        # Virtual (Physical) Memory
-        memory_info = psutil.virtual_memory()
-        memory_percent = memory_info.percent  # Memory usage in percent
-        # Correct calculation for used and total memory in MB
-        memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
-        memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
-
-        # Swap Memory
-        swap_info = psutil.swap_memory()
-        # Correct calculation for used and total swap in MB
-        swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
-        swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
-
-        st.write(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
-        st.write(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
-        st.write(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
-
         return result, serviceInstance
     except Exception as e:
         # Re-raise the exception to be caught in the calling function
@@ -891,6 +871,26 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
             if not error_queue.empty():
                 error_message = error_queue.get()
                 st.error(error_message)
+            
+            # CPU usage
+            cpu_percent = psutil.cpu_percent()
+
+            # Virtual (Physical) Memory
+            memory_info = psutil.virtual_memory()
+            memory_percent = memory_info.percent  # Memory usage in percent
+            # Correct calculation for used and total memory in MB
+            memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
+            memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+            # Swap Memory
+            swap_info = psutil.swap_memory()
+            # Correct calculation for used and total swap in MB
+            swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
+            swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+            st.write(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
+            st.write(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
+            st.write(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
             time.sleep(0.1)
 
     # If there are any remaining errors in the queue, display them
