@@ -886,11 +886,34 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
             moyocrawling(url1, url2, sheet_id, googlesheetInstance)
             print("Crawling Started/////////////////////////////////////////////////////////////////")
 
+        cpu_placeholder = st.empty()
+        memory_placeholder = st.empty()
+        swap_placeholder = st.empty()
+
         # Wait for the completion of the moyocrawling process
         while not thread_completed.is_set():
             if not error_queue.empty():
                 error_message = error_queue.get()
                 st.error(error_message)
+            # CPU usage
+            cpu_percent = psutil.cpu_percent()
+
+            # Virtual (Physical) Memory
+            memory_info = psutil.virtual_memory()
+            memory_percent = memory_info.percent  # Memory usage in percent
+            memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
+            memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+            # Swap Memory
+            swap_info = psutil.swap_memory()
+            swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
+            swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+            # Update the placeholders
+            cpu_placeholder.write(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
+            memory_placeholder.write(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
+            swap_placeholder.write(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
+
             time.sleep(0.1)
 
     # If there are any remaining errors in the queue, display them
