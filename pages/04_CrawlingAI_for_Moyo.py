@@ -878,6 +878,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     html_content = page.content()
                     soup = BeautifulSoup(html_content, 'html.parser')
                     strSoup = soup.get_text()
+                    print(strSoup)
                     regex_formula = regex_extract(strSoup)
                     if regex_formula[18] != "제공안함" and 사은품_링크 is not None:
                         regex_formula[18] += (f", link:{사은품_링크}")
@@ -963,60 +964,36 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
     if stop_signal.is_set():
         return
     
-async def fetch_url_list(session, base_url="https://www.moyoplan.com/plans"):
-    url_list = []
-    i = 1
-    end_of_list = False
-    while not end_of_list:
-        plan_list_url = f"{base_url}?page={i}"
-        async with session.get(plan_list_url) as response:
-            if response.status != 200:
-                print(f"Failed to fetch data from {plan_list_url}. Status code: {response.status}")
-                break
-            soup = BeautifulSoup(await response.text(), 'html.parser')
-            a_tags = soup.find_all('a', class_='e3509g015')
-            if not a_tags:
-                end_of_list = True
-                break
-            for a_tag in a_tags:
-                link = a_tag['href']
-                url_list.append(f"{base_url}{link}")
-            i += 1
-    return url_list
 
-async def fetch_data(url, playwright, semaphore):
+# async def fetch_url_list(session, base_url="https://www.moyoplan.com/plans"):
+#     url_list = []
+#     i = 1
+#     end_of_list = False
+#     while not end_of_list:
+#         plan_list_url = f"{base_url}?page={i}"
+#         async with session.get(plan_list_url) as response:
+#             if response.status != 200:
+#                 print(f"Failed to fetch data from {plan_list_url}. Status code: {response.status}")
+#                 break
+#             soup = BeautifulSoup(await response.text(), 'html.parser')
+#             print(f"url fetched")
+#             a_tags = soup.find_all('a', class_='e3509g015')
+#             if not a_tags:
+#                 end_of_list = True
+#                 break
+#             for a_tag in a_tags:
+#                 link = a_tag['href']
+#                 url_list.append(f"{base_url}{link}")
+#             i += 1
+#     print(url_list)
+#     return url_list
+
+async def fetch_and_process_url(url, session, playwright, semaphore):
     async with semaphore:  # This will block if more than 3 tasks are already running
         browser = await playwright.chromium.launch()
         context = await browser.new_context()
         page = await context.new_page()
         await page.goto(url)
-        html_content = await page.content()
-        soup = BeautifulSoup(html_content, 'html.parser')
-        strSoup = soup.get_text()
-        print(f"fetch data soup: {strSoup}")
-        await page.reload()
-        await page.wait_for_selector(".css-yg1ktq", state="attached")
-        await page.click(".css-yg1ktq")
-
-        # Extracting elements with Playwright
-        사은품_링크_element = await page.query_selector('a.css-1hdj7cf.e17wbb0s4')
-        사은품_링크 = await 사은품_링크_element.get_attribute('href') if 사은품_링크_element else None
-
-        카드할인_링크_element = await page.query_selector('a.css-pnutty.ema3yz60')
-        카드할인_링크 = await 카드할인_링크_element.get_attribute('href') if 카드할인_링크_element else None
-
-        html_content = await page.content()
-        soup = BeautifulSoup(html_content, 'html.parser')
-        strSoup = soup.get_text()
-        print(strSoup)
-        regex_formula = regex_extract(strSoup)
-        if regex_formula[18] != "제공안함" and 사은품_링크 is not None:
-            regex_formula[18] += (f", link:{사은품_링크}")
-        if regex_formula[19] != "제공안함" and 카드할인_링크 is not None:
-            regex_formula[19] += (f", link:{카드할인_링크}")
-        planUrl = str(url)
-        data = [planUrl] + regex_formula
-        print(f"button clicked data: {data}")
         # After fetching data, monitor system resources
         cpu_percent = psutil.cpu_percent()
         memory_info = psutil.virtual_memory()
@@ -1031,32 +1008,66 @@ async def fetch_data(url, playwright, semaphore):
         print(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
         print(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
         print(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
+        html_content = await page.content()
+        soup = BeautifulSoup(html_content, 'html.parser')
+        strSoup = soup.get_text()
+        print(f"page loaded for {url}: {strSoup}")
+        await page.reload()
+        await page.wait_for_selector(".css-yg1ktq", state="attached")
+        await page.click(".css-yg1ktq")
+
+        # Extracting elements with Playwright
+        사은품_링크_element = await page.query_selector('a.css-1hdj7cf.e17wbb0s4')
+        사은품_링크 = await 사은품_링크_element.get_attribute('href') if 사은품_링크_element else None
+
+        카드할인_링크_element = await page.query_selector('a.css-pnutty.ema3yz60')
+        카드할인_링크 = await 카드할인_링크_element.get_attribute('href') if 카드할인_링크_element else None
+
+        html_content = await page.content()
+        soup = BeautifulSoup(html_content, 'html.parser')
+        strSoup = soup.get_text()
+        regex_formula = regex_extract(strSoup)
+        if regex_formula[18] != "제공안함" and 사은품_링크 is not None:
+            regex_formula[18] += (f", link:{사은품_링크}")
+        if regex_formula[19] != "제공안함" and 카드할인_링크 is not None:
+            regex_formula[19] += (f", link:{카드할인_링크}")
+        planUrl = str(url)
+        data = [planUrl] + regex_formula
+        print(f"button clicked data: {data}")
+
         await browser.close()
+
+async def fetch_url_list(session, playwright, semaphore, base_url="https://www.moyoplan.com/plans"):
+    i = 1
+    end_of_list = False
+    while not end_of_list:
+        plan_list_url = f"{base_url}?page={i}"
+        async with session.get(plan_list_url) as response:
+            if response.status != 200:
+                print(f"Failed to fetch data from {plan_list_url}. Status code: {response.status}")
+                break
+            soup = BeautifulSoup(await response.text(), 'html.parser')
+            print("URL fetched")
+            a_tags = soup.find_all('a', class_='e3509g015')
+            if not a_tags:
+                end_of_list = True
+                break
+            for a_tag in a_tags:
+                link = a_tag['href']
+                full_url = f"{base_url}{link}"
+                asyncio.create_task(fetch_and_process_url(full_url, session, playwright, semaphore))
+            i += 1
 
 
 async def main():
-    async with aiohttp.ClientSession() as session:
-        async with async_playwright() as playwright:
-            urls = await fetch_url_list(session, base_url="https://www.moyoplan.com/plans")
-            semaphore = asyncio.Semaphore(3)  # Limit to 3 concurrent browsers
-            tasks = [fetch_data(url, playwright, semaphore) for url in urls]
-            cpu_percent = psutil.cpu_percent()
-            memory_info = psutil.virtual_memory()
-            memory_percent = memory_info.percent
-            memory_used_mb = memory_info.used / (1024 ** 2)
-            memory_total_mb = memory_info.total / (1024 ** 2)
-
-            swap_info = psutil.swap_memory()
-            swap_used_mb = swap_info.used / (1024 ** 2)
-            swap_total_mb = swap_info.total / (1024 ** 2)
-
-            print(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
-            print(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
-            print(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
-            await asyncio.gather(*tasks)
+    async with aiohttp.ClientSession() as session, async_playwright() as playwright:
+        semaphore = asyncio.Semaphore(3)  # Limit to 3 concurrent browsers
+        await fetch_url_list(session, playwright, semaphore, base_url="https://www.moyoplan.com/plans")
 
 
 asyncio.run(main())
+
+
 
 
 with st.sidebar:
