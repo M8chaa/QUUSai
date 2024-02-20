@@ -991,28 +991,14 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
 async def fetch_and_process_url(url, session, playwright, semaphore):
     async with semaphore:  # This will block if more than 3 tasks are already running
         browser = await playwright.chromium.launch()
-        context = await browser.new_context()
+        context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36")
         page = await context.new_page()
         await page.goto(url)
-        # After fetching data, monitor system resources
-        cpu_percent = psutil.cpu_percent()
-        memory_info = psutil.virtual_memory()
-        memory_percent = memory_info.percent
-        memory_used_mb = memory_info.used / (1024 ** 2)
-        memory_total_mb = memory_info.total / (1024 ** 2)
-
-        swap_info = psutil.swap_memory()
-        swap_used_mb = swap_info.used / (1024 ** 2)
-        swap_total_mb = swap_info.total / (1024 ** 2)
-
-        print(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
-        print(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
-        print(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
+        await page.reload()
         html_content = await page.content()
         soup = BeautifulSoup(html_content, 'html.parser')
         strSoup = soup.get_text()
         print(f"page loaded for {url}: {strSoup}")
-        await page.reload()
         await page.wait_for_selector(".css-yg1ktq", state="attached")
         await page.click(".css-yg1ktq")
 
@@ -1033,7 +1019,7 @@ async def fetch_and_process_url(url, session, playwright, semaphore):
             regex_formula[19] += (f", link:{카드할인_링크}")
         planUrl = str(url)
         data = [planUrl] + regex_formula
-        print(f"button clicked data: {data}")
+        st.write(f"button clicked data: {data}")
 
         await browser.close()
 
@@ -1047,21 +1033,22 @@ async def fetch_url_list(session, playwright, semaphore, base_url="https://www.m
                 print(f"Failed to fetch data from {plan_list_url}. Status code: {response.status}")
                 break
             soup = BeautifulSoup(await response.text(), 'html.parser')
-            print("URL fetched")
             a_tags = soup.find_all('a', class_='e3509g015')
             if not a_tags:
                 end_of_list = True
                 break
             for a_tag in a_tags:
                 link = a_tag['href']
-                full_url = f"{base_url}{link}"
+                Baseurl = "https://www.moyoplan.com/"
+                full_url = f"{Baseurl}{link}"
                 asyncio.create_task(fetch_and_process_url(full_url, session, playwright, semaphore))
+                print(f"URL fetched: {full_url}")
             i += 1
 
 
 async def main():
     async with aiohttp.ClientSession() as session, async_playwright() as playwright:
-        semaphore = asyncio.Semaphore(3)  # Limit to 3 concurrent browsers
+        semaphore = asyncio.Semaphore(1)  # Limit to 3 concurrent browsers
         await fetch_url_list(session, playwright, semaphore, base_url="https://www.moyoplan.com/plans")
 
 
