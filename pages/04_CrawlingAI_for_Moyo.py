@@ -1,36 +1,38 @@
 # coding:utf-8
 from email.mime import base
 # from operator import call
-from os import eventfd
+# from os import eventfd
+import os
+import subprocess
 # from tkinter import N
-from langchain.document_loaders import SitemapLoader
-from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores.faiss import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.document_transformers import Html2TextTransformer
-from langchain.schema import Document
-from langchain.storage import LocalFileStore
+# from langchain.document_loaders import SitemapLoader
+# from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
+# from langchain.text_splitter import RecursiveCharacterTextSplitter
+# from langchain.vectorstores.faiss import FAISS
+# from langchain.embeddings import OpenAIEmbeddings
+# from langchain.chat_models import ChatOpenAI
+# from langchain.prompts import ChatPromptTemplate
+# from langchain.document_transformers import Html2TextTransformer
+# from langchain.schema import Document
+# from langchain.storage import LocalFileStore
 import requests
 from bs4 import BeautifulSoup
 import re
 import threading
 from threading import Thread, Event
 import streamlit as st
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome import service as fs
-from selenium.webdriver import ChromeOptions
-from webdriver_manager.core.os_manager import ChromeType
-from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager, ChromeType
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoAlertPresentException, TimeoutException, WebDriverException
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoSuchElementException
+# from selenium import webdriver
+# from webdriver_manager.chrome import ChromeDriverManager
+# from selenium.webdriver.chrome import service as fs
+# from selenium.webdriver import ChromeOptions
+# from webdriver_manager.core.os_manager import ChromeType
+# from selenium.webdriver.common.by import By
+# from webdriver_manager.chrome import ChromeDriverManager, ChromeType
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
+# from selenium.common.exceptions import NoAlertPresentException, TimeoutException, WebDriverException
+# from selenium.webdriver.common.action_chains import ActionChains
+# from selenium.common.exceptions import NoSuchElementException
 from streamlit_extras.add_vertical_space import add_vertical_space
 from streamlit_extras.row import row
 from Google import Create_Service
@@ -42,7 +44,23 @@ from datetime import datetime
 import pytz
 from multiprocessing import Process, Manager
 import psutil
+from playwright.sync_api import sync_playwright
 
+def install_playwright():
+    marker_path = "/path/to/persistent/storage/playwright_installed.marker"
+    if not os.path.exists(marker_path):
+        try:
+            subprocess.run(["playwright", "install"], check=True)
+            print("Playwright installation successful.")
+            # Create a marker file
+            with open(marker_path, "w") as f:
+                f.write("Installed")
+        except subprocess.CalledProcessError as e:
+            print(f"Error during Playwright installation: {e}")
+    else:
+        print("Playwright is already installed.")
+
+install_playwright()
 
 
 st.set_page_config(
@@ -108,6 +126,26 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A', serviceInstance=None):
             valueInputOption='USER_ENTERED',  # or 'RAW'
             body=body
         ).execute()
+
+        # CPU usage
+        cpu_percent = psutil.cpu_percent()
+
+        # Virtual (Physical) Memory
+        memory_info = psutil.virtual_memory()
+        memory_percent = memory_info.percent  # Memory usage in percent
+        # Correct calculation for used and total memory in MB
+        memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
+        memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+        # Swap Memory
+        swap_info = psutil.swap_memory()
+        # Correct calculation for used and total swap in MB
+        swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
+        swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+        print(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
+        print(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
+        print(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
 
         return result, serviceInstance
     except Exception as e:
@@ -411,19 +449,113 @@ thread_completed = Event()
 stop_signal = Event()
 
 
-def fetch_data(driver, url_queue, data_queue):
-    try:
+# def fetch_data(driver, url_queue, data_queue):
+#     try:
+#         while not url_queue.empty():
+#             url = url_queue.get()
+#             # Fetch and process data from the URL
+#             driver.get(url)
+
+#             try:
+#                 WebDriverWait(driver, 3).until(EC.alert_is_present())
+#                 driver.switch_to.alert.accept()
+#                 alert_present = True
+#             except (NoAlertPresentException, TimeoutException):
+#                 alert_present = False
+#             expired = None
+#             result = ""
+#             if alert_present:
+#                 response = requests.get(url)
+#                 if response.status_code == 200:
+#                     soup = BeautifulSoup(response.text, 'html.parser')
+#                     strSoup = soup.get_text()
+#                     expired = "종료 되었습니다"
+
+#             else: 
+#                 try:
+#                     html = driver.page_source
+#                     soup = BeautifulSoup(html, 'html.parser')
+#                     strSoup = soup.get_text()
+#                     pattern1 = r"서버에 문제가 생겼어요"
+#                     pattern2 = r"존재하지 않는 요금제에요"
+
+#                     # Combine patterns with | which acts as logical OR
+#                     combined_pattern = pattern1 + "|" + pattern2
+
+#                     # Searching for the combined pattern in the text
+#                     match = re.search(combined_pattern, strSoup)
+#                     result = match.group() if match else ""
+#                 except Exception as e:
+#                     error_message = f"An error occurred when fetching data of: {e}"
+#                     error_queue.put(error_message)
+#                 driver.refresh()
+#                 if result is "":
+#                     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+#                     # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+#                     # ActionChains(driver).move_to_element(button).click(button).perform()
+#                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+#                     driver.execute_script("arguments[0].click();", button)
+#                     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+#                 html = driver.page_source
+#                 soup = BeautifulSoup(html, 'html.parser')
+#                 try:
+#                     사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
+#                     사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
+#                 except NoSuchElementException:
+#                     사은품_링크 = None
+
+
+#                 try:
+#                     카드할인_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
+#                     카드할인_링크 = 카드할인_링크.get_attribute('href') if 카드할인_링크 else None
+#                 except NoSuchElementException:
+#                     카드할인_링크 = None
+                
+#                 strSoup = soup.get_text()
+#                 expired = "서비스 중입니다"
+
+#             # if export_to_google_sheet:
+#             if result is "":
+#                 regex_formula = regex_extract(strSoup)
+#                 planUrl = str(url)
+#                 if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
+#                     regex_formula[18] += (f", link:{사은품_링크}")
+#                 if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
+#                     regex_formula[19] += (f", link:{카드할인_링크}")
+#                 data = [planUrl] + regex_formula + [expired]
+#             else:
+#                 planUrl = str(url)
+#                 data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
+#                 data.append(f"{result}")
+#             # Put the processed data into the data queue
+#             data_queue.put(data)
+#             driver.delete_all_cookies()
+#             url_queue.task_done()
+#             if stop_signal.is_set():
+#                 break
+#     except Exception as e:
+#         # Log the exception or handle it as needed
+#         error_message = f"An error occurred when fetching data of {url}: {e}"
+#         error_queue.put(error_message)
+#     finally:
+#         driver.quit()
+def fetch_data(url_queue, data_queue):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        context = browser.new_context()
+
         while not url_queue.empty():
             url = url_queue.get()
-            # Fetch and process data from the URL
-            driver.get(url)
+            page = context.new_page()
+            page.goto(url)
 
             try:
-                WebDriverWait(driver, 3).until(EC.alert_is_present())
-                driver.switch_to.alert.accept()
+                # Playwright waits for alerts by default and can handle them directly
+                page.on("dialog", lambda dialog: dialog.accept())
                 alert_present = True
-            except (NoAlertPresentException, TimeoutException):
+            except Exception:  # Replace with specific Playwright exceptions if needed
                 alert_present = False
+
             expired = None
             result = ""
             if alert_present:
@@ -432,75 +564,49 @@ def fetch_data(driver, url_queue, data_queue):
                     soup = BeautifulSoup(response.text, 'html.parser')
                     strSoup = soup.get_text()
                     expired = "종료 되었습니다"
-
-            else: 
+            else:
                 try:
-                    html = driver.page_source
-                    soup = BeautifulSoup(html, 'html.parser')
-                    strSoup = soup.get_text()
+                    page.reload()
+                    # Checking for specific content in the page to determine the result
+                    strSoup = page.content()
                     pattern1 = r"서버에 문제가 생겼어요"
                     pattern2 = r"존재하지 않는 요금제에요"
-
-                    # Combine patterns with | which acts as logical OR
                     combined_pattern = pattern1 + "|" + pattern2
-
-                    # Searching for the combined pattern in the text
                     match = re.search(combined_pattern, strSoup)
                     result = match.group() if match else ""
+
+                    if result == "":
+                        page.click(".css-yg1ktq")
+                        page.wait_for_selector('.css-1ipix51', state="visible")
+
+                    soup = BeautifulSoup(page.content(), 'html.parser')
+                    strSoup = soup.get_text()
+                    expired = "서비스 중입니다"
                 except Exception as e:
-                    error_message = f"An error occurred when fetching data of: {e}"
-                    error_queue.put(error_message)
-                driver.refresh()
-                if result is "":
-                    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-                    # button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    # ActionChains(driver).move_to_element(button).click(button).perform()
-                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    driver.execute_script("arguments[0].click();", button)
-                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
-                html = driver.page_source
-                soup = BeautifulSoup(html, 'html.parser')
-                try:
-                    사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
-                    사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
-                except NoSuchElementException:
-                    사은품_링크 = None
+                    print(f"Error processing page: {e}")
 
+            # Process links and regex as before
+            사은품_링크 = page.query_selector('a.css-1hdj7cf.e17wbb0s4').get_attribute('href') if page.query_selector('a.css-1hdj7cf.e17wbb0s4') else None
+            카드할인_링크 = page.query_selector('a.css-pnutty.ema3yz60').get_attribute('href') if page.query_selector('a.css-pnutty.ema3yz60') else None
 
-                try:
-                    카드할인_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
-                    카드할인_링크 = 카드할인_링크.get_attribute('href') if 카드할인_링크 else None
-                except NoSuchElementException:
-                    카드할인_링크 = None
-                
-                strSoup = soup.get_text()
-                expired = "서비스 중입니다"
-
-            # if export_to_google_sheet:
-            if result is "":
+            if result == "":
                 regex_formula = regex_extract(strSoup)
-                planUrl = str(url)
-                if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
-                    regex_formula[18] += (f", link:{사은품_링크}")
-                if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
-                    regex_formula[19] += (f", link:{카드할인_링크}")
-                data = [planUrl] + regex_formula + [expired]
+                if regex_formula[18] != "제공안함" and 사은품_링크 is not None:
+                    regex_formula[18] += f", link:{사은품_링크}"
+                if regex_formula[19] != "제공안함" and 카드할인_링크 is not None:
+                    regex_formula[19] += f", link:{카드할인_링크}"
+                data = [url] + regex_formula + [expired]
             else:
-                planUrl = str(url)
-                data = [ planUrl,"-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-","-"]
-                data.append(f"{result}")
-            # Put the processed data into the data queue
+                data = [url] + ["-"] * 19 + [result]
+
             data_queue.put(data)
-            driver.delete_all_cookies()
-            url_queue.task_done()
+            page.close()
+
             if stop_signal.is_set():
                 break
-    except Exception as e:
-        # Log the exception or handle it as needed
-        error_message = f"An error occurred when fetching data of {url}: {e}"
-        error_queue.put(error_message)
-    finally:
-        driver.quit()
+
+        browser.close()
+
 
 PER_MINUTE_LIMIT = 60
 @sleep_and_retry
@@ -649,100 +755,154 @@ def fetch_url_Just_Moyos(url_fetch_queue):
             break 
     print(f"URL Fetch Thread Finished at page = {i}//////////////////////////////////////////////////////////////////")
 
-def setup_driver():
-    options = ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-extensions')
-    # options.add_argument('window-size=800x2000')  # Adjust as needed
-    prefs = {"profile.managed_default_content_settings.images": 2}
-    options.add_experimental_option("prefs", prefs)
+# def setup_driver():
+#     options = ChromeOptions()
+#     options.add_argument("--headless")
+#     options.add_argument('--disable-gpu')
+#     options.add_argument('--no-sandbox')
+#     options.add_argument('--disable-dev-shm-usage')
+#     options.add_argument('--disable-extensions')
+#     # options.add_argument('window-size=800x2000')  # Adjust as needed
+#     prefs = {"profile.managed_default_content_settings.images": 2}
+#     options.add_experimental_option("prefs", prefs)
 
-    CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-    service = fs.Service(CHROMEDRIVER)
-    driver = webdriver.Chrome(
-                            options=options,
-                            service=service
-                            )
-    return driver
+#     CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+#     service = fs.Service(CHROMEDRIVER)
+#     driver = webdriver.Chrome(
+#                             options=options,
+#                             service=service
+#                             )
+#     return driver
 
 
+# def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
+#     try:
+#         driver = setup_driver()
+#         base_url = "https://www.moyoplan.com/plans"
+#         driver.get(base_url)
+#         while not url_fetch_queue.empty():
+#             url = url_fetch_queue.get()
+#             # Fetch and process data from the URL
+#             attempts = 0
+#             fetch_success = False
+            
+#             while attempts < 5 and not fetch_success:
+#                 try: 
+#                     driver.get(url)
+#                     driver.refresh()
+#                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
+#                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
+#                     driver.execute_script("arguments[0].click();", button)
+#                     # WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+#                     # div_css_selector = ".css-1b8xqgi"
+#                     # div_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, div_css_selector)))
+
+#                     # svg_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/main/div/section[4]/div/div/div/div/div/div[1]/div[1]/div")))
+#                     # hover = ActionChains(driver).move_to_element(svg_element)
+#                     # hover.perform()
+#                     # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
+#                     try:
+#                         사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
+#                         사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
+#                     except NoSuchElementException:
+#                         사은품_링크 = None
+
+
+#                     try:
+#                         카드할인_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
+#                         카드할인_링크 = 카드할인_링크.get_attribute('href') if 카드할인_링크 else None
+#                     except NoSuchElementException:
+#                         카드할인_링크 = None
+
+#                     html = driver.page_source
+#                     soup = BeautifulSoup(html, 'html.parser')
+#                     strSoup = soup.get_text()
+#                     regex_formula = regex_extract(strSoup)
+#                     if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
+#                         regex_formula[18] += (f", link:{사은품_링크}")
+#                     if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
+#                         regex_formula[19] += (f", link:{카드할인_링크}")
+#                     planUrl = str(url)
+#                     data = [planUrl] + regex_formula
+#                     data_queue.put(data)
+#                     print(f"Data queued for {url}")
+#                     fetch_success = True
+#                     attempts = 0
+#                 except (TimeoutException, WebDriverException) as e:
+#                     attempts += 1
+#                     if driver:
+#                         driver.quit()
+#                     driver = setup_driver()
+#                     error_queue.put(f"Timeout occurred for {url}, attempt {attempts}. Retrying...")
+#                     if attempts == 5:
+#                         error_message = f"Failed to fetch data after 5 attempts for URL: {url}"
+#                         error_queue.put(error_message)
+#             if stop_signal.is_set():
+#                 break  
+
+#             driver.delete_all_cookies()
+#             url_fetch_queue.task_done()
+#     except Exception as e:
+#         # Log the exception or handle it as needed
+#         error_message = f"An error occurred when fetching data of {url}: {e}"
+#         error_queue.put(error_message)
+#     finally:
+#         if driver:
+#             driver.quit()
 def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
-    try:
-        driver = setup_driver()
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        context = browser.new_context()
         base_url = "https://www.moyoplan.com/plans"
-        driver.get(base_url)
+
         while not url_fetch_queue.empty():
             url = url_fetch_queue.get()
-            # Fetch and process data from the URL
+            page = context.new_page()
+            page.goto(base_url)
             attempts = 0
             fetch_success = False
-            
+
             while attempts < 5 and not fetch_success:
-                try: 
-                    driver.get(url)
-                    driver.refresh()
-                    WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
-                    button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
-                    driver.execute_script("arguments[0].click();", button)
-                    # WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
-                    # div_css_selector = ".css-1b8xqgi"
-                    # div_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, div_css_selector)))
+                try:
+                    page.goto(url)
+                    page.reload()
+                    # Adapted to use Playwright's wait_for_selector method
+                    page.wait_for_selector(".css-yg1ktq", state="attached")
+                    # Simulating a button click in Playwright
+                    page.click(".css-yg1ktq")
 
-                    # svg_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/main/div/section[4]/div/div/div/div/div/div[1]/div[1]/div")))
-                    # hover = ActionChains(driver).move_to_element(svg_element)
-                    # hover.perform()
-                    # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
-                    try:
-                        사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
-                        사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
-                    except NoSuchElementException:
-                        사은품_링크 = None
+                    # Extracting elements with Playwright
+                    사은품_링크_element = page.query_selector('a.css-1hdj7cf.e17wbb0s4')
+                    사은품_링크 = 사은품_링크_element.get_attribute('href') if 사은품_링크_element else None
 
+                    카드할인_링크_element = page.query_selector('a.css-pnutty.ema3yz60')
+                    카드할인_링크 = 카드할인_링크_element.get_attribute('href') if 카드할인_링크_element else None
 
-                    try:
-                        카드할인_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-pnutty.ema3yz60')
-                        카드할인_링크 = 카드할인_링크.get_attribute('href') if 카드할인_링크 else None
-                    except NoSuchElementException:
-                        카드할인_링크 = None
-
-                    html = driver.page_source
-                    soup = BeautifulSoup(html, 'html.parser')
+                    # Using Playwright's content to get page HTML for BeautifulSoup
+                    html_content = page.content()
+                    soup = BeautifulSoup(html_content, 'html.parser')
                     strSoup = soup.get_text()
                     regex_formula = regex_extract(strSoup)
-                    if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
+                    if regex_formula[18] != "제공안함" and 사은품_링크 is not None:
                         regex_formula[18] += (f", link:{사은품_링크}")
-                    if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
+                    if regex_formula[19] != "제공안함" and 카드할인_링크 is not None:
                         regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
                     data = [planUrl] + regex_formula
                     data_queue.put(data)
                     print(f"Data queued for {url}")
                     fetch_success = True
-                    attempts = 0
-                except (TimeoutException, WebDriverException) as e:
+                except Exception as e:
                     attempts += 1
-                    if driver:
-                        driver.quit()
-                    driver = setup_driver()
-                    error_queue.put(f"Timeout occurred for {url}, attempt {attempts}. Retrying...")
+                    print(f"Attempt {attempts} failed for {url}: {e}")
                     if attempts == 5:
-                        error_message = f"Failed to fetch data after 5 attempts for URL: {url}"
-                        error_queue.put(error_message)
-            if stop_signal.is_set():
-                break  
+                        print(f"Failed to fetch data after 5 attempts for URL: {url}")
+                if stop_signal.is_set():
+                    break
 
-            driver.delete_all_cookies()
-            url_fetch_queue.task_done()
-    except Exception as e:
-        # Log the exception or handle it as needed
-        error_message = f"An error occurred when fetching data of {url}: {e}"
-        error_queue.put(error_message)
-    finally:
-        if driver:
-            driver.quit()
+            page.close()
+        browser.close()
+
 
 def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
     url_fetch_queue = Queue()
@@ -758,7 +918,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
 
     # Start data fetching threads
     fetch_threads = []
-    for _ in range(4):
+    for _ in range(1):
         t = threading.Thread(target=fetch_data_Just_Moyos, args=(url_fetch_queue, data_queue))
         t.start()
         fetch_threads.append(t)
@@ -903,4 +1063,3 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
     if stop_button_pressed:
         stop_signal.set()  # Signal threads to stop
         st.write("Stopped all processes...")
-
