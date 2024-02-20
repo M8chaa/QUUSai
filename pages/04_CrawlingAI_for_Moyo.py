@@ -47,18 +47,11 @@ import psutil
 from playwright.sync_api import sync_playwright
 
 def install_playwright():
-    marker_path = "/path/to/persistent/storage/playwright_installed.marker"
-    if not os.path.exists(marker_path):
-        try:
-            subprocess.run(["playwright", "install"], check=True)
-            print("Playwright installation successful.")
-            # Create a marker file
-            with open(marker_path, "w") as f:
-                f.write("Installed")
-        except subprocess.CalledProcessError as e:
-            print(f"Error during Playwright installation: {e}")
-    else:
-        print("Playwright is already installed.")
+    try:
+        subprocess.run(["playwright", "install"], check=True)
+        print("Playwright installation successful.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during Playwright installation: {e}")
 
 install_playwright()
 
