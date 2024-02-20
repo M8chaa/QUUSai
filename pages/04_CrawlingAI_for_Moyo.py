@@ -971,7 +971,6 @@ async def fetch_url_list(session, base_url="https://www.moyoplan.com/plans"):
                 os.write(f"Failed to fetch data from {plan_list_url}. Status code: {response.status}")
                 break
             soup = BeautifulSoup(await response.text(), 'html.parser')
-            os.write(f"fetch url soup: {soup}")
             a_tags = soup.find_all('a', class_='e3509g015')
             if not a_tags:
                 end_of_list = True
