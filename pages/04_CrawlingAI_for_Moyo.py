@@ -109,6 +109,26 @@ def pushToSheet(data, sheet_id, range='Sheet1!A:A', serviceInstance=None):
             body=body
         ).execute()
 
+        # CPU usage
+        cpu_percent = psutil.cpu_percent()
+
+        # Virtual (Physical) Memory
+        memory_info = psutil.virtual_memory()
+        memory_percent = memory_info.percent  # Memory usage in percent
+        # Correct calculation for used and total memory in MB
+        memory_used_mb = memory_info.used / (1024 ** 2)  # Convert from bytes to MB
+        memory_total_mb = memory_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+        # Swap Memory
+        swap_info = psutil.swap_memory()
+        # Correct calculation for used and total swap in MB
+        swap_used_mb = swap_info.used / (1024 ** 2)  # Convert from bytes to MB
+        swap_total_mb = swap_info.total / (1024 ** 2)  # Convert from bytes to MB
+
+        print(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
+        print(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
+        print(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
+
         return result, serviceInstance
     except Exception as e:
         # Re-raise the exception to be caught in the calling function
@@ -511,36 +531,67 @@ def rate_limited_pushToSheet(data, sheet_id, range, serviceInstance=None):
 def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
     while True:
         batch_data = []  # Accumulate data here
-        while len(batch_data) < 5:  # Wait until we have 10 records
+        while len(batch_data) < 10:  # Wait until we have 10 records
             processed_data = data_queue.get()
-            print("stacking data")
             if processed_data is None:  # Sentinel value to indicate completion
                 if len(batch_data) > 0:  # Push any remaining records
                     with sheet_update_lock:
-                        try:
-                            rate_limited_pushToSheet(batch_data, sheet_id, range='Sheet1!A:B', serviceInstance=serviceInstance)
-                        except Exception as e:
-                            error_message = f"An error occurred while updating the sheet: {e}"
-                            error_queue.put(error_message)
-                print("Data queue is empty. Exiting...///////////////////////////////////////////////////////////")
+                        retry_push_to_sheet(batch_data, sheet_id, 'Sheet1!A:B', serviceInstance)
                 return  # Exit after processing all data
             batch_data.append(processed_data)  # Add data to the batch
 
-        # Push batch_data to Google Sheet
+        # Push batch_data to Google Sheet with retries
         with sheet_update_lock:
-            try:
-                print("pushing data to sheet////////////////////////////////////////////////////////////////////")
-                rate_limited_pushToSheet(batch_data, sheet_id, range='Sheet1!A:B', serviceInstance=serviceInstance)
-                print(f"Data pushed to sheet////////////////////////////////////////////////////////////////////")
-            except Exception as e:
-                error_message = f"An error occurred while updating the sheet: {e}"
-                print("Error occurred while updating the sheet////////////////////////////////////////////////////////////////////")
-                error_queue.put(error_message)
-            finally:
-                for _ in batch_data:  # Acknowledge each item in the batch
-                    data_queue.task_done()
+            retry_push_to_sheet(batch_data, sheet_id, 'Sheet1!A:B', serviceInstance)
         if stop_signal.is_set():
             break
+
+def retry_push_to_sheet(data, sheet_id, range, serviceInstance, backoff_factor=1):
+    """Attempt to push data to the sheet indefinitely until successful, with exponential backoff."""
+    while True:
+        try:
+            print("Attempting to push data to sheet")
+            rate_limited_pushToSheet(data, sheet_id, range, serviceInstance)
+            print("Data successfully pushed to sheet")
+            break  # Success! Break out of the loop.
+        except Exception as e:
+            wait_time = backoff_factor # Exponential backoff
+            time.sleep(wait_time)
+
+
+# def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
+#     while True:
+#         batch_data = []  # Accumulate data here
+#         while len(batch_data) < 10:  # Wait until we have 10 records
+#             processed_data = data_queue.get()
+#             print("stacking data")
+#             if processed_data is None:  # Sentinel value to indicate completion
+#                 if len(batch_data) > 0:  # Push any remaining records
+#                     with sheet_update_lock:
+#                         try:
+#                             rate_limited_pushToSheet(batch_data, sheet_id, range='Sheet1!A:B', serviceInstance=serviceInstance)
+#                         except Exception as e:
+#                             error_message = f"An error occurred while updating the sheet: {e}"
+#                             error_queue.put(error_message)
+#                 print("Data queue is empty. Exiting...///////////////////////////////////////////////////////////")
+#                 return  # Exit after processing all data
+#             batch_data.append(processed_data)  # Add data to the batch
+
+#         # Push batch_data to Google Sheet
+#         with sheet_update_lock:
+#             try:
+#                 print("pushing data to sheet////////////////////////////////////////////////////////////////////")
+#                 rate_limited_pushToSheet(batch_data, sheet_id, range='Sheet1!A:B', serviceInstance=serviceInstance)
+#                 print(f"Data pushed to sheet////////////////////////////////////////////////////////////////////")
+#             except Exception as e:
+#                 error_message = f"An error occurred while updating the sheet: {e}"
+#                 print("Error occurred while updating the sheet////////////////////////////////////////////////////////////////////")
+#                 error_queue.put(error_message)
+#             finally:
+#                 for _ in batch_data:  # Acknowledge each item in the batch
+#                     data_queue.task_done()
+#         if stop_signal.is_set():
+#             break
 
 
 
@@ -758,7 +809,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
 
     # Start data fetching threads
     fetch_threads = []
-    for _ in range(4):
+    for _ in range(3):
         t = threading.Thread(target=fetch_data_Just_Moyos, args=(url_fetch_queue, data_queue))
         t.start()
         fetch_threads.append(t)
@@ -903,4 +954,3 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
     if stop_button_pressed:
         stop_signal.set()  # Signal threads to stop
         st.write("Stopped all processes...")
-
