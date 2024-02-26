@@ -7,6 +7,8 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
+
 
 def Create_Service(client_secret_file, api_name, api_version, *scopes):
     CLIENT_SECRET_FILE = client_secret_file
@@ -14,11 +16,23 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
     API_VERSION = api_version
     SCOPES = [scope for scope in scopes[0]]
 
+    conn = st.connection("gsheets", type=GSheetsConnection)
+
+    df = conn.read(
+        worksheet="Authtoken")
+
+    auth_tokens = {row[0]: row[1] for row in sheet_data}
+    
+    client_id = auth_tokens["client_id"]
+    client_secret = auth_tokens["client_secret"]
+    refresh_token = auth_tokens["refresh_token"]
+    token_uri = auth_tokens["token_uri"]
+    scopes = auth_tokens["SCOPES"]
     cred = None
-    client_id = st.secrets["AuthToken"]["client_id"]
-    client_secret = st.secrets["AuthToken"]["client_secret"]
-    refresh_token = st.secrets["AuthToken"]["refresh_token"]
-    token_uri = "https://oauth2.googleapis.com/token"  # Default token URI for Google
+    # client_id = st.secrets["AuthToken"]["client_id"]
+    # client_secret = st.secrets["AuthToken"]["client_secret"]
+    # refresh_token = st.secrets["AuthToken"]["refresh_token"]
+    # token_uri = "https://oauth2.googleapis.com/token"  # Default token URI for Google
 
     # Create a Credentials object
     cred = Credentials.from_authorized_user_info({
