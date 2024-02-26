@@ -18,10 +18,10 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
 
     conn = st.connection("gsheets", type=GSheetsConnection)
 
-    sheet_data = conn.read(
+    df = conn.read(
         worksheet="Authtoken")
-    st.write(sheet_data)
-    auth_tokens = {row[0]: row[1] for row in sheet_data}
+    st.write(df)
+    auth_tokens = {row[0]: row[1] for row in df}
     print(auth_tokens)
     st.write(auth_tokens)
     
