@@ -22,6 +22,8 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         worksheet="Authtoken")
 
     auth_tokens = {row[0]: row[1] for row in sheet_data}
+    print(auth_tokens)
+    st.write(auth_tokens)
     
     client_id = auth_tokens["client_id"]
     client_secret = auth_tokens["client_secret"]
