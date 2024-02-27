@@ -21,8 +21,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoAlertPresentException, TimeoutException, WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
-from streamlit_extras.add_vertical_space import add_vertical_space
-from streamlit_extras.row import row
 from Google import Create_Service
 from queue import Queue
 import time
