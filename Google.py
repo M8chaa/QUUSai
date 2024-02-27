@@ -9,7 +9,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
-
+import json
 
 def Create_Service(client_secret_file, api_name, api_version, *scopes):
     CLIENT_SECRET_FILE = client_secret_file
@@ -52,8 +52,6 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
 
     if cred.valid:
         st.write("cred valid")
-    else:        
-        st.write("cred not valid")
 
 
     if not cred or not cred.valid:
@@ -62,7 +60,8 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
             cred.refresh(Request())
             st.write("token refreshed")
             new_credentials = cred.to_json()
-            df = [{'A': key, 'B': value} for key, value in new_credentials.items()]
+            new_credentials_dict = json.loads(new_credentials)
+            df = [{'A': key, 'B': value} for key, value in new_credentials_dict.items()]
             st.write(df)
             conn.update(worksheet="Authtoken",
                         data = df)
