@@ -26,11 +26,6 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
 
     auth_tokens = {row[0]: row[1] for index, row in df.iterrows()}
     
-    # client_id = auth_tokens["client_id"]
-    # client_secret = auth_tokens["client_secret"]
-    # refresh_token = auth_tokens["refresh_token"]
-    # token_uri = auth_tokens["token_uri"]
-    # scopes = auth_tokens["SCOPES"]
     client_id = auth_tokens.get("client_id", "")
     client_secret = auth_tokens.get("client_secret", "")
     refresh_token = auth_tokens.get("refresh_token", "")
@@ -50,6 +45,15 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         "refresh_token": refresh_token,
         "token_uri": token_uri
     }, SCOPES)
+    if cred:
+        st.write("cred created")
+    else:  
+        st.write("cred not created")
+
+    if cred.valid:
+        st.write("cred valid")
+    else:        
+        st.write("cred not valid")
 
 
     if not cred or not cred.valid:
@@ -57,13 +61,9 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
             st.write("token refreshed")
-            new_credentials = {
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "refresh_token": cred.refresh_token,
-                "token_uri": token_uri
-            }
+            new_credentials = cred.to_json()
             df = [{'A': key, 'B': value} for key, value in new_credentials.items()]
+            st.write(df)
             conn.update(worksheet="Authtoken",
                         data = df)
         else:
@@ -79,6 +79,7 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
     try:
         service = build(API_SERVICE_NAME, API_VERSION, credentials=cred)
         print(API_SERVICE_NAME, 'Cred valid. Service created successfully')
+        saveService = service
         return service
     except Exception as e:
         print('Unable to connect.')
