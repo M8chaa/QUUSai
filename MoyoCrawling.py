@@ -98,7 +98,7 @@ def create_new_google_sheet(is_just_moyos, url1=None, url2=None):
     return sheet_id, sheet_web_view_link
 
 
-def pushToSheet(data, sheet_id, range='Sheet1!A:A', serviceInstance=None):
+def pushToSheet(data, sheet_id, range='Sheet3!A:A', serviceInstance=None):
     try:
         serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
         body = {'values': data}
@@ -900,8 +900,9 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트", "카드 할인"]
     }
     with st.spinner("Processing for Google Sheet..."):
-        sheet_id, webviewlink = create_new_google_sheet(is_just_moyos, url1, url2)
-        print("Google Sheet Created - Sheet ID: ", sheet_id)
+        # sheet_id, webviewlink = create_new_google_sheet(is_just_moyos, url1, url2)
+        sheet_id = "12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0"
+        webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
         result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet1!A1:L1')
         print("Header Pushed to Google Sheet: ", result)
         formatHeaderTrim(sheet_id, 0, googlesheetInstance)
