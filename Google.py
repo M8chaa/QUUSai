@@ -56,6 +56,7 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
             cred.refresh(Request())
             print("token refreshed")
             df = cred.to_json()
+            st.write(df)
             conn.update(worksheet="Authtoken",
                         data = df)
         else:
