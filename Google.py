@@ -1,3 +1,4 @@
+from hmac import new
 import pickle
 import os
 from google_auth_oauthlib.flow import Flow, InstalledAppFlow
@@ -55,10 +56,14 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
             print("token refreshed")
-            df = cred.to_json()
-            st.write(df)
+            new_credentials = {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "refresh_token": cred.refresh_token,
+                "token_uri": token_uri
+            }
             conn.update(worksheet="Authtoken",
-                        data = df)
+                        data = new_credentials)
         else:
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
             cred = flow.run_local_server()
