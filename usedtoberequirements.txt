@@ -250,3 +250,4 @@ google-auth-oauthlib
 google
 ratelimit
 pytz
+git+https://github.com/username/repository.git@branch_or_commit#egg=PackageName

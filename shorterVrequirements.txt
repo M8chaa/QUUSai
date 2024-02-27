@@ -1,0 +1,14 @@
+beautifulsoup4==4.11.1
+google-auth-httplib2
+google-auth-oauthlib
+requests==2.31.0
+webdriver-manager
+streamlit>=1.28
+selenium
+seleniumbase
+st-gsheets-connection
+google-api-python-client
+ratelimit
+pytz
+pytz==2023.3.post1
+pytz-deprecation-shim==0.1.0.post0
