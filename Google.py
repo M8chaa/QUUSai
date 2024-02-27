@@ -1,3 +1,4 @@
+from email import header
 from hmac import new
 import pickle
 import os
@@ -69,11 +70,16 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
             st.write("token refreshed")
             new_credentials = cred.to_json()
             new_credentials_dict = json.loads(new_credentials)
-            df = [{'A': key, 'B': value} for key, value in new_credentials_dict.items()]
+            df = [{'key': key, 'value': value} for key, value in new_credentials_dict.items()]
             st.write(df)
             conn.update(worksheet="Authtoken",
                         data = df)
         else:
+            # CLIENT_SECRET_FILE = conn.read(
+            #     worksheet="GoogleDriveAPISecrets",
+            #     usecols = [0,1],
+            #     header=None
+            # )
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
             cred = flow.run_local_server()
             print("token recreated")
