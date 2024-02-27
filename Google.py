@@ -54,24 +54,13 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         "account": account,
         "expiry": expiry
     }, SCOPES)
-    if cred:
-        st.write("cred created")
-    else:  
-        st.write("cred not created")
-
-    if cred.valid:
-        st.write("cred valid")
-
 
     if not cred or not cred.valid:
-        st.write("cred not valid")
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
-            st.write("token refreshed")
             new_credentials = cred.to_json()
             new_credentials_dict = json.loads(new_credentials)
             df = [{'key': key, 'value': value} for key, value in new_credentials_dict.items()]
-            st.write(df)
             conn.update(worksheet="Authtoken",
                         data = df)
         else:

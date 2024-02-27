@@ -3,16 +3,6 @@ from email.mime import base
 # from operator import call
 from os import eventfd
 # from tkinter import N
-from langchain.document_loaders import SitemapLoader
-from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores.faiss import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.document_transformers import Html2TextTransformer
-from langchain.schema import Document
-from langchain.storage import LocalFileStore
 import requests
 from bs4 import BeautifulSoup
 import re
