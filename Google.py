@@ -22,15 +22,21 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         worksheet="Authtoken", 
         usecols=[0, 1] )
     st.write(df)
-    auth_tokens = {row[0]: row[1] for row in df}
+    auth_tokens = {row[0]: row[1] for index, row in df.iterrows()}
     print(auth_tokens)
     st.write(auth_tokens)
     
-    client_id = auth_tokens["client_id"]
-    client_secret = auth_tokens["client_secret"]
-    refresh_token = auth_tokens["refresh_token"]
-    token_uri = auth_tokens["token_uri"]
-    scopes = auth_tokens["SCOPES"]
+    # client_id = auth_tokens["client_id"]
+    # client_secret = auth_tokens["client_secret"]
+    # refresh_token = auth_tokens["refresh_token"]
+    # token_uri = auth_tokens["token_uri"]
+    # scopes = auth_tokens["SCOPES"]
+    client_id = auth_tokens.get("client_id", "")
+    client_secret = auth_tokens.get("client_secret", "")
+    refresh_token = auth_tokens.get("refresh_token", "")
+    token_uri = auth_tokens.get("token_uri", "")
+    scopes = auth_tokens.get("SCOPES", "")
+
     cred = None
     # client_id = st.secrets["AuthToken"]["client_id"]
     # client_secret = st.secrets["AuthToken"]["client_secret"]
