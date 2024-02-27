@@ -96,6 +96,21 @@ def pushToSheet(data, sheet_id, range='Sheet3!A:A', serviceInstance=None):
             body=body
         ).execute()
 
+        sheet_name = range.split('!')[0]
+
+        sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        sheets = sheet_metadata.get('sheets', '')
+
+        sheetId = None
+        for sheet in sheets:
+            if sheet['properties']['title'] == sheet_name:
+                sheetId = sheet['properties']['sheetId']
+                break
+        if sheetId is None:
+            print(f"Sheet named '{sheet_name}' not found in spreadsheet.")
+            return result, serviceInstance, None  # Return None if sheetId not found
+
+
         # CPU usage
         cpu_percent = psutil.cpu_percent()
 
@@ -124,8 +139,6 @@ def pushToSheet(data, sheet_id, range='Sheet3!A:A', serviceInstance=None):
 
 
 def formatHeaderTrim(sheet_id, sheet_index=0, serviceInstance=None):
-    serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
-
     # Retrieve sheet metadata
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
     sheet = sheet_metadata.get('sheets', '')[sheet_index]
@@ -891,7 +904,6 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         sheet_id = "12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0"
         webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
         result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:L1')
-        print("Header Pushed to Google Sheet: ", result, googlesheetInstance)
         formatHeaderTrim(sheet_id, 0, googlesheetInstance)
         print("Header Formatted")
         sheetUrl = str(webviewlink)
