@@ -4,7 +4,7 @@ google-auth==2.6.2
 google-auth-oauthlib==0.4.6
 requests==2.27.1
 webdriver-manager
-streamlit==1.8.1
+streamlit>=1.22.0
 selenium
 seleniumbase
 st-gsheets-connection
