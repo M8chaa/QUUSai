@@ -55,15 +55,16 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
     if not cred or not cred.valid:
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
-            print("token refreshed")
+            st.write("token refreshed")
             new_credentials = {
                 "client_id": client_id,
                 "client_secret": client_secret,
                 "refresh_token": cred.refresh_token,
                 "token_uri": token_uri
             }
+            df = [{'A': key, 'B': value} for key, value in new_credentials.items()]
             conn.update(worksheet="Authtoken",
-                        data = new_credentials)
+                        data = df)
         else:
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
             cred = flow.run_local_server()
@@ -75,6 +76,7 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         # with open("token.json", "w") as token:
         #     token.write(cred.to_json())
     try:
+        st.write("Cred valid")
         service = build(API_SERVICE_NAME, API_VERSION, credentials=cred)
         print(API_SERVICE_NAME, 'Cred valid. Service created successfully')
         return service
