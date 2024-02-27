@@ -809,7 +809,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
 
     # Start data fetching threads
     fetch_threads = []
-    for _ in range(4):
+    for _ in range(3):
         t = threading.Thread(target=fetch_data_Just_Moyos, args=(url_fetch_queue, data_queue))
         t.start()
         fetch_threads.append(t)
