@@ -36,7 +36,7 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
     refresh_token = auth_tokens.get("refresh_token", "")
     token_uri = auth_tokens.get("token_uri", "")
     scopes = auth_tokens.get("SCOPES", "")
-
+    st.write(client_id, client_secret, refresh_token, token_uri, scopes)
     cred = None
     # client_id = st.secrets["AuthToken"]["client_id"]
     # client_secret = st.secrets["AuthToken"]["client_secret"]
