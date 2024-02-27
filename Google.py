@@ -55,7 +55,9 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
             print("token refreshed")
-            conn.write(credentials=cred.to_json(), worksheet="Authtoken", start="A1", mode="overwrite")
+            df = cred.to_json()
+            conn.update(worksheet="Authtoken",
+                        data = df)
         else:
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
             cred = flow.run_local_server()
