@@ -53,6 +53,7 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
 
 
     if not cred or not cred.valid:
+        st.write("cred not valid")
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
             st.write("token refreshed")
@@ -76,7 +77,6 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
         # with open("token.json", "w") as token:
         #     token.write(cred.to_json())
     try:
-        st.write("Cred valid")
         service = build(API_SERVICE_NAME, API_VERSION, credentials=cred)
         print(API_SERVICE_NAME, 'Cred valid. Service created successfully')
         return service
