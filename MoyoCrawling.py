@@ -1,7 +1,6 @@
 # coding:utf-8
 from email.mime import base
 # from operator import call
-from os import eventfd
 # from tkinter import N
 import requests
 from bs4 import BeautifulSoup
