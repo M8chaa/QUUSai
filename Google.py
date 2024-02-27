@@ -26,11 +26,15 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
 
     auth_tokens = {row[0]: row[1] for index, row in df.iterrows()}
     
+    token = auth_tokens.get("token", "")
     client_id = auth_tokens.get("client_id", "")
     client_secret = auth_tokens.get("client_secret", "")
     refresh_token = auth_tokens.get("refresh_token", "")
     token_uri = auth_tokens.get("token_uri", "")
     scopes = auth_tokens.get("SCOPES", "")
+    universe_domain = auth_tokens.get("universe_domain", "")
+    account = auth_tokens.get("account", "")
+    expiry = auth_tokens.get("expiry", "")
     
     cred = None
     # client_id = st.secrets["AuthToken"]["client_id"]
@@ -40,10 +44,14 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
 
     # Create a Credentials object
     cred = Credentials.from_authorized_user_info({
+        "token": token,
         "client_id": client_id,
         "client_secret": client_secret,
         "refresh_token": refresh_token,
-        "token_uri": token_uri
+        "token_uri": token_uri,
+        "universe_domain": universe_domain,
+        "account": account,
+        "expiry": expiry
     }, SCOPES)
     if cred:
         st.write("cred created")
