@@ -56,39 +56,38 @@ def googleSheetConnect():
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     return serviceInstance
 
-def create_new_google_sheet(is_just_moyos, url1=None, url2=None):
-    serviceInstance = googleDriveConnect()
+# def create_new_google_sheet(is_just_moyos, url1=None, url2=None):
+#     serviceInstance = googleDriveConnect()
     
-    if not is_just_moyos:
-        part1 = url1.split('/')
-        part2 = url2.split('/')
-        number1 = int(part1[-1])
-        number2 = int(part2[-1])
-        name = f'모요 요금제 {number1} ~ {number2}'
-    else:
-        kst = pytz.timezone('Asia/Seoul')
-        current_date = datetime.now(kst).strftime("%Y-%m-%d")
-        name = f'모요 요금제 {current_date}'
+#     if not is_just_moyos:
+#         part1 = url1.split('/')
+#         part2 = url2.split('/')
+#         number1 = int(part1[-1])
+#         number2 = int(part2[-1])
+#         name = f'모요 요금제 {number1} ~ {number2}'
+#     else:
+#         kst = pytz.timezone('Asia/Seoul')
+#         current_date = datetime.now(kst).strftime("%Y-%m-%d")
+#         name = f'모요 요금제 {current_date}'
     
-    file_metadata = {
-        'name': name,
-        'mimeType': 'application/vnd.google-apps.spreadsheet'
-    }
-    file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
-    sheet_id = file.get('id')
-    sheet_web_view_link = file.get('webViewLink')
-    permission = {
-        'type': 'anyone',
-        'role': 'writer'
-    }
-    serviceInstance.permissions().create(fileId=sheet_id, body=permission).execute()
+#     file_metadata = {
+#         'name': name,
+#         'mimeType': 'application/vnd.google-apps.spreadsheet'
+#     }
+#     file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
+#     sheet_id = file.get('id')
+#     sheet_web_view_link = file.get('webViewLink')
+#     permission = {
+#         'type': 'anyone',
+#         'role': 'writer'
+#     }
+#     serviceInstance.permissions().create(fileId=sheet_id, body=permission).execute()
 
-    return sheet_id, sheet_web_view_link
+#     return sheet_id, sheet_web_view_link
 
 
 def pushToSheet(data, sheet_id, range='Sheet3!A:A', serviceInstance=None):
     try:
-        serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
         body = {'values': data}
         result = serviceInstance.spreadsheets().values().append(
             spreadsheetId=sheet_id,
@@ -202,7 +201,7 @@ def formatHeaderTrim(sheet_id, sheet_index=0, serviceInstance=None):
 
 
 def autoResizeColumns(sheet_id, sheet_index=0, serviceInstance=None):
-    serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
+    serviceInstance = serviceInstance if serviceInstance else googleSheetConnect(sheet_id)
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
     sheet = sheet_metadata.get('sheets', '')[sheet_index]
     sheetId = sheet.get('properties', {}).get('sheetId', 0)
