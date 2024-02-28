@@ -926,7 +926,7 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         sheet_id = "12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0"
         webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
         result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:A1', serviceInstance=None)
-        delete_data_records(sheet_id, "Sheet3", googlesheetInstance)
+        delete_data_records(sheet_id, 2, googlesheetInstance)
         # sheet_name = "Sheet3"
 
         # sheet_metadata = googlesheetInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
