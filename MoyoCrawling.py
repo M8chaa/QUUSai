@@ -397,7 +397,7 @@ def regex_extract(strSoup):
     ]
 
 def update_google_sheet(data, sheet_id, serviceInstance=None):
-    pushToSheet(data, sheet_id, range='Sheet1!A:B', serviceInstance=serviceInstance)
+    pushToSheet(data, sheet_id, range='Sheet3!A:B', serviceInstance=serviceInstance)
 
 def sort_sheet_by_column(sheet_id, column_index=0, serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
@@ -533,13 +533,13 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
             if processed_data is None:  # Sentinel value to indicate completion
                 if len(batch_data) > 0:  # Push any remaining records
                     with sheet_update_lock:
-                        retry_push_to_sheet(batch_data, sheet_id, 'Sheet1!A:B', serviceInstance)
+                        retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A:B', serviceInstance)
                 return  # Exit after processing all data
             batch_data.append(processed_data)  # Add data to the batch
 
         # Push batch_data to Google Sheet with retries
         with sheet_update_lock:
-            retry_push_to_sheet(batch_data, sheet_id, 'Sheet1!A:B', serviceInstance)
+            retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A:B', serviceInstance)
         if stop_signal.is_set():
             break
 
