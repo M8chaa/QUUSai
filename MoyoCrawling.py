@@ -126,20 +126,19 @@ def pushToSheet(data, spreadsheet_id, range='Sheet3!A:A', serviceInstance=None):
         raise Exception(f"Failed to push data to sheet: {e}")
 
 
-def formatHeaderTrim(sheet_id, sheet_name='Sheet3', sheet_index=0, serviceInstance=None):
+def formatHeaderTrim(sheet_id, sheet_name='Sheet3', sheet_index=2, serviceInstance=None):
     # Retrieve sheet metadata
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
-    # sheets = sheet_metadata.get('sheets', '')
-    sheet = sheet_metadata.get('properties', {}).get('title', 'Sheet3')
+    sheet = sheet_metadata.get('sheets', '')[sheet_index]
     # sheet = None
     # for s in sheets:
     #     if s.get('properties', {}).get('title') == sheet_name:
     #         sheet = s
     #         break
 
-    # if sheet is None:
-    #     print(f"No sheet named '{sheet_name}' found in the spreadsheet.")
-    #     return
+    if sheet is None:
+        print(f"No sheet named '{sheet_name}' found in the spreadsheet.")
+        return
     totalColumns = sheet.get('properties', {}).get('gridProperties', {}).get('columnCount', 0)
     sheetId = sheet.get('properties', {}).get('sheetId', 0)
 
