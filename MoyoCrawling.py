@@ -84,6 +84,28 @@ def googleSheetConnect():
 
 #     return sheet_id, sheet_web_view_link
 
+def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
+    serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
+    try:
+        # Retrieve the records from the sheet
+        result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3").execute()
+        records = result.get('values', [])
+
+        if records:
+            # Get the last column index
+            last_column = chr(ord('A') + len(records[0]) - 1)
+            range = f'Sheet3!A{start_row}:{last_column}'
+            
+            serviceInstance.spreadsheets().values().clear(
+                spreadsheetId=sheet_id,
+                range=range,
+                body={}
+            ).execute()
+        else:
+            print("No records found in the sheet.")
+    except Exception as e:
+        print(f"Failed to delete data records from sheet: {e}")
+
 
 def pushToSheet(data, spreadsheet_id, range='Sheet3!A:A', serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
@@ -129,16 +151,19 @@ def pushToSheet(data, spreadsheet_id, range='Sheet3!A:A', serviceInstance=None):
 def formatHeaderTrim(sheet_id, sheet_name='Sheet3', sheet_index=2, serviceInstance=None):
     # Retrieve sheet metadata
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
-    sheet = sheet_metadata.get('sheets', '')[sheet_index]
-    # sheet = None
-    # for s in sheets:
-    #     if s.get('properties', {}).get('title') == sheet_name:
-    #         sheet = s
-    #         break
+    sheets = sheet_metadata.get('sheets', '')
+    
+    # Find the sheet with the specified name
+    sheet = None
+    for s in sheets:
+        if s.get('properties', {}).get('title') == sheet_name:
+            sheet = s
+            break
 
     if sheet is None:
         print(f"No sheet named '{sheet_name}' found in the spreadsheet.")
         return
+
     totalColumns = sheet.get('properties', {}).get('gridProperties', {}).get('columnCount', 0)
     sheetId = sheet.get('properties', {}).get('sheetId', 0)
 
@@ -210,7 +235,7 @@ def formatHeaderTrim(sheet_id, sheet_name='Sheet3', sheet_index=2, serviceInstan
     return response
 
 
-def autoResizeColumns(sheet_id, sheet_index=0, serviceInstance=None):
+def autoResizeColumns(sheet_id, sheet_index=2, serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect(sheet_id)
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
     sheet = sheet_metadata.get('sheets', '')[sheet_index]
@@ -533,13 +558,13 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
             if processed_data is None:  # Sentinel value to indicate completion
                 if len(batch_data) > 0:  # Push any remaining records
                     with sheet_update_lock:
-                        retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A:B', serviceInstance)
+                        retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2:A', serviceInstance)
                 return  # Exit after processing all data
             batch_data.append(processed_data)  # Add data to the batch
 
         # Push batch_data to Google Sheet with retries
         with sheet_update_lock:
-            retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A:B', serviceInstance)
+            retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2:A', serviceInstance)
         if stop_signal.is_set():
             break
 
@@ -900,7 +925,8 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         # sheet_id, webviewlink = create_new_google_sheet(is_just_moyos, url1, url2)
         sheet_id = "12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0"
         webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
-        result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:A', serviceInstance=None)
+        result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:A1', serviceInstance=None)
+        delete_data_records(sheet_id, "Sheet3", googlesheetInstance)
         # sheet_name = "Sheet3"
 
         # sheet_metadata = googlesheetInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
@@ -911,8 +937,7 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         #     if sheet['properties']['title'] == sheet_name:
         #         sheet_id = sheet['properties']['sheetId']
         #         break
-        formatHeaderTrim(sheet_id, "Sheet3" ,0, googlesheetInstance)
-        print("Header Formatted")
+        # formatHeaderTrim(sheet_id, "Sheet3" ,0, googlesheetInstance)
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
 
