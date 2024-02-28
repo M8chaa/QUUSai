@@ -85,30 +85,18 @@ def googleSheetConnect():
 #     return sheet_id, sheet_web_view_link
 
 
-def pushToSheet(data, sheet_id, range='Sheet3!A:A', serviceInstance=None):
+def pushToSheet(data, spreadsheet_id, range='Sheet3!A:A', serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
     try:
         body = {'values': data}
         result = serviceInstance.spreadsheets().values().append(
-            spreadsheetId=sheet_id,
+            spreadsheetId=spreadsheet_id,
             range=range,
             valueInputOption='USER_ENTERED',  # or 'RAW'
             body=body
         ).execute()
 
-        sheet_name = range.split('!')[0]
-
-        sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
-        sheets = sheet_metadata.get('sheets', '')
-
-        sheetId = None
-        for sheet in sheets:
-            if sheet['properties']['title'] == sheet_name:
-                sheetId = sheet['properties']['sheetId']
-                break
-        if sheetId is None:
-            print(f"Sheet named '{sheet_name}' not found in spreadsheet.")
-            return result, serviceInstance, None  # Return None if sheetId not found
+        
 
 
         # CPU usage
@@ -138,10 +126,19 @@ def pushToSheet(data, sheet_id, range='Sheet3!A:A', serviceInstance=None):
         raise Exception(f"Failed to push data to sheet: {e}")
 
 
-def formatHeaderTrim(sheet_id, sheet_index=0, serviceInstance=None):
+def formatHeaderTrim(sheet_id, sheet_name='Sheet3', sheet_index=0, serviceInstance=None):
     # Retrieve sheet metadata
     sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
-    sheet = sheet_metadata.get('sheets', '')[sheet_index]
+    sheets = sheet_metadata.get('sheets', '')[sheet_index]
+    sheet = None
+    for s in sheets:
+        if s.get('properties', {}).get('title') == sheet_name:
+            sheet = s
+            break
+
+    if sheet is None:
+        print(f"No sheet named '{sheet_name}' found in the spreadsheet.")
+        return
     totalColumns = sheet.get('properties', {}).get('gridProperties', {}).get('columnCount', 0)
     sheetId = sheet.get('properties', {}).get('sheetId', 0)
 
@@ -903,7 +900,17 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         # sheet_id, webviewlink = create_new_google_sheet(is_just_moyos, url1, url2)
         sheet_id = "12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0"
         webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
-        result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:L1')
+        result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:A', serviceInstance=None)
+        # sheet_name = "Sheet3"
+
+        # sheet_metadata = googlesheetInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        # sheets = sheet_metadata.get('sheets', '')
+
+        # sheet_id = None
+        # for sheet in sheets:
+        #     if sheet['properties']['title'] == sheet_name:
+        #         sheet_id = sheet['properties']['sheetId']
+        #         break
         formatHeaderTrim(sheet_id, 0, googlesheetInstance)
         print("Header Formatted")
         sheetUrl = str(webviewlink)
