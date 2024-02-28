@@ -911,7 +911,7 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         #     if sheet['properties']['title'] == sheet_name:
         #         sheet_id = sheet['properties']['sheetId']
         #         break
-        formatHeaderTrim(sheet_id, 0, googlesheetInstance)
+        formatHeaderTrim(sheet_id, "Sheet3" ,0, googlesheetInstance)
         print("Header Formatted")
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
