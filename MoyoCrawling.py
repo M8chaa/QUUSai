@@ -65,7 +65,7 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
         result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3").execute()
         records = result.get('values', [])
 
-        if records != []:
+        if records[1] != []:
             # Get the last column index
             last_column = chr(ord('A') + len(records[0]) - 1)
             range = f'Sheet3!A{start_row}:{last_column}'
@@ -899,13 +899,14 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                                 weights['문자(건)'] * data[8])
                         return score
                     
-                    rawMonthPayment = data[3].str.replace('원', '').str.replace(',', '').astype(int)
-                    rawMonthData= data[4].apply(convert_data_to_numeric)
-                    rawDailyData= data[5].apply(convert_data_to_numeric)
-                    rawDataSpeed = data[6].replace('제공안함', '0mbps').apply(lambda x: float(x.replace('mbps', '')) if isinstance(x, str) else x)
-                    rawCall= data[7].apply(convert_calls_texts_to_numeric)
-                    rawText = data[8].apply(convert_calls_texts_to_numeric)
+                    rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
+                    rawMonthData = convert_data_to_numeric(data[4])
+                    rawDailyData = convert_data_to_numeric(data[5])
+                    rawDataSpeed = float(data[6].replace('제공안함', '0mbps').replace('mbps', '')) if isinstance(data[6], str) else data[6]
+                    rawCall = convert_calls_texts_to_numeric(data[7])
+                    rawText = convert_calls_texts_to_numeric(data[8])
 
+                    
                     score = calculate_score()
 
                     data.extend([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
