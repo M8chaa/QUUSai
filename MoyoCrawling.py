@@ -882,7 +882,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                             return 0
 
                     # Define the scoring function
-                    def calculate_score():
+                    def calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText):
                         weights = {
                             '월 요금': -1,
                             '월 데이터': 2,
@@ -891,12 +891,12 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                             '통화(분)': 1,
                             '문자(건)': 1,
                         }
-                        score = (weights['월 요금'] * data[3] +
-                                weights['월 데이터'] * data[4] +
-                                weights['일 데이터'] * data[5] +
-                                weights['데이터 속도'] * data[6] +
-                                weights['통화(분)'] * data[7] +
-                                weights['문자(건)'] * data[8])
+                        score = (weights['월 요금'] * rawMonthPayment +
+                                weights['월 데이터'] * rawMonthData +
+                                weights['일 데이터'] * rawDailyData +
+                                weights['데이터 속도'] * rawDataSpeed +
+                                weights['통화(분)'] * rawCall +
+                                weights['문자(건)'] * rawText)
                         return score
                     
                     rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
@@ -907,7 +907,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     rawText = convert_calls_texts_to_numeric(data[8])
 
                     
-                    score = calculate_score()
+                    score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
 
                     new_data = pd.Series([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
                     data = data.append(new_data, ignore_index=True)
