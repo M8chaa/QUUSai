@@ -909,7 +909,8 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     
                     score = calculate_score()
 
-                    data.extend([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
+                    new_data = pd.Series([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
+                    data = data.append(new_data, ignore_index=True)
                     data_queue.put(data)
                     print(f"Data queued for {url}")
                     fetch_success = True
