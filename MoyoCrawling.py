@@ -57,12 +57,12 @@ def googleSheetConnect():
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     return serviceInstance
 
-def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
+def backup_and_refresh(sheet_id, start_row=2, serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
     driveServiceInstance = googleDriveConnect()
     try:
         # Retrieve the records from the sheet
-        result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3A1:A").execute()
+        result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3!A1:A").execute()
         records = result.get('values', [])
 
         if records:
@@ -1046,7 +1046,7 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         sheet_id = "12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0"
         webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
         result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:A1', serviceInstance=None)
-        delete_data_records(sheet_id, 2, googlesheetInstance)
+        backup_and_refresh(sheet_id, 2, googlesheetInstance)
         # sheet_name = "Sheet3"
 
         # sheet_metadata = googlesheetInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
