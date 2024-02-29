@@ -55,37 +55,9 @@ def googleSheetConnect():
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     return serviceInstance
 
-# def create_new_google_sheet(is_just_moyos, url1=None, url2=None):
-#     serviceInstance = googleDriveConnect()
-    
-#     if not is_just_moyos:
-#         part1 = url1.split('/')
-#         part2 = url2.split('/')
-#         number1 = int(part1[-1])
-#         number2 = int(part2[-1])
-#         name = f'모요 요금제 {number1} ~ {number2}'
-#     else:
-#         kst = pytz.timezone('Asia/Seoul')
-#         current_date = datetime.now(kst).strftime("%Y-%m-%d")
-#         name = f'모요 요금제 {current_date}'
-    
-#     file_metadata = {
-#         'name': name,
-#         'mimeType': 'application/vnd.google-apps.spreadsheet'
-#     }
-#     file = serviceInstance.files().create(body=file_metadata, fields='id, webViewLink').execute()
-#     sheet_id = file.get('id')
-#     sheet_web_view_link = file.get('webViewLink')
-#     permission = {
-#         'type': 'anyone',
-#         'role': 'writer'
-#     }
-#     serviceInstance.permissions().create(fileId=sheet_id, body=permission).execute()
-
-#     return sheet_id, sheet_web_view_link
-
 def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
+    driveServiceInstance = googleDriveConnect()
     try:
         # Retrieve the records from the sheet
         result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3").execute()
@@ -102,7 +74,7 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
                 'name': backup_name,
                 'mimeType': 'application/vnd.google-apps.spreadsheet'
             }
-            backup_file = serviceInstance.files().create(body=backup_file_metadata, fields='id, webViewLink').execute()
+            backup_file = driveServiceInstance.files().create(body=backup_file_metadata, fields='id, webViewLink').execute()
             backup_sheet_id = backup_file.get('id')
             backup_sheet_web_view_link = backup_file.get('webViewLink')
 
