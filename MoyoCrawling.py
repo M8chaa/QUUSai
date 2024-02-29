@@ -62,7 +62,7 @@ def backup_and_refresh(sheet_id, start_row=2, serviceInstance=None):
     driveServiceInstance = googleDriveConnect()
     try:
         # Retrieve the records from the sheet
-        result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3!A1:A").execute()
+        result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3").execute()
         records = result.get('values', [])
 
         if records:
