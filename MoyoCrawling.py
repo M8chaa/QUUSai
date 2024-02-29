@@ -105,11 +105,11 @@ def backup_and_refresh(sheet_id, start_row=2, serviceInstance=None):
                     else:
                         print(f"Backup of the data to '{backup_name}' failed. Retrying...")
                         attempt += 1
-                        time.sleep(0.1)  # Wait for 0.1 seconds before trying again
+                        time.sleep(1)  # Wait for 0.1 seconds before trying again
                 except Exception as e:
                     print(f"Failed to update new file (attempt {attempt}): {e}")
                     attempt += 1
-                    time.sleep(0.1)  # Wait for 0.1 seconds before trying again
+                    time.sleep(1)  # Wait for 0.1 seconds before trying again
 
 
             # Clear the data in the original sheet
