@@ -62,10 +62,10 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
     driveServiceInstance = googleDriveConnect()
     try:
         # Retrieve the records from the sheet
-        result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3").execute()
+        result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3A1:A").execute()
         records = result.get('values', [])
 
-        if records[1] != []:
+        if records:
             # Get the last column index
             last_column = chr(ord('A') + len(records[0]) - 1)
             range = f'Sheet3!A{start_row}:{last_column}'
@@ -911,7 +911,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
 
                     new_data = pd.Series([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
                     data = data.append(new_data, ignore_index=True)
-                    data_queue.put(data)
+                    data_queue.put(data.tolist())
                     print(f"Data queued for {url}")
                     fetch_success = True
                     attempts = 0
