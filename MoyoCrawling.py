@@ -69,17 +69,17 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
             range = f'Sheet3!A{start_row}:{last_column}'
 
             # Backup the data to a new spreadsheet
-            backup_name = f'모요 요금제 {datetime.now().strftime("%Y.%m.%d.%H.%M.%S")}'
+            backup_name = f'모요 요금제 {datetime.now().strftime("%Y/%m/%d - %H:%M:%S")}'
             backup_file_metadata = {
                 'name': backup_name,
                 'mimeType': 'application/vnd.google-apps.spreadsheet'
             }
             backup_file = driveServiceInstance.files().create(body=backup_file_metadata, fields='id, webViewLink').execute()
             backup_sheet_id = backup_file.get('id')
-            backup_sheet_web_view_link = backup_file.get('webViewLink')
+            # backup_sheet_web_view_link = backup_file.get('webViewLink')
 
             # Copy the data to the backup spreadsheet
-            backup_range = f'{backup_name}!A1:{last_column}'
+            backup_range = f'Sheet1!A1:{last_column}'
             serviceInstance.spreadsheets().values().update(
                 spreadsheetId=backup_sheet_id,
                 range=backup_range,
@@ -93,8 +93,6 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
                 range=range,
                 body={}
             ).execute()
-
-            return backup_sheet_id, backup_sheet_web_view_link
         else:
             print("No records found in the sheet.")
     except Exception as e:
