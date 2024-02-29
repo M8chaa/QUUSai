@@ -1,4 +1,5 @@
 # coding:utf-8
+from curses import raw
 from email.mime import base
 # from operator import call
 # from tkinter import N
@@ -29,6 +30,7 @@ from datetime import datetime
 import pytz
 from multiprocessing import Process, Manager
 import psutil
+import pandas as pd
 
 
 
@@ -413,6 +415,52 @@ def regex_extract(strSoup):
         카드_할인_정보.group(1) + "할인" if 카드_할인_정보 else "제공안함", 
     ]
 
+def convert_data_to_numeric(data):
+    if isinstance(data, int) or isinstance(data, float):
+        return data
+    elif data == '무제한':
+        return 100000  
+    elif data == '제공안함':
+        return 0  
+    elif 'GB' in data:
+        return float(data.replace('GB', ''))  
+    elif 'MB' in data:
+        return float(data.replace('MB', '')) / 1000  
+    else:
+        return 0
+
+# Define the function to convert call and text data to numeric values
+def convert_calls_texts_to_numeric(data):
+    if isinstance(data, int) or isinstance(data, float):
+        return data
+    elif data == '무제한':
+        return 100000
+    elif data == '제공안함':
+        return 0
+    elif isinstance(data, str):
+        return int(data.replace('분', '').replace('건', ''))
+    else:
+        return 0
+
+# Define the scoring function
+def calculate_score(row):
+    weights = {
+        '월 요금': -1,
+        '월 데이터': 2,
+        '일 데이터': 1,
+        '데이터 속도': 1,
+        '통화(분)': 1,
+        '문자(건)': 1,
+    }
+    score = (weights['월 요금'] * row['월 요금'] +
+             weights['월 데이터'] * row['월 데이터'] +
+             weights['일 데이터'] * row['일 데이터'] +
+             weights['데이터 속도'] * row['데이터 속도'] +
+             weights['통화(분)'] * row['통화(분)'] +
+             weights['문자(건)'] * row['문자(건)'])
+    return score
+
+
 def update_google_sheet(data, sheet_id, serviceInstance=None):
     pushToSheet(data, sheet_id, range='Sheet3!A:B', serviceInstance=serviceInstance)
 
@@ -783,6 +831,61 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                         regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
                     data = [planUrl] + regex_formula
+                    def convert_data_to_numeric(data):
+                        if isinstance(data, int) or isinstance(data, float):
+                            return data
+                        elif data == '무제한':
+                            return 100000  
+                        elif data == '제공안함':
+                            return 0  
+                        elif 'GB' in data:
+                            return float(data.replace('GB', ''))  
+                        elif 'MB' in data:
+                            return float(data.replace('MB', '')) / 1000  
+                        else:
+                            return 0
+
+                    # Define the function to convert call and text data to numeric values
+                    def convert_calls_texts_to_numeric(data):
+                        if isinstance(data, int) or isinstance(data, float):
+                            return data
+                        elif data == '무제한':
+                            return 100000
+                        elif data == '제공안함':
+                            return 0
+                        elif isinstance(data, str):
+                            return int(data.replace('분', '').replace('건', ''))
+                        else:
+                            return 0
+
+                    # Define the scoring function
+                    def calculate_score(row):
+                        weights = {
+                            '월 요금': -1,
+                            '월 데이터': 2,
+                            '일 데이터': 1,
+                            '데이터 속도': 1,
+                            '통화(분)': 1,
+                            '문자(건)': 1,
+                        }
+                        score = (weights['월 요금'] * data[3] +
+                                weights['월 데이터'] * data[4] +
+                                weights['일 데이터'] * data[5] +
+                                weights['데이터 속도'] * data[6] +
+                                weights['통화(분)'] * data[7] +
+                                weights['문자(건)'] * data[8])
+                        return score
+                    
+                    rawMonthPayment = data[3].str.replace('원', '').str.replace(',', '').astype(int)
+                    rawMonthData= data[4].apply(convert_data_to_numeric)
+                    rawDailyData= data[5].apply(convert_data_to_numeric)
+                    rawDataSpeed = data[6].replacce('제공안함', '0mbps').apply(lambda x: float(x.replace('mbps', '')) if isinstance(x, str) else x)
+                    rawCall= data[7].apply(convert_calls_texts_to_numeric)
+                    rawText = data[8].apply(convert_calls_texts_to_numeric)
+
+                    score = calculate_score(data)
+
+                    data.append(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score)
                     data_queue.put(data)
                     print(f"Data queued for {url}")
                     fetch_success = True
@@ -911,7 +1014,7 @@ with st.sidebar:
 
 def process_google_sheet(is_just_moyos, url1="", url2=""):
     headers = {
-        'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트", "카드 할인"]
+        'values': ["url", "MVNO", "요금제명", "월 요금", "월 데이터", "일 데이터", "데이터 속도", "통화(분)", "문자(건)", "통신사", "망종류", "할인정보", "통신사 약정", "번호이동 수수료", "일반 유심 배송", "NFC 유심 배송", "eSim", "지원", "미지원", "이벤트", "카드 할인", "월 요금 (숫자)", "월 데이터 (숫자)", "일 데이터 (숫자)", "데이터 속도 (숫자)", "통화(분) (숫자)", "문자(건) (숫자)", "점수"]
     }
     with st.spinner("Processing for Google Sheet..."):
         # sheet_id, webviewlink = create_new_google_sheet(is_just_moyos, url1, url2)
