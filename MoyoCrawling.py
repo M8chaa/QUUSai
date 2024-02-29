@@ -82,7 +82,11 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
             backup_sheet_id = backup_file.get('id')
             # backup_sheet_web_view_link = backup_file.get('webViewLink')
 
-            for i in range(5):  # Try up to 5 times
+            max_attempts = 5
+            attempt = 1
+            backup_successful = False
+
+            while attempt <= max_attempts and not backup_successful:
                 try:
                     # Copy the data to the backup spreadsheet
                     backup_range = f'Sheet1!A1:{last_column}'
@@ -92,10 +96,20 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
                         valueInputOption='USER_ENTERED',
                         body={'values': records}
                     ).execute()
-                    break  # If the update is successful, break the loop
+
+                    # Retrieve the backup data
+                    backup_result = serviceInstance.spreadsheets().values().get(spreadsheetId=backup_sheet_id, range=backup_range).execute()
+                    if backup_result.get('values', []) == records:
+                        print(f"Backup of the data to '{backup_name}' was successful.")
+                        backup_successful = True
+                    else:
+                        print(f"Backup of the data to '{backup_name}' failed. Retrying...")
+                        attempt += 1
+                        time.sleep(0.1)  # Wait for 0.1 seconds before trying again
                 except Exception as e:
-                    print(f"Failed to update new file (attempt {i+1}): {e}")
-                    time.sleep(0.1)  # Wait for 2 seconds before trying again
+                    print(f"Failed to update new file (attempt {attempt}): {e}")
+                    attempt += 1
+                    time.sleep(0.1)  # Wait for 0.1 seconds before trying again
 
 
             # Clear the data in the original sheet
