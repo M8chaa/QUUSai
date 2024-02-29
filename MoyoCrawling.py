@@ -65,7 +65,7 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
         result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3").execute()
         records = result.get('values', [])
 
-        if records:
+        if records != []:
             # Get the last column index
             last_column = chr(ord('A') + len(records[0]) - 1)
             range = f'Sheet3!A{start_row}:{last_column}'
@@ -853,7 +853,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
                         regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
-                    data = [planUrl] + regex_formula
+                    data = pd.Series([planUrl] + regex_formula)
                     def convert_data_to_numeric(data):
                         if isinstance(data, int) or isinstance(data, float):
                             return data
@@ -882,7 +882,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                             return 0
 
                     # Define the scoring function
-                    def calculate_score(row):
+                    def calculate_score():
                         weights = {
                             '월 요금': -1,
                             '월 데이터': 2,
@@ -902,11 +902,11 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     rawMonthPayment = data[3].str.replace('원', '').str.replace(',', '').astype(int)
                     rawMonthData= data[4].apply(convert_data_to_numeric)
                     rawDailyData= data[5].apply(convert_data_to_numeric)
-                    rawDataSpeed = data[6].replacce('제공안함', '0mbps').apply(lambda x: float(x.replace('mbps', '')) if isinstance(x, str) else x)
+                    rawDataSpeed = data[6].replace('제공안함', '0mbps').apply(lambda x: float(x.replace('mbps', '')) if isinstance(x, str) else x)
                     rawCall= data[7].apply(convert_calls_texts_to_numeric)
                     rawText = data[8].apply(convert_calls_texts_to_numeric)
 
-                    score = calculate_score(data)
+                    score = calculate_score()
 
                     data.extend([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
                     data_queue.put(data)
