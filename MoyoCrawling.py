@@ -71,7 +71,9 @@ def delete_data_records(sheet_id, start_row=2, serviceInstance=None):
             range = f'Sheet3!A{start_row}:{last_column}'
 
             # Backup the data to a new spreadsheet
-            backup_name = f'모요 요금제 {datetime.now().strftime("%Y/%m/%d - %H:%M:%S")}'
+            kst = pytz.timezone('Asia/Seoul')
+            current_time = datetime.now(kst).strftime("%Y/%m/%d - %H:%M:%S")
+            backup_name = f'모요 요금제 {current_time}'
             backup_file_metadata = {
                 'name': backup_name,
                 'mimeType': 'application/vnd.google-apps.spreadsheet'
@@ -885,7 +887,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
 
                     score = calculate_score(data)
 
-                    data.append(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score)
+                    data.extend([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
                     data_queue.put(data)
                     print(f"Data queued for {url}")
                     fetch_success = True
