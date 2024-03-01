@@ -885,7 +885,6 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
 
                     data = pd.concat([data_df, new_data_df], axis=1)
 
-                    # Convert the dataframe back to a list of lists for the data_queue
                     data_queue.put(data.values.tolist())
                     print(f"Data queued for {url}")
                     fetch_success = True
