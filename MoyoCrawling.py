@@ -108,12 +108,11 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
         if sheet_id_to_copy is not None:
             try:
                 # Copy "Sheet3" to the new spreadsheet
-                copy_response = serviceInstance.spreadsheets().sheets().copyTo(
+                serviceInstance.spreadsheets().sheets().copyTo(
                     spreadsheetId=sheet_id,
                     sheetId=sheet_id_to_copy,
                     body={'destinationSpreadsheetId': new_spreadsheet_id}
                 ).execute()
-                st.write(f"Sheet copied to new spreadsheet: {copy_response}")
             except Exception as e:
                 st.write(f"Failed to copy sheet: {e}")
         else:
@@ -884,7 +883,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     new_data_df = new_data.to_frame().T
 
                     data = pd.concat([data_df, new_data_df], axis=1)
-
+                    print ({data})
                     data_queue.put(data.values.tolist())
                     print(f"Data queued for {url}")
                     fetch_success = True
