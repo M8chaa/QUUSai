@@ -166,7 +166,7 @@ def pushToSheet(data, spreadsheet_id, range='Sheet3!A', serviceInstance=None):
         return result, serviceInstance
     except Exception as e:
         # Re-raise the exception to be caught in the calling function
-        print(f"Failed to push data to sheet: {e}")
+        # print(f"Failed to push data to sheet: {e}")
         raise Exception(f"Failed to push data to sheet: {e}")
 
 
