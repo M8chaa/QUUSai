@@ -650,43 +650,6 @@ def retry_push_to_sheet(data, sheet_id, range, serviceInstance, backoff_factor=1
             time.sleep(wait_time)
 
 
-# def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
-#     while True:
-#         batch_data = []  # Accumulate data here
-#         while len(batch_data) < 10:  # Wait until we have 10 records
-#             processed_data = data_queue.get()
-#             print("stacking data")
-#             if processed_data is None:  # Sentinel value to indicate completion
-#                 if len(batch_data) > 0:  # Push any remaining records
-#                     with sheet_update_lock:
-#                         try:
-#                             rate_limited_pushToSheet(batch_data, sheet_id, range='Sheet1!A:B', serviceInstance=serviceInstance)
-#                         except Exception as e:
-#                             error_message = f"An error occurred while updating the sheet: {e}"
-#                             error_queue.put(error_message)
-#                 print("Data queue is empty. Exiting...///////////////////////////////////////////////////////////")
-#                 return  # Exit after processing all data
-#             batch_data.append(processed_data)  # Add data to the batch
-
-#         # Push batch_data to Google Sheet
-#         with sheet_update_lock:
-#             try:
-#                 print("pushing data to sheet////////////////////////////////////////////////////////////////////")
-#                 rate_limited_pushToSheet(batch_data, sheet_id, range='Sheet1!A:B', serviceInstance=serviceInstance)
-#                 print(f"Data pushed to sheet////////////////////////////////////////////////////////////////////")
-#             except Exception as e:
-#                 error_message = f"An error occurred while updating the sheet: {e}"
-#                 print("Error occurred while updating the sheet////////////////////////////////////////////////////////////////////")
-#                 error_queue.put(error_message)
-#             finally:
-#                 for _ in batch_data:  # Acknowledge each item in the batch
-#                     data_queue.task_done()
-#         if stop_signal.is_set():
-#             break
-
-
-
-
 
 def moyocrawling(url1, url2, sheet_id, serviceInstance):
     part1 = url1.split('/')
@@ -1052,17 +1015,6 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
         result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:A1', serviceInstance=None)
         backup_and_refresh(sheet_id=sheet_id, sheet_name="Sheet3", start_row=2, serviceInstance=googlesheetInstance)
-        # sheet_name = "Sheet3"
-
-        # sheet_metadata = googlesheetInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
-        # sheets = sheet_metadata.get('sheets', '')
-
-        # sheet_id = None
-        # for sheet in sheets:
-        #     if sheet['properties']['title'] == sheet_name:
-        #         sheet_id = sheet['properties']['sheetId']
-        #         break
-        # formatHeaderTrim(sheet_id, "Sheet3" ,0, googlesheetInstance)
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
 
