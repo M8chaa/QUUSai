@@ -31,6 +31,7 @@ import pytz
 from multiprocessing import Process, Manager
 import psutil
 import pandas as pd
+from string import ascii_uppercase
 
 
 
@@ -131,6 +132,7 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
             sheet_grid_properties = sheet_properties.get("gridProperties", {})
             sheet_row_count = sheet_grid_properties.get("rowCount", 0)
             sheet_column_count = sheet_grid_properties.get("columnCount", 0)
+            sheet_column_letter = ascii_uppercase[sheet_column_count - 1] if sheet_column_count > 0 else ''
 
             range = f'{sheet_name}!A2:{chr(65 + sheet_column_count - 1)}{sheet_row_count}'
             serviceInstance.spreadsheets().values().clear(
