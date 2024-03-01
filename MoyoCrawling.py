@@ -132,9 +132,15 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
             sheet_grid_properties = sheet_properties.get("gridProperties", {})
             sheet_row_count = sheet_grid_properties.get("rowCount", 0)
             sheet_column_count = sheet_grid_properties.get("columnCount", 0)
-            sheet_column_letter = ascii_uppercase[sheet_column_count - 1] if sheet_column_count > 0 else ''
+            def column_number_to_letter(n):
+                string = ""
+                while n > 0:
+                    n, remainder = divmod(n - 1, 26)
+                    string = chr(65 + remainder) + string
+                return string
+            last_column_letter = column_number_to_letter(sheet_column_count)
 
-            range = f'{sheet_name}!A2:{chr(65 + sheet_column_count - 1)}{sheet_row_count}'
+            range = f'{sheet_name}!A2:{last_column_letter}{sheet_row_count}'
             serviceInstance.spreadsheets().values().clear(
                 spreadsheetId=sheet_id,
                 range=range,
