@@ -909,19 +909,19 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     # print ({data})
                     # data_queue.put(data.values.tolist())
                     data = [planUrl] + regex_formula
-                    
-                    rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
-                    rawMonthData = convert_data_to_numeric(data[4])
-                    rawDailyData = convert_data_to_numeric(data[5])
-                    rawDataSpeed = float(data[6].replace('제공안함', '0mbps').replace('mbps', '')) if isinstance(data[6], str) else data[6]
-                    rawCall = convert_calls_texts_to_numeric(data[7])
-                    rawText = convert_calls_texts_to_numeric(data[8])
+                    #
+                    # rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
+                    # rawMonthData = convert_data_to_numeric(data[4])
+                    # rawDailyData = convert_data_to_numeric(data[5])
+                    # rawDataSpeed = float(data[6].replace('제공안함', '0mbps').replace('mbps', '')) if isinstance(data[6], str) else data[6]
+                    # rawCall = convert_calls_texts_to_numeric(data[7])
+                    # rawText = convert_calls_texts_to_numeric(data[8])
 
-                    score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
+                    # score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
 
-                    new_data = [rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score]
+                    # new_data = [rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score]
                     
-                    data = data + new_data
+                    # data = data + new_data
                     print (data)
                     data_queue.put(data)
                     print(f"Data queued for {url}")
