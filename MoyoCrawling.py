@@ -119,12 +119,27 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
             st.write(f"Sheet '{sheet_name}' not found in the original spreadsheet.")
 
         # Optionally, clear the data in "Sheet3" of the original spreadsheet
-        range = f'{sheet_name}!A{start_row}:Z'
-        serviceInstance.spreadsheets().values().clear(
-            spreadsheetId=sheet_id,
-            range=range,
-            body={}
-        ).execute()
+        sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        sheets = sheet_metadata.get('sheets', '')
+        sheet_properties = None
+        for sheet in sheets:
+            if sheet.get("properties", {}).get("title", "") == sheet_name:
+                sheet_properties = sheet.get("properties", {})
+                break
+
+        if sheet_properties is not None:
+            sheet_grid_properties = sheet_properties.get("gridProperties", {})
+            sheet_row_count = sheet_grid_properties.get("rowCount", 0)
+            sheet_column_count = sheet_grid_properties.get("columnCount", 0)
+
+            range = f'{sheet_name}!A2:{chr(65 + sheet_column_count - 1)}{sheet_row_count}'
+            serviceInstance.spreadsheets().values().clear(
+                spreadsheetId=sheet_id,
+                range=range,
+                body={}
+            ).execute()
+        else:
+            st.write(f"Sheet '{sheet_name}' not found in the spreadsheet.")
 
     except Exception as e:
         st.write(f"Failed to backup and refresh sheet: {e}")
