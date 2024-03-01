@@ -491,7 +491,7 @@ def calculate_score(row):
 
 
 def update_google_sheet(data, sheet_id, serviceInstance=None):
-    pushToSheet(data, sheet_id, range='Sheet3!A:B', serviceInstance=serviceInstance)
+    result, serviceInstance = pushToSheet(data, sheet_id, range='Sheet3!A:B', serviceInstance=serviceInstance)
 
 def sort_sheet_by_column(sheet_id, column_index=0, serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
@@ -617,7 +617,7 @@ PER_MINUTE_LIMIT = 60
 @sleep_and_retry
 @limits(calls=PER_MINUTE_LIMIT, period=60)
 def rate_limited_pushToSheet(data, sheet_id, range, serviceInstance=None):
-    pushToSheet(data, sheet_id, range, serviceInstance)
+    result, serviceInstance = pushToSheet(data, sheet_id, range, serviceInstance)
 
 def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
     while True:
@@ -642,8 +642,8 @@ def retry_push_to_sheet(data, sheet_id, range, serviceInstance, backoff_factor=1
     while True:
         try:
             print("Attempting to push data to sheet")
-            rate_limited_pushToSheet(data, sheet_id, range, serviceInstance)
-            print("Data successfully pushed to sheet")
+            result, serviceInstance = rate_limited_pushToSheet(data, sheet_id, range, serviceInstance)
+            print(f"Data successfully pushed to sheet{result}")
             break  # Success! Break out of the loop.
         except Exception as e:
             wait_time = backoff_factor # Exponential backoff
@@ -810,6 +810,50 @@ def setup_driver():
                             )
     return driver
 
+def convert_data_to_numeric(data):
+    if isinstance(data, int) or isinstance(data, float):
+        return data
+    elif data == '무제한':
+        return 100000  
+    elif data == '제공안함':
+        return 0  
+    elif 'GB' in data:
+        return float(data.replace('GB', ''))  
+    elif 'MB' in data:
+        return float(data.replace('MB', '')) / 1000  
+    else:
+        return 0
+
+# Define the function to convert call and text data to numeric values
+def convert_calls_texts_to_numeric(data):
+    if isinstance(data, int) or isinstance(data, float):
+        return data
+    elif data == '무제한':
+        return 100000
+    elif data == '제공안함':
+        return 0
+    elif isinstance(data, str):
+        return int(data.replace('분', '').replace('건', ''))
+    else:
+        return 0
+
+# Define the scoring function
+def calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText):
+    weights = {
+        '월 요금': -1,
+        '월 데이터': 2,
+        '일 데이터': 1,
+        '데이터 속도': 1,
+        '통화(분)': 1,
+        '문자(건)': 1,
+    }
+    score = (weights['월 요금'] * rawMonthPayment +
+            weights['월 데이터'] * rawMonthData +
+            weights['일 데이터'] * rawDailyData +
+            weights['데이터 속도'] * rawDataSpeed +
+            weights['통화(분)'] * rawCall +
+            weights['문자(건)'] * rawText)
+    return score
 
 def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
     try:
@@ -860,50 +904,6 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                         regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
                     data = pd.Series([planUrl] + regex_formula)
-                    def convert_data_to_numeric(data):
-                        if isinstance(data, int) or isinstance(data, float):
-                            return data
-                        elif data == '무제한':
-                            return 100000  
-                        elif data == '제공안함':
-                            return 0  
-                        elif 'GB' in data:
-                            return float(data.replace('GB', ''))  
-                        elif 'MB' in data:
-                            return float(data.replace('MB', '')) / 1000  
-                        else:
-                            return 0
-
-                    # Define the function to convert call and text data to numeric values
-                    def convert_calls_texts_to_numeric(data):
-                        if isinstance(data, int) or isinstance(data, float):
-                            return data
-                        elif data == '무제한':
-                            return 100000
-                        elif data == '제공안함':
-                            return 0
-                        elif isinstance(data, str):
-                            return int(data.replace('분', '').replace('건', ''))
-                        else:
-                            return 0
-
-                    # Define the scoring function
-                    def calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText):
-                        weights = {
-                            '월 요금': -1,
-                            '월 데이터': 2,
-                            '일 데이터': 1,
-                            '데이터 속도': 1,
-                            '통화(분)': 1,
-                            '문자(건)': 1,
-                        }
-                        score = (weights['월 요금'] * rawMonthPayment +
-                                weights['월 데이터'] * rawMonthData +
-                                weights['일 데이터'] * rawDailyData +
-                                weights['데이터 속도'] * rawDataSpeed +
-                                weights['통화(분)'] * rawCall +
-                                weights['문자(건)'] * rawText)
-                        return score
                     
                     rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
                     rawMonthData = convert_data_to_numeric(data[4])
@@ -912,7 +912,6 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     rawCall = convert_calls_texts_to_numeric(data[7])
                     rawText = convert_calls_texts_to_numeric(data[8])
 
-                    
                     score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
 
                     new_data = pd.Series([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
