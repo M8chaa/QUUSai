@@ -163,7 +163,7 @@ def pushToSheet(data, spreadsheet_id, range='Sheet3!A:A', serviceInstance=None):
         print(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
         print(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
         print(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
-
+        print(f"Data successfully pushed to sheet: {result}")
         return result, serviceInstance
     except Exception as e:
         # Re-raise the exception to be caught in the calling function
