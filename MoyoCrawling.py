@@ -647,6 +647,7 @@ def retry_push_to_sheet(data, sheet_id, range, serviceInstance, backoff_factor=1
             break  # Success! Break out of the loop.
         except Exception as e:
             wait_time = backoff_factor # Exponential backoff
+            print(f"Failed to push data to sheet: {e}. Retrying in {wait_time} seconds...")
             time.sleep(wait_time)
 
 
