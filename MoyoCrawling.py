@@ -153,8 +153,9 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
         st.write(f"Failed to backup and refresh sheet: {e}")
 
 def pushToSheet(data, spreadsheet_id, range='Sheet3!A', serviceInstance=None):
-    serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
+
     try:
+        serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
         body = {'values': data}
         result = serviceInstance.spreadsheets().values().append(
             spreadsheetId=spreadsheet_id,
@@ -185,7 +186,6 @@ def pushToSheet(data, spreadsheet_id, range='Sheet3!A', serviceInstance=None):
         print(f"CPU: {cpu_percent}%, Physical Memory: {memory_percent}%")
         print(f"Physical Memory Used: {memory_used_mb:.2f} MB, Total: {memory_total_mb:.2f} MB")
         print(f"Swap Used: {swap_used_mb:.2f} MB, Total: {swap_total_mb:.2f} MB")
-        print(f"Data successfully pushed to sheet: {result}")
         return result, serviceInstance
     except Exception as e:
         # Re-raise the exception to be caught in the calling function
@@ -513,7 +513,7 @@ def calculate_score(row):
 
 
 def update_google_sheet(data, sheet_id, serviceInstance=None):
-    result, serviceInstance = pushToSheet(data, sheet_id, range='Sheet3!A', serviceInstance=serviceInstance)
+    pushToSheet(data, sheet_id, range='Sheet3!A', serviceInstance=serviceInstance)
 
 def sort_sheet_by_column(sheet_id, column_index=0, serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
@@ -639,7 +639,7 @@ PER_MINUTE_LIMIT = 60
 @sleep_and_retry
 @limits(calls=PER_MINUTE_LIMIT, period=60)
 def rate_limited_pushToSheet(data, sheet_id, range, serviceInstance=None):
-    result, serviceInstance = pushToSheet(data, sheet_id, range, serviceInstance)
+    pushToSheet(data, sheet_id, range, serviceInstance)
 
 def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
     while True:
@@ -664,8 +664,8 @@ def retry_push_to_sheet(data, sheet_id, range, serviceInstance, backoff_factor=1
     while True:
         try:
             print("Attempting to push data to sheet")
-            result, serviceInstance = rate_limited_pushToSheet(data, sheet_id, range, serviceInstance)
-            print(f"Data successfully pushed to sheet{result}")
+            rate_limited_pushToSheet(data, sheet_id, range, serviceInstance)
+            print(f"Data successfully pushed to sheet")
             break  # Success! Break out of the loop.
         except Exception as e:
             wait_time = backoff_factor # Exponential backoff
@@ -909,19 +909,19 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     # print ({data})
                     # data_queue.put(data.values.tolist())
                     data = [planUrl] + regex_formula
-                    #
-                    # rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
-                    # rawMonthData = convert_data_to_numeric(data[4])
-                    # rawDailyData = convert_data_to_numeric(data[5])
-                    # rawDataSpeed = float(data[6].replace('제공안함', '0mbps').replace('mbps', '')) if isinstance(data[6], str) else data[6]
-                    # rawCall = convert_calls_texts_to_numeric(data[7])
-                    # rawText = convert_calls_texts_to_numeric(data[8])
-
-                    # score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
-
-                    # new_data = [rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score]
                     
-                    # data = data + new_data
+                    rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
+                    rawMonthData = convert_data_to_numeric(data[4])
+                    rawDailyData = convert_data_to_numeric(data[5])
+                    rawDataSpeed = float(data[6].replace('제공안함', '0mbps').replace('mbps', '')) if isinstance(data[6], str) else data[6]
+                    rawCall = convert_calls_texts_to_numeric(data[7])
+                    rawText = convert_calls_texts_to_numeric(data[8])
+
+                    score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
+
+                    new_data = [rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score]
+                    
+                    data = data + new_data
                     print (data)
                     data_queue.put(data)
                     print(f"Data queued for {url}")
