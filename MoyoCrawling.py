@@ -62,64 +62,24 @@ def backup_and_refresh(sheet_id, start_row=2, serviceInstance=None):
     driveServiceInstance = googleDriveConnect()
     try:
         # Retrieve the records from the sheet
-        result = serviceInstance.spreadsheets().values().get(spreadsheetId=sheet_id, range="Sheet3").execute()
-        records = result.get('values', [])
+        kst = pytz.timezone('Asia/Seoul')  # Set the timezone to Korean Standard Time
+        current_datetime = datetime.now(kst).strftime("%Y/%m/%d - %H:%M:%S")
+        backup_file_name = f"모요 요금제 {current_datetime}"
+        backup_file_metadata = {
+            'name': backup_file_name,
+            'mimeType': 'application/vnd.google-apps.spreadsheet'
+        }
+        backup_file = driveServiceInstance.files().copy(fileId=sheet_id, body=backup_file_metadata).execute()
+        backup_sheet_id = backup_file.get('id')
+        backup_sheet_web_view_link = backup_file.get('webViewLink')
 
-        if records:
-            # Get the last column index
-            last_column = chr(ord('A') + len(records[0]) - 1)
-            range = f'Sheet3!A{start_row}:{last_column}'
-
-            # Backup the data to a new spreadsheet
-            kst = pytz.timezone('Asia/Seoul')
-            current_time = datetime.now(kst).strftime("%Y/%m/%d - %H:%M:%S")
-            backup_name = f'모요 요금제 {current_time}'
-            backup_file_metadata = {
-                'name': backup_name,
-                'mimeType': 'application/vnd.google-apps.spreadsheet'
-            }
-            backup_file = driveServiceInstance.files().create(body=backup_file_metadata, fields='id, webViewLink').execute()
-            backup_sheet_id = backup_file.get('id')
-            # backup_sheet_web_view_link = backup_file.get('webViewLink')
-
-            max_attempts = 5
-            attempt = 1
-            backup_successful = False
-
-            while attempt <= max_attempts and not backup_successful:
-                try:
-                    # Copy the data to the backup spreadsheet
-                    backup_range = f'Sheet1!A1:{last_column}'
-                    serviceInstance.spreadsheets().values().update(
-                        spreadsheetId=backup_sheet_id,
-                        range=backup_range,
-                        valueInputOption='USER_ENTERED',
-                        body={'values': records}
-                    ).execute()
-
-                    # Retrieve the backup data
-                    backup_result = serviceInstance.spreadsheets().values().get(spreadsheetId=backup_sheet_id, range=backup_range).execute()
-                    if backup_result.get('values', []) == records:
-                        print(f"Backup of the data to '{backup_name}' was successful.")
-                        backup_successful = True
-                    else:
-                        print(f"Backup of the data to '{backup_name}' failed. Retrying...")
-                        attempt += 1
-                        time.sleep(1)  # Wait for 0.1 seconds before trying again
-                except Exception as e:
-                    print(f"Failed to update new file (attempt {attempt}): {e}")
-                    attempt += 1
-                    time.sleep(1)  # Wait for 0.1 seconds before trying again
-
-
-            # Clear the data in the original sheet
-            serviceInstance.spreadsheets().values().clear(
-                spreadsheetId=sheet_id,
-                range=range,
-                body={}
-            ).execute()
-        else:
-            print("No records found in the sheet.")
+        # Clear the data in the original sheet
+        range = f'Sheet3!A{start_row}:Z'
+        serviceInstance.spreadsheets().values().clear(
+            spreadsheetId=sheet_id,
+            range=range,
+            body={}
+        ).execute()
     except Exception as e:
         print(f"Failed to delete data records from sheet: {e}")
 
