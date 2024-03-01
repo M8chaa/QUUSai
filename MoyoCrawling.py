@@ -84,33 +84,45 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
             if sheet_id_to_copy and sheet_id_to_delete:
                 break
 
-        if sheet_id_to_copy is not None and sheet_id_to_delete is not None:
-            try:
-                # Delete the existing sheet
-                delete_request = {
-                    "deleteSheet": {
-                        "sheetId": sheet_id_to_delete
-                    }
-                }
-                serviceInstance.spreadsheets().batchUpdate(
-                    spreadsheetId=sheet_id,
-                    body={"requests": [delete_request]}
-                ).execute()
+        # if sheet_id_to_copy is not None and sheet_id_to_delete is not None:
+        #     try:
+        #         # Delete the existing sheet
+        #         delete_request = {
+        #             "deleteSheet": {
+        #                 "sheetId": sheet_id_to_delete
+        #             }
+        #         }
+        #         serviceInstance.spreadsheets().batchUpdate(
+        #             spreadsheetId=sheet_id,
+        #             body={"requests": [delete_request]}
+        #         ).execute()
 
-                # Duplicate "Sheet3" with the name of the deleted sheet
-                duplicate_request = {
-                    "duplicateSheet": {
-                        "sourceSheetId": sheet_id_to_copy,
-                        "insertSheetIndex": 0,  # Adjust as needed
-                        "newSheetName": "planDataSheet"  # Replace with your desired name
-                    }
-                }
-                serviceInstance.spreadsheets().batchUpdate(
+        #         # Duplicate "Sheet3" with the name of the deleted sheet
+        #         duplicate_request = {
+        #             "duplicateSheet": {
+        #                 "sourceSheetId": sheet_id_to_copy,
+        #                 "insertSheetIndex": 0,  # Adjust as needed
+        #                 "newSheetName": "planDataSheet"  # Replace with your desired name
+        #             }
+        #         }
+        #         serviceInstance.spreadsheets().batchUpdate(
+        #             spreadsheetId=sheet_id,
+        #             body={"requests": [duplicate_request]}
+        #         ).execute()
+            # except Exception as e:
+            #     st.write(f"Failed to replace sheet: {e}")
+        
+        # Copy the data from "Sheet3" of the original spreadsheet to the new spreadsheet
+        if sheet_id_to_copy is not None:
+            try:
+                # Copy "Sheet3" to the new spreadsheet
+                serviceInstance.spreadsheets().sheets().copyTo(
                     spreadsheetId=sheet_id,
-                    body={"requests": [duplicate_request]}
+                    sheetId=sheet_id_to_copy,
+                    body={'destinationSpreadsheetId': new_spreadsheet_id}
                 ).execute()
             except Exception as e:
-                st.write(f"Failed to replace sheet: {e}")
+                st.write(f"Failed to copy sheet: {e}")
         else:
             st.write(f"Sheet '{sheet_name}' not found in the original spreadsheet.")
 
@@ -670,6 +682,21 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
                     return None
                 
             column_index = find_column_index_by_header(sheet_id, 'Sheet3', '점수', serviceInstance)
+            def get_sheet_id(spreadsheet_id, sheet_title, serviceInstance):
+                # Fetch the spreadsheet's metadata
+                result = serviceInstance.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+                sheets = result.get('sheets', [])
+                
+                # Find the sheet with the given title and return its ID
+                for sheet in sheets:
+                    if sheet.get('properties', {}).get('title') == sheet_title:
+                        return sheet.get('properties', {}).get('sheetId')
+                
+                print(f"Sheet '{sheet_title}' not found.")
+                return None
+
+            # Use the function to get the sheet_id
+            sheet3_id = get_sheet_id(sheet_id, 'Sheet3', serviceInstance)
 
             def sort_sheet_by_column(sheet_id, column_index=0, serviceInstance=None):
                 request_body = {
@@ -691,7 +718,7 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
                     ]
                 }
                 serviceInstance.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=request_body).execute()
-            sort_sheet_by_column(sheet_id, column_index, serviceInstance)
+            sort_sheet_by_column(sheet3_id, column_index, serviceInstance)
         if stop_signal.is_set():
             break
 
