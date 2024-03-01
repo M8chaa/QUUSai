@@ -58,32 +58,6 @@ def googleSheetConnect():
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     return serviceInstance
 
-# def backup_and_refresh(sheet_id, start_row=2, serviceInstance=None):
-#     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
-#     driveServiceInstance = googleDriveConnect()
-#     try:
-#         # Retrieve the records from the sheet
-#         kst = pytz.timezone('Asia/Seoul')  # Set the timezone to Korean Standard Time
-#         current_datetime = datetime.now(kst).strftime("%Y/%m/%d - %H:%M:%S")
-#         backup_file_name = f"모요 요금제 {current_datetime}"
-#         backup_file_metadata = {
-#             'name': backup_file_name,
-#             'mimeType': 'application/vnd.google-apps.spreadsheet'
-#         }
-#         backup_file = driveServiceInstance.files().copy(fileId=sheet_id, body=backup_file_metadata).execute()
-#         backup_sheet_id = backup_file.get('id')
-#         backup_sheet_web_view_link = backup_file.get('webViewLink')
-
-#         # Clear the data in the original sheet
-#         range = f'Sheet3!A{start_row}:Z'
-#         serviceInstance.spreadsheets().values().clear(
-#             spreadsheetId=sheet_id,
-#             range=range,
-#             body={}
-#         ).execute()
-#     except Exception as e:
-#         print(f"Failed to delete data records from sheet: {e}")
-
 def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstance=None):
     if not serviceInstance:
         serviceInstance = googleSheetConnect()
@@ -97,25 +71,46 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
         }, fields='spreadsheetId').execute()
         new_spreadsheet_id = new_spreadsheet.get('spreadsheetId')
 
-        # Get the ID of "Sheet3" from the original spreadsheet
+        # Get the ID of "Sheet3", "planDataSheet" from the original spreadsheet
         sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
         sheets = sheet_metadata.get('sheets', '')
         sheet_id_to_copy = None
+        sheet_id_to_delete = None
         for sheet in sheets:
             if sheet.get("properties", {}).get("title", "") == sheet_name:
                 sheet_id_to_copy = sheet.get("properties", {}).get("sheetId", "")
+            elif sheet.get("properties", {}).get("title", "") == "planDataSheet":
+                sheet_id_to_delete = sheet.get("properties", {}).get("sheetId", "")
+            if sheet_id_to_copy and sheet_id_to_delete:
                 break
 
-        if sheet_id_to_copy is not None:
+        if sheet_id_to_copy is not None and sheet_id_to_delete is not None:
             try:
-                # Copy "Sheet3" to the new spreadsheet
-                serviceInstance.spreadsheets().sheets().copyTo(
+                # Delete the existing sheet
+                delete_request = {
+                    "deleteSheet": {
+                        "sheetId": sheet_id_to_delete
+                    }
+                }
+                serviceInstance.spreadsheets().batchUpdate(
                     spreadsheetId=sheet_id,
-                    sheetId=sheet_id_to_copy,
-                    body={'destinationSpreadsheetId': new_spreadsheet_id}
+                    body={"requests": [delete_request]}
+                ).execute()
+
+                # Duplicate "Sheet3" with the name of the deleted sheet
+                duplicate_request = {
+                    "duplicateSheet": {
+                        "sourceSheetId": sheet_id_to_copy,
+                        "insertSheetIndex": 0,  # Adjust as needed
+                        "newSheetName": "planDataSheet"  # Replace with your desired name
+                    }
+                }
+                serviceInstance.spreadsheets().batchUpdate(
+                    spreadsheetId=sheet_id,
+                    body={"requests": [duplicate_request]}
                 ).execute()
             except Exception as e:
-                st.write(f"Failed to copy sheet: {e}")
+                st.write(f"Failed to replace sheet: {e}")
         else:
             st.write(f"Sheet '{sheet_name}' not found in the original spreadsheet.")
 
@@ -656,6 +651,47 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
         # Push batch_data to Google Sheet with retries
         with sheet_update_lock:
             retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2', serviceInstance)
+
+            def find_column_index_by_header(spreadsheet_id, sheet_title, header_name, serviceInstance):
+                # Fetch the header row. Assume it's the first row.
+                range_name = f"{sheet_title}!1:1"  # Adjust the range if your headers are not in the first row.
+                result = serviceInstance.spreadsheets().values().get(
+                    spreadsheetId=spreadsheet_id,
+                    range=range_name
+                ).execute()
+                headers = result.get('values', [[]])[0]  # Get the first row (header row)
+                
+                # Find the index of the header_name
+                try:
+                    column_index = headers.index(header_name)
+                    return column_index
+                except ValueError:
+                    print(f"Header '{header_name}' not found.")
+                    return None
+                
+            column_index = find_column_index_by_header(sheet_id, 'Sheet3', '점수', serviceInstance)
+
+            def sort_sheet_by_column(sheet_id, column_index=0, serviceInstance=None):
+                request_body = {
+                    "requests": [
+                        {
+                            "sortRange": {
+                                "range": {
+                                    "sheetId": sheet_id,
+                                    "startRowIndex": 1,  # Exclude header row
+                                },
+                                "sortSpecs": [
+                                    {
+                                        "dimensionIndex": column_index,
+                                        "sortOrder": "DESCENDING"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+                serviceInstance.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=request_body).execute()
+            sort_sheet_by_column(sheet_id, column_index, serviceInstance)
         if stop_signal.is_set():
             break
 
@@ -1005,7 +1041,7 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
     for thread in update_threads:
         thread.join()
     print("Update Thread Finished/////////////////////////////////////////////////////////////////")
-    autoResizeColumns(sheet_id, 0, serviceInstance)
+    # autoResizeColumns(sheet_id, 0, serviceInstance)
     print("Auto Resize Column Finished/////////////////////////////////////////////////////////////////")
     thread_completed.set()
     print("All Threads Completed/////////////////////////////////////////////////////////////////")
