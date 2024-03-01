@@ -879,8 +879,14 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
 
                     new_data = pd.Series([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
-                    data = data.append(new_data, ignore_index=True)
-                    data_queue.put(data.tolist())
+                    
+                    data_df = data.to_frame().T
+                    new_data_df = new_data.to_frame().T
+
+                    data = pd.concat([data_df, new_data_df], axis=1)
+
+                    # Convert the dataframe back to a list of lists for the data_queue
+                    data_queue.put(data.values.tolist())
                     print(f"Data queued for {url}")
                     fetch_success = True
                     attempts = 0
