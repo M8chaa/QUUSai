@@ -639,7 +639,7 @@ PER_MINUTE_LIMIT = 60
 @sleep_and_retry
 @limits(calls=PER_MINUTE_LIMIT, period=60)
 def rate_limited_pushToSheet(data, sheet_id, range, serviceInstance=None):
-    pushToSheet(data, sheet_id, range, serviceInstance)
+    return pushToSheet(data, sheet_id, range, serviceInstance)
 
 def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
     while True:
