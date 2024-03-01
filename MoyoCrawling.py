@@ -130,7 +130,7 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
     except Exception as e:
         st.write(f"Failed to backup and refresh sheet: {e}")
 
-def pushToSheet(data, spreadsheet_id, range='Sheet3!A:A', serviceInstance=None):
+def pushToSheet(data, spreadsheet_id, range='Sheet3!A', serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
     try:
         body = {'values': data}
@@ -491,7 +491,7 @@ def calculate_score(row):
 
 
 def update_google_sheet(data, sheet_id, serviceInstance=None):
-    result, serviceInstance = pushToSheet(data, sheet_id, range='Sheet3!A:B', serviceInstance=serviceInstance)
+    result, serviceInstance = pushToSheet(data, sheet_id, range='Sheet3!A', serviceInstance=serviceInstance)
 
 def sort_sheet_by_column(sheet_id, column_index=0, serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
@@ -627,13 +627,13 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
             if processed_data is None:  # Sentinel value to indicate completion
                 if len(batch_data) > 0:  # Push any remaining records
                     with sheet_update_lock:
-                        retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2:A', serviceInstance)
+                        retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2', serviceInstance)
                 return  # Exit after processing all data
             batch_data.append(processed_data)  # Add data to the batch
 
         # Push batch_data to Google Sheet with retries
         with sheet_update_lock:
-            retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2:A', serviceInstance)
+            retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2', serviceInstance)
         if stop_signal.is_set():
             break
 
@@ -1019,7 +1019,7 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         # sheet_id, webviewlink = create_new_google_sheet(is_just_moyos, url1, url2)
         sheet_id = "12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0"
         webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
-        result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:A1', serviceInstance=None)
+        result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1', serviceInstance=None)
         backup_and_refresh(sheet_id=sheet_id, sheet_name="Sheet3", start_row=2, serviceInstance=googlesheetInstance)
         sheetUrl = str(webviewlink)
         st.link_button("Go to see", sheetUrl)
