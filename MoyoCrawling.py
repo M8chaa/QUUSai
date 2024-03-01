@@ -1048,7 +1048,7 @@ def process_google_sheet(is_just_moyos, url1="", url2=""):
         sheet_id = "12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0"
         webviewlink = "https://docs.google.com/spreadsheets/d/12s6sKkpWkHdsx_2kxFRim3M7-VTEQBmbG4OPgFrG0n0/edit?usp=sharing"
         result, googlesheetInstance = pushToSheet(headers, sheet_id, 'Sheet3!A1:A1', serviceInstance=None)
-        backup_and_refresh(sheet_id, 2, googlesheetInstance)
+        backup_and_refresh(sheet_id=sheet_id, sheet_name="Sheet3", start_row=2, serviceInstance=googlesheetInstance)
         # sheet_name = "Sheet3"
 
         # sheet_metadata = googlesheetInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
