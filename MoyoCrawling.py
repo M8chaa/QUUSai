@@ -106,12 +106,15 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
                 break
 
         if sheet_id_to_copy is not None:
-            # Copy "Sheet3" to the new spreadsheet
-            serviceInstance.spreadsheets().sheets().copyTo(
-                spreadsheetId=sheet_id,
-                sheetId=sheet_id_to_copy,
-                body={'destinationSpreadsheetId': new_spreadsheet_id}
-            ).execute()
+            try:
+                # Copy "Sheet3" to the new spreadsheet
+                serviceInstance.spreadsheets().sheets().copyTo(
+                    spreadsheetId=sheet_id,
+                    sheetId=sheet_id_to_copy,
+                    body={'destinationSpreadsheetId': new_spreadsheet_id}
+                ).execute()
+            except Exception as e:
+                st.write(f"Failed to copy sheet: {e}")
         else:
             st.write(f"Sheet '{sheet_name}' not found in the original spreadsheet.")
 
