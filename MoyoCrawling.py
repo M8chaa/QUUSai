@@ -57,32 +57,74 @@ def googleSheetConnect():
     serviceInstance = Create_Service(CLIENT_SECRETS, API_NAME, API_VERSION, SCOPES)
     return serviceInstance
 
-def backup_and_refresh(sheet_id, start_row=2, serviceInstance=None):
-    serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
-    driveServiceInstance = googleDriveConnect()
-    try:
-        # Retrieve the records from the sheet
-        kst = pytz.timezone('Asia/Seoul')  # Set the timezone to Korean Standard Time
-        current_datetime = datetime.now(kst).strftime("%Y/%m/%d - %H:%M:%S")
-        backup_file_name = f"모요 요금제 {current_datetime}"
-        backup_file_metadata = {
-            'name': backup_file_name,
-            'mimeType': 'application/vnd.google-apps.spreadsheet'
-        }
-        backup_file = driveServiceInstance.files().copy(fileId=sheet_id, body=backup_file_metadata).execute()
-        backup_sheet_id = backup_file.get('id')
-        backup_sheet_web_view_link = backup_file.get('webViewLink')
+# def backup_and_refresh(sheet_id, start_row=2, serviceInstance=None):
+#     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
+#     driveServiceInstance = googleDriveConnect()
+#     try:
+#         # Retrieve the records from the sheet
+#         kst = pytz.timezone('Asia/Seoul')  # Set the timezone to Korean Standard Time
+#         current_datetime = datetime.now(kst).strftime("%Y/%m/%d - %H:%M:%S")
+#         backup_file_name = f"모요 요금제 {current_datetime}"
+#         backup_file_metadata = {
+#             'name': backup_file_name,
+#             'mimeType': 'application/vnd.google-apps.spreadsheet'
+#         }
+#         backup_file = driveServiceInstance.files().copy(fileId=sheet_id, body=backup_file_metadata).execute()
+#         backup_sheet_id = backup_file.get('id')
+#         backup_sheet_web_view_link = backup_file.get('webViewLink')
 
-        # Clear the data in the original sheet
-        range = f'Sheet3!A{start_row}:Z'
+#         # Clear the data in the original sheet
+#         range = f'Sheet3!A{start_row}:Z'
+#         serviceInstance.spreadsheets().values().clear(
+#             spreadsheetId=sheet_id,
+#             range=range,
+#             body={}
+#         ).execute()
+#     except Exception as e:
+#         print(f"Failed to delete data records from sheet: {e}")
+
+def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstance=None):
+    if not serviceInstance:
+        serviceInstance = googleSheetConnect()
+    try:
+        # Create a new backup spreadsheet
+        kst = pytz.timezone('Asia/Seoul')  # Ensure pytz is imported
+        current_datetime = datetime.now(kst).strftime("%Y/%m/%d - %H:%M:%S")
+        backup_file_name = f"Backup 모요 요금제 {current_datetime}"
+        new_spreadsheet = serviceInstance.spreadsheets().create(body={
+            'properties': {'title': backup_file_name}
+        }, fields='spreadsheetId').execute()
+        new_spreadsheet_id = new_spreadsheet.get('spreadsheetId')
+
+        # Get the ID of "Sheet3" from the original spreadsheet
+        sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        sheets = sheet_metadata.get('sheets', '')
+        sheet_id_to_copy = None
+        for sheet in sheets:
+            if sheet.get("properties", {}).get("title", "") == sheet_name:
+                sheet_id_to_copy = sheet.get("properties", {}).get("sheetId", "")
+                break
+
+        if sheet_id_to_copy is not None:
+            # Copy "Sheet3" to the new spreadsheet
+            serviceInstance.spreadsheets().sheets().copyTo(
+                spreadsheetId=sheet_id,
+                sheetId=sheet_id_to_copy,
+                body={'destinationSpreadsheetId': new_spreadsheet_id}
+            ).execute()
+        else:
+            st.write(f"Sheet '{sheet_name}' not found in the original spreadsheet.")
+
+        # Optionally, clear the data in "Sheet3" of the original spreadsheet
+        range = f'{sheet_name}!A{start_row}:Z'
         serviceInstance.spreadsheets().values().clear(
             spreadsheetId=sheet_id,
             range=range,
             body={}
         ).execute()
-    except Exception as e:
-        print(f"Failed to delete data records from sheet: {e}")
 
+    except Exception as e:
+        st.write(f"Failed to backup and refresh sheet: {e}")
 
 def pushToSheet(data, spreadsheet_id, range='Sheet3!A:A', serviceInstance=None):
     serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
