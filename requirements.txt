@@ -23,14 +23,11 @@ certifi==2023.7.22
 cffi==1.15.1
 chardet==5.2.0
 charset-normalizer==3.2.0
-chroma-hnswlib==0.7.3
-chromadb==0.4.11
 click==8.1.7
 coloredlogs==15.0.1
 comm==0.1.4
 confection==0.1.3
 contourpy==1.1.1
-cryptography==41.0.4
 cycler==0.11.0
 cymem==2.0.8
 dataclasses-json==0.5.14
@@ -38,8 +35,6 @@ debugpy==1.8.0
 decorator==5.1.1
 dill==0.3.7
 dnspython==2.4.2
-duckduckgo-search==3.8.5
-EbookLib==0.18
 effdet==0.4.1
 elastic-transport==8.4.0
 elasticsearch==8.9.0
@@ -47,7 +42,6 @@ email-validator==2.0.0.post2
 emoji==2.8.0
 et-xmlfile==1.1.0
 executing==1.2.0
-faiss-cpu==1.7.4
 fastapi==0.99.1
 ffmpeg==1.4
 ffmpeg-python==0.2.0
@@ -60,7 +54,6 @@ fsspec==2023.9.1
 future==0.18.3
 gitdb==4.0.10
 GitPython==3.1.35
-gpt4all==2.0.2
 greenlet==3.0.0
 h11==0.14.0
 h2==4.1.0
@@ -86,12 +79,7 @@ jsonpatch==1.33
 jsonpointer==2.4
 jsonschema==4.19.0
 jsonschema-specifications==2023.7.1
-jupyter_client==8.3.1
-jupyter_core==5.3.1
 kiwisolver==1.4.5
-langchain==0.0.332
-langcodes==3.3.0
-langsmith==0.0.52
 layoutparser==0.3.4
 loguru==0.7.2
 lxml==4.9.3
@@ -100,8 +88,6 @@ Markdown==3.4.4
 markdown-it-py==3.0.0
 MarkupSafe==2.1.3
 marshmallow==3.20.1
-matplotlib==3.8.0
-matplotlib-inline==0.1.6
 mdurl==0.1.2
 monotonic==1.6
 mpmath==1.3.0
@@ -128,15 +114,10 @@ pandas>=1.3.0,<2.0.0
 parso==0.8.3
 pathspec==0.11.2
 pathy==0.10.2
-pdf2image==1.16.3
-pdfminer.six==20221105
-pdfplumber==0.10.2
 pexpect==4.8.0
 pickleshare==0.7.5
 Pillow==9.5.0
-pinecone-client==2.2.4
 platformdirs==3.10.0
-playwright==1.39.0
 portalocker==2.8.2
 posthog==3.0.2
 preshed==3.0.9
@@ -206,17 +187,12 @@ tabulate==0.9.0
 tenacity==8.2.3
 thinc==8.1.12
 threadpoolctl==3.2.0
-tiktoken==0.5.1
 timm==0.9.7
-tokenizers==0.14.0
 toml==0.10.2
 toolz==0.12.0
-torch==2.0.1
-torchvision==0.15.2
 tornado==6.3.3
 tqdm==4.66.1
 traitlets==5.10.0
-transformers==4.34.0
 typer==0.9.0
 typing-inspect==0.9.0
 typing_extensions==4.7.1
@@ -239,9 +215,6 @@ xlrd==2.0.1
 XlsxWriter==3.1.5
 yarl==1.9.2
 zipp==3.16.2
-# selenium
-# seleniumbase
-# webdriver-manager
 streamlit-extras
 st-gsheets-connection
 google-api-python-client
@@ -249,5 +222,4 @@ google-auth-httplib2
 google-auth-oauthlib
 google
 ratelimit
-pytz
 playwright
