@@ -1056,7 +1056,6 @@ asyncio.run(main())
 
 
 
-
 with st.sidebar:
     base_url = "https://www.moyoplan.com/plans/"
     end_param1 = st.text_input(f"Enter the End Parameter for the Starting URL\n {base_url}", placeholder="15000")
