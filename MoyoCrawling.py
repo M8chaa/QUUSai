@@ -84,33 +84,44 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
             if sheet_id_to_copy and sheet_id_to_delete:
                 break
 
-        # if sheet_id_to_copy is not None and sheet_id_to_delete is not None:
-        #     try:
-        #         # Delete the existing sheet
-        #         delete_request = {
-        #             "deleteSheet": {
-        #                 "sheetId": sheet_id_to_delete
-        #             }
-        #         }
-        #         serviceInstance.spreadsheets().batchUpdate(
-        #             spreadsheetId=sheet_id,
-        #             body={"requests": [delete_request]}
-        #         ).execute()
+        # Get the value of last row in "Sheet3" of the original spreadsheet
+        sheet3_last_row_value = serviceInstance.spreadsheets().values().get(
+            spreadsheetId=sheet_id,
+            range=f"{sheet_name}!A1:A"
+        ).execute().get('values', [])
+        last_row_value = sheet3_last_row_value[-1][0] if sheet3_last_row_value else None
 
-        #         # Duplicate "Sheet3" with the name of the deleted sheet
-        #         duplicate_request = {
-        #             "duplicateSheet": {
-        #                 "sourceSheetId": sheet_id_to_copy,
-        #                 "insertSheetIndex": 0,  # Adjust as needed
-        #                 "newSheetName": "planDataSheet"  # Replace with your desired name
-        #             }
-        #         }
-        #         serviceInstance.spreadsheets().batchUpdate(
-        #             spreadsheetId=sheet_id,
-        #             body={"requests": [duplicate_request]}
-        #         ).execute()
-            # except Exception as e:
-            #     st.write(f"Failed to replace sheet: {e}")
+        fetch_completed = False
+        if last_row_value == "Fetch data ended successfully":
+            fetch_completed = True
+
+        if sheet_id_to_copy is not None and sheet_id_to_delete is not None and fetch_completed:
+            try:
+                # Delete the existing sheet
+                delete_request = {
+                    "deleteSheet": {
+                        "sheetId": sheet_id_to_delete
+                    }
+                }
+                serviceInstance.spreadsheets().batchUpdate(
+                    spreadsheetId=sheet_id,
+                    body={"requests": [delete_request]}
+                ).execute()
+
+                # Duplicate "Sheet3" with the name of the deleted sheet
+                duplicate_request = {
+                    "duplicateSheet": {
+                        "sourceSheetId": sheet_id_to_copy,
+                        "insertSheetIndex": 0,  # Adjust as needed
+                        "newSheetName": "planDataSheet"  # Replace with your desired name
+                    }
+                }
+                serviceInstance.spreadsheets().batchUpdate(
+                    spreadsheetId=sheet_id,
+                    body={"requests": [duplicate_request]}
+                ).execute()
+            except Exception as e:
+                st.write(f"Failed to replace sheet: {e}")
         
         # Copy the data from "Sheet3" of the original spreadsheet to the new spreadsheet
         if sheet_id_to_copy is not None:
@@ -522,29 +533,6 @@ def calculate_score(row):
 def update_google_sheet(data, sheet_id, serviceInstance=None):
     pushToSheet(data, sheet_id, range='Sheet3!A', serviceInstance=serviceInstance)
 
-def sort_sheet_by_column(sheet_id, column_index=0, serviceInstance=None):
-    serviceInstance = serviceInstance if serviceInstance else googleSheetConnect()
-
-    # Specify the sort request
-    requests = [{
-        "sortRange": {
-            "range": {
-                "sheetId": sheet_id,
-                "startRowIndex": 1,  # Assuming the first row is headers
-            },
-            "sortSpecs": [{
-                "dimensionIndex": column_index,
-                "sortOrder": "ASCENDING"
-            }]
-        }
-    }]
-
-    # Send the request
-    body = {
-        'requests': requests
-    }
-    serviceInstance.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
-
 error_queue = Queue()
 log_queue = Queue()
 thread_completed = Event()
@@ -654,6 +642,7 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
         while len(batch_data) < 10:  # Wait until we have 10 records
             processed_data = data_queue.get()
             if processed_data is None:  # Sentinel value to indicate completion
+                batch_data.append("Fetch data ended successfully")  # Add a row indicating fetch data ended
                 if len(batch_data) > 0:  # Push any remaining records
                     with sheet_update_lock:
                         retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2', serviceInstance)
@@ -698,13 +687,13 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
             # Use the function to get the sheet_id
             sheet3_id = get_sheet_id(sheet_id, 'Sheet3', serviceInstance)
 
-            def sort_sheet_by_column(sheet_id, column_index=0, serviceInstance=None):
+            def sort_sheet_by_column(sheet_id_to_sort, column_index=0, serviceInstance=None):
                 request_body = {
                     "requests": [
                         {
                             "sortRange": {
                                 "range": {
-                                    "sheetId": sheet_id,
+                                    "sheetId": sheet_id_to_sort,
                                     "startRowIndex": 1,  # Exclude header row
                                 },
                                 "sortSpecs": [
