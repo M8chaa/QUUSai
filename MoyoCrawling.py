@@ -128,7 +128,7 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
             try:
                 # Copy "Sheet3" to the new spreadsheet
                 serviceInstance.spreadsheets().sheets().copyTo(
-                    spreadsheetId=sheet_id,
+                    spreadsheetId=sheet_id_to_delete,
                     sheetId=sheet_id_to_copy,
                     body={'destinationSpreadsheetId': new_spreadsheet_id}
                 ).execute()
@@ -642,7 +642,7 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
         while len(batch_data) < 10:  # Wait until we have 10 records
             processed_data = data_queue.get()
             if processed_data is None:  # Sentinel value to indicate completion
-                batch_data.append("Fetch data ended successfully")  # Add a row indicating fetch data ended
+                batch_data.append(["Fetch data ended successfully"])  # Add a row indicating fetch data ended
                 if len(batch_data) > 0:  # Push any remaining records
                     with sheet_update_lock:
                         retry_push_to_sheet(batch_data, sheet_id, 'Sheet3!A2', serviceInstance)
