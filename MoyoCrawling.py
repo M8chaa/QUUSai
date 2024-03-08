@@ -112,7 +112,6 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
                 duplicate_request = {
                     "duplicateSheet": {
                         "sourceSheetId": sheet_id_to_copy,
-                        "insertSheetIndex": -1,  # Adjust as needed
                         "newSheetName": "planDataSheet"  # Replace with your desired name
                     }
                 }
@@ -128,7 +127,7 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
             try:
                 # Copy "Sheet3" to the new spreadsheet
                 serviceInstance.spreadsheets().sheets().copyTo(
-                    spreadsheetId=sheet_id_to_delete,
+                    spreadsheetId=sheet_id,
                     sheetId=sheet_id_to_copy,
                     body={'destinationSpreadsheetId': new_spreadsheet_id}
                 ).execute()
