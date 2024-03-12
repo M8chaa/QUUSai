@@ -514,6 +514,8 @@ stop_signal = Event()
 
 def fetch_data(driver, url_queue, data_queue):
     try:
+        url = ""
+        driver = None
         while not url_queue.empty():
             url = url_queue.get()
             # Fetch and process raw data from the URL
@@ -717,24 +719,24 @@ def moyocrawling(url1, url2, sheet_id, serviceInstance):
         current_url = '/'.join(part1[:-1] + [str(i)])
         url_queue.put(current_url)
 
-    def setup_driver():
-        options = ChromeOptions()
-        options.add_argument("--headless")
-        options.add_argument('--disable-gpu')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-extensions')
-        # options.add_argument("window-size=800x2000")
-        prefs = {"profile.managed_default_content_settings.images": 2}
-        options.add_experimental_option("prefs", prefs)
+    # def setup_driver():
+    #     options = ChromeOptions()
+    #     options.add_argument("--headless")
+    #     options.add_argument('--disable-gpu')
+    #     options.add_argument('--no-sandbox')
+    #     options.add_argument('--disable-dev-shm-usage')
+    #     options.add_argument('--disable-extensions')
+    #     # options.add_argument("window-size=800x2000")
+    #     prefs = {"profile.managed_default_content_settings.images": 2}
+    #     options.add_experimental_option("prefs", prefs)
 
-        CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-        service = fs.Service(CHROMEDRIVER)
-        driver = webdriver.Chrome(
-                                options=options,
-                                service=service
-                                )
-        return driver
+    #     CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+    #     service = fs.Service(CHROMEDRIVER)
+    #     driver = webdriver.Chrome(
+    #                             options=options,
+    #                             service=service
+    #                             )
+    #     return driver
 
      # Start data fetching threads
     fetch_threads = []
@@ -871,6 +873,7 @@ def fetch_data_Just_Moyos(url_fetch_queue, raw_data_queue):
         driver = setup_driver()
         base_url = "https://www.moyoplan.com/plans"
         driver.get(base_url)
+        url = ""
         while not url_fetch_queue.empty():
             url = url_fetch_queue.get()
             # Fetch and process raw data from the URL
