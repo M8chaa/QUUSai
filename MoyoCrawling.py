@@ -535,7 +535,7 @@ def update_google_sheet(data, sheet_id, serviceInstance=None):
 error_queue = Queue()
 log_queue = Queue()
 thread_completed = Event()
-stop_signal = Event()
+# stop_signal = Event()
 
 
 def fetch_data(driver, url_queue, data_queue):
@@ -620,8 +620,8 @@ def fetch_data(driver, url_queue, data_queue):
             data_queue.put(data)
             driver.delete_all_cookies()
             url_queue.task_done()
-            if stop_signal.is_set():
-                break
+            # if stop_signal.is_set():
+            #     break
     except Exception as e:
         # Log the exception or handle it as needed
         error_message = f"An error occurred when fetching data of {url}: {e}"
@@ -707,8 +707,8 @@ def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
                 }
                 serviceInstance.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=request_body).execute()
             sort_sheet_by_column(sheet3_id, column_index, serviceInstance)
-        if stop_signal.is_set():
-            break
+        # if stop_signal.is_set():
+        #     break
 
 def retry_push_to_sheet(data, sheet_id, range, serviceInstance, backoff_factor=1):
     """Attempt to push data to the sheet indefinitely until successful, with exponential backoff."""
@@ -788,8 +788,8 @@ def moyocrawling(url1, url2, sheet_id, serviceInstance):
         thread.join()
     autoResizeColumns(sheet_id, 0, serviceInstance)
     thread_completed.set()
-    if stop_signal.is_set():
-        return
+    # if stop_signal.is_set():
+    #     return
 
 def fetch_url_Just_Moyos(url_fetch_queue):
     end_of_list = False
@@ -824,8 +824,8 @@ def fetch_url_Just_Moyos(url_fetch_queue):
                 attempts += 1  # Increment attempts counter
             if attempts >= 5:
                 break  # Break out of the outer loop if max attempts reached
-        if stop_signal.is_set():
-            break 
+        # if stop_signal.is_set():
+        #     break 
     print(f"URL Fetch Thread Finished at page = {i}//////////////////////////////////////////////////////////////////")
 
 def setup_driver():
@@ -987,8 +987,8 @@ def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
                     if attempts == 5:
                         error_message = f"Failed to fetch data after 5 attempts for URL: {url}"
                         error_queue.put(error_message)
-            if stop_signal.is_set():
-                break  
+            # if stop_signal.is_set():
+            #     break  
 
             driver.delete_all_cookies()
             url_fetch_queue.task_done()
@@ -1060,8 +1060,8 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
     print("Auto Resize Column Finished/////////////////////////////////////////////////////////////////")
     thread_completed.set()
     print("All Threads Completed/////////////////////////////////////////////////////////////////")
-    if stop_signal.is_set():
-        return
+    # if stop_signal.is_set():
+    #     return
     
 
 
@@ -1156,5 +1156,5 @@ if 'show_download_buttons' in st.session_state and st.session_state['show_downlo
             st.error(f"An Error Occurred: {e}")
 
     if stop_button_pressed:
-        stop_signal.set()  # Signal threads to stop
+        # stop_signal.set()  # Signal threads to stop
         st.write("Stopped all processes...")
