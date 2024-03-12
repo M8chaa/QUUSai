@@ -97,23 +97,27 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
 
         if sheet_id_to_copy is not None and sheet_id_to_delete is not None and fetch_completed:
             try:
-                # Delete the planDatasheet and duplicate "Sheet3" with the name of the deleted sheet
-                requests = [
-                    {
-                        "deleteSheet": {
-                            "sheetId": sheet_id_to_delete
-                        }
-                    },
-                    {
-                        "duplicateSheet": {
-                            "sourceSheetId": sheet_id_to_copy,
-                            "newSheetName": "planDataSheet"  # Replace with your desired name
-                        }
+                # Delete the existing sheet
+                delete_request = {
+                    "deleteSheet": {
+                        "sheetId": sheet_id_to_delete
                     }
-                ]
+                }
                 serviceInstance.spreadsheets().batchUpdate(
                     spreadsheetId=sheet_id,
-                    body={"requests": requests}
+                    body={"requests": [delete_request]}
+                ).execute()
+
+                # Duplicate "Sheet3" with the name of the deleted sheet
+                duplicate_request = {
+                    "duplicateSheet": {
+                        "sourceSheetId": sheet_id_to_copy,
+                        "newSheetName": "planDataSheet"  # Replace with your desired name
+                    }
+                }
+                serviceInstance.spreadsheets().batchUpdate(
+                    spreadsheetId=sheet_id,
+                    body={"requests": [duplicate_request]}
                 ).execute()
             except Exception as e:
                 st.write(f"Failed to replace sheet: {e}")
@@ -132,13 +136,35 @@ def backup_and_refresh(sheet_id, sheet_name='Sheet3', start_row=2, serviceInstan
         else:
             st.write(f"Sheet '{sheet_name}' not found in the original spreadsheet.")
 
-        # Delete data below row 2 in "Sheet3" of the original spreadsheet
-        range = f'{sheet_name}!A2:ZZZ'
-        serviceInstance.spreadsheets().values().clear(
-            spreadsheetId=sheet_id,
-            range=range,
-            body={}
-        ).execute()
+        # Optionally, clear the data in "Sheet3" of the original spreadsheet
+        sheet_metadata = serviceInstance.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        sheets = sheet_metadata.get('sheets', '')
+        sheet_properties = None
+        for sheet in sheets:
+            if sheet.get("properties", {}).get("title", "") == sheet_name:
+                sheet_properties = sheet.get("properties", {})
+                break
+
+        if sheet_properties is not None:
+            sheet_grid_properties = sheet_properties.get("gridProperties", {})
+            sheet_row_count = sheet_grid_properties.get("rowCount", 0)
+            sheet_column_count = sheet_grid_properties.get("columnCount", 0)
+            def column_number_to_letter(n):
+                string = ""
+                while n > 0:
+                    n, remainder = divmod(n - 1, 26)
+                    string = chr(65 + remainder) + string
+                return string
+            last_column_letter = column_number_to_letter(sheet_column_count)
+
+            range = f'{sheet_name}!A2:{last_column_letter}{sheet_row_count}'
+            serviceInstance.spreadsheets().values().clear(
+                spreadsheetId=sheet_id,
+                range=range,
+                body={}
+            ).execute()
+        else:
+            st.write(f"Sheet '{sheet_name}' not found in the spreadsheet.")
 
     except Exception as e:
         st.write(f"Failed to backup and refresh sheet: {e}")
@@ -514,11 +540,9 @@ stop_signal = Event()
 
 def fetch_data(driver, url_queue, data_queue):
     try:
-        url = ""
-        driver = None
         while not url_queue.empty():
             url = url_queue.get()
-            # Fetch and process raw data from the URL
+            # Fetch and process data from the URL
             driver.get(url)
 
             try:
@@ -611,11 +635,11 @@ PER_MINUTE_LIMIT = 60
 def rate_limited_pushToSheet(data, sheet_id, range, serviceInstance=None):
     return pushToSheet(data, sheet_id, range, serviceInstance)
 
-def update_sheet(processed_data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
+def update_sheet(data_queue, sheet_update_lock, sheet_id, serviceInstance=None):
     while True:
         batch_data = []  # Accumulate data here
         while len(batch_data) < 10:  # Wait until we have 10 records
-            processed_data = processed_data_queue.get()
+            processed_data = data_queue.get()
             if processed_data is None:  # Sentinel value to indicate completion
                 batch_data.append(["Fetch data ended successfully"])  # Add a row indicating fetch data ended
                 if len(batch_data) > 0:  # Push any remaining records
@@ -719,24 +743,24 @@ def moyocrawling(url1, url2, sheet_id, serviceInstance):
         current_url = '/'.join(part1[:-1] + [str(i)])
         url_queue.put(current_url)
 
-    # def setup_driver():
-    #     options = ChromeOptions()
-    #     options.add_argument("--headless")
-    #     options.add_argument('--disable-gpu')
-    #     options.add_argument('--no-sandbox')
-    #     options.add_argument('--disable-dev-shm-usage')
-    #     options.add_argument('--disable-extensions')
-    #     # options.add_argument("window-size=800x2000")
-    #     prefs = {"profile.managed_default_content_settings.images": 2}
-    #     options.add_experimental_option("prefs", prefs)
+    def setup_driver():
+        options = ChromeOptions()
+        options.add_argument("--headless")
+        options.add_argument('--disable-gpu')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-extensions')
+        # options.add_argument("window-size=800x2000")
+        prefs = {"profile.managed_default_content_settings.images": 2}
+        options.add_experimental_option("prefs", prefs)
 
-    #     CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-    #     service = fs.Service(CHROMEDRIVER)
-    #     driver = webdriver.Chrome(
-    #                             options=options,
-    #                             service=service
-    #                             )
-    #     return driver
+        CHROMEDRIVER = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
+        service = fs.Service(CHROMEDRIVER)
+        driver = webdriver.Chrome(
+                                options=options,
+                                service=service
+                                )
+        return driver
 
      # Start data fetching threads
     fetch_threads = []
@@ -868,15 +892,14 @@ def calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, r
             weights['문자(건)'] * rawText)
     return score
 
-def fetch_data_Just_Moyos(url_fetch_queue, raw_data_queue):
+def fetch_data_Just_Moyos(url_fetch_queue, data_queue):
     try:
         driver = setup_driver()
         base_url = "https://www.moyoplan.com/plans"
         driver.get(base_url)
-        url = ""
         while not url_fetch_queue.empty():
             url = url_fetch_queue.get()
-            # Fetch and process raw data from the URL
+            # Fetch and process data from the URL
             attempts = 0
             fetch_success = False
             
@@ -887,6 +910,14 @@ def fetch_data_Just_Moyos(url_fetch_queue, raw_data_queue):
                     WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.CLASS_NAME, "css-yg1ktq")))
                     button = driver.find_element(By.XPATH, "//button[contains(@class, 'css-yg1ktq')]")
                     driver.execute_script("arguments[0].click();", button)
+                    # WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, 'css-1ipix51')))
+                    # div_css_selector = ".css-1b8xqgi"
+                    # div_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, div_css_selector)))
+
+                    # svg_element = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div[2]/main/div/section[4]/div/div/div/div/div/div[1]/div[1]/div")))
+                    # hover = ActionChains(driver).move_to_element(svg_element)
+                    # hover.perform()
+                    # tooltip = WebDriverWait(driver, 15).until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span[role="tooltip"]')))
                     try:
                         사은품_링크 = driver.find_element(By.CSS_SELECTOR, 'a.css-1hdj7cf.e17wbb0s4')
                         사은품_링크 = 사은품_링크.get_attribute('href') if 사은품_링크 else None
@@ -903,16 +934,13 @@ def fetch_data_Just_Moyos(url_fetch_queue, raw_data_queue):
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     strSoup = soup.get_text()
+                    regex_formula = regex_extract(strSoup)
+                    if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
+                        regex_formula[18] += (f", link:{사은품_링크}")
+                    if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
+                        regex_formula[19] += (f", link:{카드할인_링크}")
                     planUrl = str(url)
-                    raw_data_queue.put((strSoup, 사은품_링크, 카드할인_링크, planUrl))
-                    # regex_formula = regex_extract(strSoup)
-                    # if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
-                    #     regex_formula[18] += (f", link:{사은품_링크}")
-                    # if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
-                    #     regex_formula[19] += (f", link:{카드할인_링크}")
-                    # planUrl = str(url)
-
-                    # data = [planUrl] + regex_formula
+                    # data = pd.Series([planUrl] + regex_formula)
                     
                     # rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
                     # rawMonthData = convert_data_to_numeric(data[4])
@@ -923,12 +951,31 @@ def fetch_data_Just_Moyos(url_fetch_queue, raw_data_queue):
 
                     # score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
 
-                    # new_data = [rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score]
+                    # new_data = pd.Series([rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score])
                     
-                    # data = data + new_data
-                    # print (data)
-                    # data_queue.put(data)
-                    # print(f"Data queued for {url}")
+                    # data_df = data.to_frame().T
+                    # new_data_df = new_data.to_frame().T
+
+                    # data = pd.concat([data_df, new_data_df], axis=1)
+                    # print ({data})
+                    # data_queue.put(data.values.tolist())
+                    data = [planUrl] + regex_formula
+                    
+                    rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
+                    rawMonthData = convert_data_to_numeric(data[4])
+                    rawDailyData = convert_data_to_numeric(data[5])
+                    rawDataSpeed = float(data[6].replace('제공안함', '0mbps').replace('mbps', '')) if isinstance(data[6], str) else data[6]
+                    rawCall = convert_calls_texts_to_numeric(data[7])
+                    rawText = convert_calls_texts_to_numeric(data[8])
+
+                    score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
+
+                    new_data = [rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score]
+                    
+                    data = data + new_data
+                    print (data)
+                    data_queue.put(data)
+                    print(f"Data queued for {url}")
                     fetch_success = True
                     attempts = 0
                 except (TimeoutException, WebDriverException) as e:
@@ -953,38 +1000,9 @@ def fetch_data_Just_Moyos(url_fetch_queue, raw_data_queue):
         if driver:
             driver.quit()
 
-def process_raw_data(raw_data_queue, processed_data_queue):
-    raw_data = raw_data_queue.get()
-    while raw_data is not None:
-        strSoup, 사은품_링크, 카드할인_링크, planUrl = raw_data
-    regex_formula = regex_extract(strSoup)
-    if regex_formula[18] is not "제공안함" and 사은품_링크 is not None:
-        regex_formula[18] += (f", link:{사은품_링크}")
-    if regex_formula[19] is not "제공안함" and 카드할인_링크 is not None:
-        regex_formula[19] += (f", link:{카드할인_링크}")
-    planUrl = str(planUrl)
-
-    data = [planUrl] + regex_formula
-    
-    rawMonthPayment = int(data[3].replace('원', '').replace(',', ''))
-    rawMonthData = convert_data_to_numeric(data[4])
-    rawDailyData = convert_data_to_numeric(data[5])
-    rawDataSpeed = float(data[6].replace('제공안함', '0mbps').replace('mbps', '')) if isinstance(data[6], str) else data[6]
-    rawCall = convert_calls_texts_to_numeric(data[7])
-    rawText = convert_calls_texts_to_numeric(data[8])
-
-    score = calculate_score(rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText)
-
-    new_data = [rawMonthPayment, rawMonthData, rawDailyData, rawDataSpeed, rawCall, rawText, score]
-    
-    data = data + new_data
-    processed_data_queue.put(data)
-    print(f"Data queued for {planUrl}")
-
 def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
     url_fetch_queue = Queue()
-    raw_data_queue = Queue()
-    processed_data_queue = Queue()
+    data_queue = Queue()
     sheet_update_lock = threading.Lock()
 
     fetch_url_threads = []
@@ -996,27 +1014,30 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
 
     # Start data fetching threads
     fetch_threads = []
-    for _ in range(3):
-        t = threading.Thread(target=fetch_data_Just_Moyos, args=(url_fetch_queue, raw_data_queue))
+    for _ in range(4):
+        t = threading.Thread(target=fetch_data_Just_Moyos, args=(url_fetch_queue, data_queue))
         t.start()
         fetch_threads.append(t)
     print("Fetch Data Thread Started/////////////////////////////////////////////////////////////////")
 
-    process_raw_data_threads = []
-    for _ in range(1):
-        t = threading.Thread(target=process_raw_data, args=(raw_data_queue, processed_data_queue))
-        t.start()
-        process_raw_data_threads.append(t)
-    print("Process Raw Data Thread Started/////////////////////////////////////////////////////////////////")
-
     # Start sheet updating threads
     update_threads = []
     for _ in range(1):
-        t = threading.Thread(target=update_sheet, args=(processed_data_queue, sheet_update_lock, sheet_id, serviceInstance))
+        t = threading.Thread(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id, serviceInstance))
         t.start()
         update_threads.append(t)
     print("Update Thread Started/////////////////////////////////////////////////////////////////")
 
+    # process1 = Process(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id, serviceInstance))
+    # process2 = Process(target=update_sheet, args=(data_queue, sheet_update_lock, sheet_id, serviceInstance))
+
+    # # Start your processes
+    # process1.start()
+    # process2.start()
+
+    # # Wait for both processes to complete
+    # process1.join()
+    # process2.join()
 
     # Wait for data url fetching threads to finish and signal fetch threads to finish
     for thread in fetch_url_threads:
@@ -1025,17 +1046,11 @@ def moyocrawling_Just_Moyos(sheet_id, sheetUrl, serviceInstance):
         url_fetch_queue.put(None)
     print("URL Fetch Thread Finished/////////////////////////////////////////////////////////////////")
 
-    # Wait for data fetching threads to finish and signal process_raw_data threads to finish
+    # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
     for _ in range(1):
-        raw_data_queue.put(None)
-
-    # Wait for data process_raw_data threads to finish and signal update threads to finish
-    for thread in process_raw_data_threads:
-        thread.join()
-    for _ in range(1):
-        processed_data_queue.put(None)  # Sentinel value for each update thread
+        data_queue.put(None)  # Sentinel value for each update thread
     print("Data Fetch Thread Finished/////////////////////////////////////////////////////////////////")
     # Wait for update threads to finish
     for thread in update_threads:
