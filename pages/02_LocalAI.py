@@ -1,19 +1,24 @@
 from langchain.prompts import ChatPromptTemplate
 from langchain.document_loaders import UnstructuredFileLoader
-from langchain.embeddings import CacheBackedEmbeddings, OllamaEmbeddings
+from langchain.embeddings import CacheBackedEmbeddings, OllamaEmbeddings, OpenAIEmbeddings
 from langchain.schema.runnable import RunnableLambda, RunnablePassthrough
 from langchain.storage import LocalFileStore
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
 from langchain.vectorstores.faiss import FAISS
 from langchain.chat_models import ChatOllama
 from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
+from langserve import RemoteRunnable
+
 
 st.set_page_config(
-    page_title="LocalAI",
+    page_title="쿠스AI",
     page_icon="🔒",
 )
 
+openaikey = st.secrets["OPENAI_API_KEY"]
+ip = st.secrets["Langserve_endpoint"]
+LANGSERVE_ENDPOINT = f"http://{ip}/chat/c/N4XyA"
 
 class ChatCallbackHandler(BaseCallbackHandler):
     message = ""
@@ -29,14 +34,37 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
-llm = ChatOllama(
-    model="mistral:latest",
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler(),
-    ],
-)
+# llm = ChatOllama(
+#     model="mistral:latest",
+#     temperature=0.1,
+#     streaming=True,
+#     callbacks=[
+#         ChatCallbackHandler(),
+#     ],
+# )
+
+llm = RemoteRunnable(LANGSERVE_ENDPOINT)
+
+
+# @st.cache_data(show_spinner="Embedding file...")
+# def embed_file(file):
+#     file_content = file.read()
+#     file_path = f"./.cache/private_files/{file.name}"
+#     with open(file_path, "wb") as f:
+#         f.write(file_content)
+#     cache_dir = LocalFileStore(f"./.cache/private_embeddings/{file.name}")
+#     splitter = CharacterTextSplitter.from_tiktoken_encoder(
+#         separator="\n",
+#         chunk_size=600,
+#         chunk_overlap=100,
+#     )
+#     loader = UnstructuredFileLoader(file_path)
+#     docs = loader.load_and_split(text_splitter=splitter)
+#     embeddings = OllamaEmbeddings(model="mistral:latest")
+#     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+#     vectorstore = FAISS.from_documents(docs, cached_embeddings)
+#     retriever = vectorstore.as_retriever()
+#     return retriever
 
 
 @st.cache_data(show_spinner="Embedding file...")
@@ -46,14 +74,15 @@ def embed_file(file):
     with open(file_path, "wb") as f:
         f.write(file_content)
     cache_dir = LocalFileStore(f"./.cache/private_embeddings/{file.name}")
-    splitter = CharacterTextSplitter.from_tiktoken_encoder(
-        separator="\n",
-        chunk_size=600,
-        chunk_overlap=100,
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=50,
+        separators=["\n\n", "\n", "(?<=\. )", " ", ""],
+        length_function=len,
     )
     loader = UnstructuredFileLoader(file_path)
     docs = loader.load_and_split(text_splitter=splitter)
-    embeddings = OllamaEmbeddings(model="mistral:latest")
+    embeddings = OpenAIEmbeddings()
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
     vectorstore = FAISS.from_documents(docs, cached_embeddings)
     retriever = vectorstore.as_retriever()
@@ -93,7 +122,7 @@ prompt = ChatPromptTemplate.from_template(
 )
 
 
-st.title("LocalAI")
+st.title("쿠스AI")
 
 st.markdown(
     """
