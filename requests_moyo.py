@@ -2,80 +2,40 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-current_url = "https://www.moyoplan.com/plans/19291"
+current_url = "https://www.moyoplan.com/plans/16181"
 response = requests.get(current_url)
 soup = BeautifulSoup(response.text, 'html.parser')
-strSoup = soup.get_text()
-print(strSoup)
+events_sections = soup.find_all('div', class_='css-mdplld eqp7k0x1')
 
-# Find the <a> tag
-a_tags = soup.find_all('a', class_='e3509g015')
+for section in events_sections:
+#         # Assuming each event has a title in a span with a specific class
+        #check if there is a title of 사은품 및 이벤트
+        try:
+            title = section.find('span', class_='css-1dhu10z e8zn4re0').text
+        except:
+            title = ''
+        if title == '사은품 및 이벤트':
+            print(title)
+            # print(section.text)
+            # print link
+            print(section.find('a', class_='css-1hdj7cf e17wbb0s4')['href'])
+            #print title: css-1p5yo9l e8zn4re0
+            print(section.find('span', class_='css-1p5yo9l e8zn4re0').text)
+            # Check if description contains '대상' for all descriptions
+            descriptions = section.find_all('p', class_='tw-m-0 css-1sfi3e1 e8zn4re0')
+            for description in descriptions:
+                if '대상' in description.text:
+                    print(description.text)
+                elif '지급시기' in description.text:
+                    print(description.text)
+            
+        
+#         # Further details can be extracted here based on the structure
+#         # For example, extracting the event link and description
+#         event_link = section.find('a', class_='css-1hdj7cf e17wbb0s4')['href']
+#         description = section.find('div', class_='css-1kkt86i e17wbb0s2').text
+        
+#         print(f'Title: {title}')
+#         print(f'Link: {event_link}')
+#         print(f'Description: {description}\n')
 
-# Extract the href attribute
-links = [a_tag['href'] for a_tag in a_tags]
-
-print(links)
-
-
-# import requests
-# from bs4 import BeautifulSoup
-# from urllib.parse import urljoin
-
-# def decode_unicode_escapes(text):
-#     return text.encode('utf-8').decode('unicode_escape')
-
-# base_url = "https://www.moyoplan.com/plans/15007"
-# response = requests.get(base_url)
-# soup = BeautifulSoup(response.content, 'html.parser')
-
-# scripts = soup.find_all('script')
-
-# for script in scripts:
-#     if script.string and 'alert(' in script.string:
-#         print("Alert found in inline script:")
-#         decoded_script = decode_unicode_escapes(script.string)
-#         print(decoded_script)
-#     elif script.get('src'):
-#         # Convert relative URL to absolute URL
-#         script_url = urljoin(base_url, script.get('src'))
-#         print(f"External script: {script_url}")
-#         try:
-#             external_response = requests.get(script_url)
-#             if 'alert(' in external_response.text:
-#                 print("Alert found in external script:")
-#                 decoded_script = decode_unicode_escapes(external_response.text)
-#                 print(decoded_script)
-#         except requests.exceptions.RequestException as e:
-#             print(f"Error fetching script {script_url}: {e}")
-
-
-# import requests
-# from bs4 import BeautifulSoup
-# from urllib.parse import urljoin
-# import codecs
-
-# def decode_unicode_escapes(text):
-#     return codecs.decode(text, 'unicode_escape', 'ignore')
-
-# base_url = "https://www.moyoplan.com/plans/15007"
-# response = requests.get(base_url)
-# soup = BeautifulSoup(response.content, 'html.parser')
-
-# scripts = soup.find_all('script')
-
-# for script in scripts:
-#     if script.string and 'alert(' in script.string:
-#         print("Alert found in inline script:")
-#         decoded_script = decode_unicode_escapes(script.string)
-#         print(decoded_script)
-#     elif script.get('src'):
-#         # Convert relative URL to absolute URL
-#         script_url = urljoin(base_url, script.get('src'))
-#         try:
-#             external_response = requests.get(script_url)
-#             if 'alert(' in external_response.text:
-#                 print("Alert found in external script:")
-#                 decoded_script = decode_unicode_escapes(external_response.text)
-#                 print(decoded_script)
-#         except requests.exceptions.RequestException as e:
-#             print(f"Error fetching script {script_url}: {e}")
