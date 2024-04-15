@@ -17,10 +17,10 @@ load_dotenv()
 
 embeddings = OpenAIEmbeddings()
 
-vector_store = Pinecone.from_existing_index(
-    "recipes",
-    embeddings,
-)
+# vector_store = Pinecone.from_existing_index(
+#     "recipes",
+#     embeddings,
+# )
 
 
 app = FastAPI(

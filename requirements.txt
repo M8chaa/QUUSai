@@ -249,3 +249,4 @@ google-auth-httplib2
 google-auth-oauthlib
 google
 langserve==0.0.51
+langchain_core
