@@ -59,6 +59,8 @@ Use this chatbot to ask questions to an AI!
 )
 
 send_message("I'm ready! Ask away!", "ai", save=False)
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 paint_history()
 message = st.chat_input("Ask anything...")
 if message:
