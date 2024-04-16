@@ -72,11 +72,13 @@ llm = RemoteRunnable(LANGSERVE_ENDPOINT)
 def embed_file(file):
     file_content = file.read()
     file_path = f"./.cache/private_files/{file.name}"
-    os.makedirs(file_path, exist_ok=True)
+    file_dir = "./.cache/private_files/"
+    os.makedirs(file_dir, exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(file_content)
-    cache_dir = LocalFileStore(f"./.cache/private_embeddings/{file.name}")
-    os.makedirs(cache_dir.path, exist_ok=True)
+    cache_dir_path = f"./.cache/private_embeddings/{file.name}"
+    os.makedirs(cache_dir_path, exist_ok=True)
+    cache_dir = LocalFileStore(cache_dir_path)
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=50,
