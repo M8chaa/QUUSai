@@ -16,13 +16,6 @@ st.set_page_config(
     page_title="쿠스AI",
     page_icon="🔒",
 )
-from pydantic import BaseModel
-
-class MyModel(BaseModel):
-    my_field: MyCustomType
-
-    class Config:
-        arbitrary_types_allowed = True
 
 openaikey = st.secrets["OPENAI_API_KEY"]
 ip = st.secrets["Langserve_endpoint"]
