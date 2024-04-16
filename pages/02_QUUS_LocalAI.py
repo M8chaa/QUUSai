@@ -9,6 +9,7 @@ from langchain.chat_models import ChatOllama
 from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
 from langserve import RemoteRunnable
+from langchain_core.runnables.schema import StreamEvent
 
 
 st.set_page_config(

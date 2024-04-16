@@ -248,5 +248,5 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 google
-langserve
-langchain_core
+langserve==0.0.51
+langchain-core==0.1.42
