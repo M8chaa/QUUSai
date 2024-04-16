@@ -10,7 +10,7 @@ from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
 from langserve import RemoteRunnable
 from langchain_core.runnables.schema import StreamEvent
-
+import os
 
 st.set_page_config(
     page_title="쿠스AI",
@@ -72,9 +72,11 @@ llm = RemoteRunnable(LANGSERVE_ENDPOINT)
 def embed_file(file):
     file_content = file.read()
     file_path = f"./.cache/private_files/{file.name}"
+    os.makedirs(file_path, exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(file_content)
     cache_dir = LocalFileStore(f"./.cache/private_embeddings/{file.name}")
+    os.makedirs(cache_dir.path, exist_ok=True)
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=50,
