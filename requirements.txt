@@ -242,7 +242,7 @@ XlsxWriter==3.1.5
 yarl==1.9.4
 zipp==3.16.2
 selenium
-seleniumbase
+# seleniumbase
 webdriver-manager
 streamlit-extras
 st-gsheets-connection
@@ -250,4 +250,4 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 google
-PyVirtualDisplay>=0.2.1
+PyVirtualDisplay==3.0
