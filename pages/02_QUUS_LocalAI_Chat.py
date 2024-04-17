@@ -16,17 +16,33 @@ st.write(openaikey)
 # LANGSERVE_ENDPOINT = f"http://{ip}/chat/c/N4XyA"
 LANGSERVE_ENDPOINT = "https://504d-121-170-69-151.ngrok-free.app/llm/"
 class ChatCallbackHandler(BaseCallbackHandler):
-    message = ""
+    # message = ""
+
+    # def on_llm_start(self, *args, **kwargs):
+    #     self.message_box = st.empty()
+
+    # def on_llm_end(self, *args, **kwargs):
+    #     save_message(self.message, "ai")
+
+    # def on_llm_new_token(self, token, *args, **kwargs):
+    #     self.message += token
+    #     self.message_box.markdown(self.message)
+    def __init__(self):
+        self.message = ""
+        self.message_box = None
 
     def on_llm_start(self, *args, **kwargs):
         self.message_box = st.empty()
-
-    def on_llm_end(self, *args, **kwargs):
-        save_message(self.message, "ai")
+        self.message = ""
 
     def on_llm_new_token(self, token, *args, **kwargs):
         self.message += token
         self.message_box.markdown(self.message)
+
+    def on_llm_end(self, *args, **kwargs):
+        save_message(self.message, "ai")
+        self.message_box = None  # Clear the reference once done
+
 
 llm = RemoteRunnable(LANGSERVE_ENDPOINT)
 
