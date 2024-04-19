@@ -44,7 +44,7 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box = None  # Clear the reference once done
 
 
-llm = RemoteRunnable(LANGSERVE_ENDPOINT)
+llm = RemoteRunnable(LANGSERVE_ENDPOINT, callback_handler=ChatCallbackHandler())
 
 def save_message(message, role):
     st.session_state["messages"].append({"message": message, "role": role})
