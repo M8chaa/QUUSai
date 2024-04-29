@@ -86,7 +86,7 @@ if message:
         chunks = []
         for chunk in response:
             chunks.append(chunk.content)
-            st.write(''.join(chunks))
+        st.write_stream(''.join(chunks))
         # chat_container = st.empty()
         # answer = llm.stream(message)
         # chunks = []
