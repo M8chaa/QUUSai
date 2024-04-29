@@ -84,9 +84,9 @@ if message:
     with st.chat_message("ai"):
         response = llm.stream(message)
         chunks = []
-        for i, chunk in enumerate(response):
+        for chunk in response:
             chunks.append(chunk.content)
-            st.text(''.join(chunks), key=f'chunk-{i}')
+        st.write_stream(chunks)
         # chat_container = st.empty()
         # answer = llm.stream(message)
         # chunks = []
