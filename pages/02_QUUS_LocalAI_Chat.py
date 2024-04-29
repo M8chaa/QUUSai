@@ -82,9 +82,9 @@ message = st.chat_input("Ask anything...")
 if message:
     send_message(message, "human")
     with st.chat_message("ai"):
-        llm.invoke(message, callback_handler=ChatCallbackHandler())
-        # response = llm.stream(message)
-        # for chunk in response:
-        #     st.write(chunk)
+        # llm.invoke(message, callback_handler=ChatCallbackHandler())
+        response = llm.stream(message)
+        for chunk in response:
+            st.write(chunk)
 else:
     st.session_state["messages"] = []
