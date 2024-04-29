@@ -251,3 +251,4 @@ google-auth-httplib2
 google-auth-oauthlib
 google
 PyVirtualDisplay==3.0
+httpx_sse
