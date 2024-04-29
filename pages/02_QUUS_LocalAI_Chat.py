@@ -10,8 +10,6 @@ st.set_page_config(
 )
 
 openaikey = st.secrets["OPENAI_API_KEY"]
-#log openaikey
-st.write(openaikey)
 # ip = st.secrets["Langserve_endpoint"]
 # LANGSERVE_ENDPOINT = f"http://{ip}/chat/c/N4XyA"
 LANGSERVE_ENDPOINT = "https://4936-121-170-69-151.ngrok-free.app/llm"
