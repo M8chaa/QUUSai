@@ -83,14 +83,17 @@ if message:
     send_message(message, "human")
     with st.chat_message("ai"):
         # llm.invoke(message, callback_handler=ChatCallbackHandler())
-        # response = llm.stream(message)
-        # for chunk in response:
-        #     st.write(chunk)
-        chat_container = st.empty()
-        answer = llm.stream(message)
-        chunks = []
-        for chunk in answer:
-            chunks.append(chunk)
-            chat_container.markdown("".join(chunks))
+        response = llm.stream(message)
+        for chunk in response:
+            st.write(chunk)
+        # chat_container = st.empty()
+        # answer = llm.stream(message)
+        # chunks = []
+        # for chunk in answer:
+        #     # Ensure each chunk is a string before appending
+        #     chunks.append(str(chunk))
+        # # Check if chat_container is not None before using it
+        # if chat_container is not None:
+        #     chat_container.markdown("".join(chunks))
 else:
     st.session_state["messages"] = []
