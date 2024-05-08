@@ -369,7 +369,7 @@ def regex_extract(strSoup):
     mvno_pattern = r"\[(.*?)\]"
     plan_name_pattern = r"\]\s*(.*?)\s*\|"
     monthly_fee_pattern = r"\|\s*([\d,]+원)\s*\|"
-    monthly_data_pattern = r"월\s*([.\d]+(?:GB|MB))"
+    monthly_data_pattern = r"(월\s*[.\d]+(?:GB|MB))"
     daily_data_pattern = r"매일\s*([.\d]+(?:GB|MB))"
     data_speed_pattern = r"\(([.\d]+(?:mbps|gbps))\)"
     call_minutes_pattern = r"(\d+분|무제한)"
