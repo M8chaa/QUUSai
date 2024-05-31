@@ -12,7 +12,7 @@ st.set_page_config(
 openaikey = st.secrets["OPENAI_API_KEY"]
 # ip = st.secrets["Langserve_endpoint"]
 # LANGSERVE_ENDPOINT = f"http://{ip}/chat/c/N4XyA"
-LANGSERVE_ENDPOINT = "https://4936-121-170-69-151.ngrok-free.app/llm"
+LANGSERVE_ENDPOINT = "https://2d26-211-106-56-66.ngrok-free.app/llm"
 class ChatCallbackHandler(BaseCallbackHandler):
     # message = ""
 
