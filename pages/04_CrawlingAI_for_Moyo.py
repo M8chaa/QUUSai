@@ -652,7 +652,7 @@ def moyocrawling(url1, url2, sheet_id, serviceInstance):
     # Wait for data fetching threads to finish and signal update threads to finish
     for thread in fetch_threads:
         thread.join()
-    for _ in range(1):
+    for _ in range(2):
         data_queue.put(None)  # Sentinel value for each update thread
 
     # Wait for update threads to finish
