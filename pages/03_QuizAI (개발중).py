@@ -205,8 +205,11 @@ formatting_chain = formatting_prompt | llm
 def split_file(file):
     file_content = file.read()
     file_path = f"./.cache/quiz_files/{file.name}"
-    with open(file_path, "wb") as f:
-        f.write(file_content)
+    try:
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+    except Exception as e:
+        st.error(f"Error occurred while writing the file: {e}")
     splitter = CharacterTextSplitter.from_tiktoken_encoder(
         separator="\n",
         chunk_size=600,
