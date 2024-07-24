@@ -83,6 +83,11 @@ def extract_audio_from_video(video_path):
 def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
     if has_transcript:
         return
+    print(f"Checking if audio file exists at {audio_path}")
+    if not os.path.exists(audio_path):
+        print(f"Audio file not found at {audio_path}")
+        return
+    print(f"Audio file found at {audio_path}")
     track = AudioSegment.from_mp3(audio_path)
     chunk_len = chunk_size * 60 * 1000
     chunks = math.ceil(len(track) / chunk_len)
