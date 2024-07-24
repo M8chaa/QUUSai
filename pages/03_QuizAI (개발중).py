@@ -7,7 +7,7 @@ from langchain.callbacks import StreamingStdOutCallbackHandler
 import streamlit as st
 from langchain.retrievers import WikipediaRetriever
 from langchain.schema import BaseOutputParser, output_parser
-
+import os
 
 class JsonOutputParser(BaseOutputParser):
     def parse(self, text):
@@ -205,6 +205,8 @@ formatting_chain = formatting_prompt | llm
 def split_file(file):
     file_content = file.read()
     file_path = f"./.cache/quiz_files/{file.name}"
+    # 디렉토리 생성 로직 추가
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     try:
         with open(file_path, "wb") as f:
             f.write(file_content)
