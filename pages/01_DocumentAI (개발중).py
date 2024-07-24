@@ -39,7 +39,7 @@ llm = ChatOpenAI(
 )
 
 
-@st.cache_data(show_spinner="Embedding file...")
+@st.cache_resource(show_spinner="Embedding file...")
 def embed_file(file):
     # Ensure .cache/files directory exists
     file_dir = f"./.cache/files"
