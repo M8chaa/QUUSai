@@ -31,9 +31,13 @@ class StockMarketSymbolSearchTool(BaseTool):
     def _run(self, query):
         ddg = DuckDuckGoSearchAPIWrapper()
         try:
-            return ddg.run(query)
+            result = ddg.run(query)
+            print(f"StockMarketSymbolSearchTool result: {result}")
+            return result
         except Exception as e:
-            return f"An error occurred while searching for the stock symbol: {e}"
+            error_message = f"An error occurred while searching for the stock symbol: {e}"
+            print(error_message)
+            return error_message
 
 class CompanyOverviewArgsSchema(BaseModel):
     symbol: str = Field(
@@ -54,9 +58,13 @@ class CompanyOverviewTool(BaseTool):
                 f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey={alpha_vantage_api_key}"
             )
             r.raise_for_status()
-            return r.json()
+            result = r.json()
+            print(f"CompanyOverviewTool result: {result}")
+            return result
         except requests.exceptions.RequestException as e:
-            return f"An error occurred while fetching the company overview: {e}"
+            error_message = f"An error occurred while fetching the company overview: {e}"
+            print(error_message)
+            return error_message
 
 class CompanyIncomeStatementTool(BaseTool):
     name = "CompanyIncomeStatement"
@@ -72,9 +80,13 @@ class CompanyIncomeStatementTool(BaseTool):
                 f"https://www.alphavantage.co/query?function=INCOME_STATEMENT&symbol={symbol}&apikey={alpha_vantage_api_key}"
             )
             r.raise_for_status()
-            return r.json().get("annualReports", "No data found")
+            result = r.json().get("annualReports", "No data found")
+            print(f"CompanyIncomeStatementTool result: {result}")
+            return result
         except requests.exceptions.RequestException as e:
-            return f"An error occurred while fetching the income statement: {e}"
+            error_message = f"An error occurred while fetching the income statement: {e}"
+            print(error_message)
+            return error_message
 
 class CompanyStockPerformanceTool(BaseTool):
     name = "CompanyStockPerformance"
@@ -91,9 +103,13 @@ class CompanyStockPerformanceTool(BaseTool):
             )
             r.raise_for_status()
             response = r.json()
-            return list(response.get("Weekly Time Series", {}).items())[:200]
+            result = list(response.get("Weekly Time Series", {}).items())[:200]
+            print(f"CompanyStockPerformanceTool result: {result}")
+            return result
         except requests.exceptions.RequestException as e:
-            return f"An error occurred while fetching the stock performance: {e}"
+            error_message = f"An error occurred while fetching the stock performance: {e}"
+            print(error_message)
+            return error_message
 
 agent = initialize_agent(
     llm=llm,
