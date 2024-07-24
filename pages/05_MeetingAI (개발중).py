@@ -53,6 +53,7 @@ def transcribe_chunks(chunk_folder, destination):
                 audio_file,
             )
             text_file.write(transcript["text"])
+    print(f"Transcription completed. Transcript saved at {destination}")
 
 @st.cache_data()
 def extract_audio_from_video(video_path):
@@ -78,6 +79,7 @@ def extract_audio_from_video(video_path):
         print(f"ffmpeg not found: {e}")
     except Exception as e:
         print(f"Error running ffmpeg: {e}")
+    return audio_path
 
 @st.cache_data()
 def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
@@ -100,6 +102,7 @@ def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
             f"./{chunks_folder}/chunk_{i}.mp3",
             format="mp3",
         )
+    print(f"Audio cut into {chunks} chunks, saved in {chunks_folder}")
 
 st.set_page_config(
     page_title="MeetingAI",
@@ -133,7 +136,7 @@ if video:
         with open(video_path, "wb") as f:
             f.write(video_content)
         status.update(label="Extracting audio...")
-        extract_audio_from_video(video_path)
+        audio_path = extract_audio_from_video(video_path)
         status.update(label="Cutting audio segments...")
         cut_audio_in_chunks(audio_path, 10, chunks_folder)
         status.update(label="Transcribing audio...")
@@ -148,8 +151,11 @@ if video:
     )
 
     with transcript_tab:
-        with open(transcript_path, "r") as file:
-            st.write(file.read())
+        if os.path.exists(transcript_path):
+            with open(transcript_path, "r") as file:
+                st.write(file.read())
+        else:
+            st.write("Transcript not found.")
 
     with summary_tab:
         start = st.button("Generate summary")
