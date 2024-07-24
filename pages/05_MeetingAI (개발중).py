@@ -25,10 +25,9 @@ splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_overlap=100,
 )
 
-
 @st.cache_data()
 def embed_file(file_path):
-    cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
+    cache_dir = LocalFileStore(f"./.cache/embeddings/{file_path}")
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size=800,
         chunk_overlap=100,
@@ -40,7 +39,6 @@ def embed_file(file_path):
     vectorstore = FAISS.from_documents(docs, cached_embeddings)
     retriever = vectorstore.as_retriever()
     return retriever
-
 
 @st.cache_data()
 def transcribe_chunks(chunk_folder, destination):
@@ -56,7 +54,6 @@ def transcribe_chunks(chunk_folder, destination):
             )
             text_file.write(transcript["text"])
 
-
 @st.cache_data()
 def extract_audio_from_video(video_path):
     if has_transcript:
@@ -70,8 +67,17 @@ def extract_audio_from_video(video_path):
         "-vn",
         audio_path,
     ]
-    subprocess.run(command)
-
+    try:
+        print(f"Running command: {' '.join(command)}")
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Error in ffmpeg: {result.stderr}")
+        else:
+            print(f"ffmpeg output: {result.stdout}")
+    except FileNotFoundError as e:
+        print(f"ffmpeg not found: {e}")
+    except Exception as e:
+        print(f"Error running ffmpeg: {e}")
 
 @st.cache_data()
 def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
@@ -80,6 +86,7 @@ def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
     track = AudioSegment.from_mp3(audio_path)
     chunk_len = chunk_size * 60 * 1000
     chunks = math.ceil(len(track) / chunk_len)
+    os.makedirs(chunks_folder, exist_ok=True)
     for i in range(chunks):
         start_time = i * chunk_len
         end_time = (i + 1) * chunk_len
@@ -88,7 +95,6 @@ def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
             f"./{chunks_folder}/chunk_{i}.mp3",
             format="mp3",
         )
-
 
 st.set_page_config(
     page_title="MeetingAI",
@@ -118,6 +124,7 @@ if video:
         video_path = f"./.cache/{video.name}"
         audio_path = video_path.replace("mp4", "mp3")
         transcript_path = video_path.replace("mp4", "txt")
+        os.makedirs(os.path.dirname(video_path), exist_ok=True)
         with open(video_path, "wb") as f:
             f.write(video_content)
         status.update(label="Extracting audio...")
