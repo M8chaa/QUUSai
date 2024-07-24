@@ -13,19 +13,16 @@ llm = ChatOpenAI(temperature=0.1, model_name="gpt-3.5-turbo-1106")
 
 alpha_vantage_api_key = os.environ.get("ALPHA_VANTAGE_API_KEY")
 
-
 class StockMarketSymbolSearchToolArgsSchema(BaseModel):
     query: str = Field(
-        description="The query you will search for.Example query: Stock Market Symbol for Apple Company"
+        description="The query you will search for. Example query: Stock Market Symbol for Apple Company"
     )
-
 
 class StockMarketSymbolSearchTool(BaseTool):
     name = "StockMarketSymbolSearchTool"
     description = """
     Use this tool to find the stock market symbol for a company.
     It takes a query as an argument.
-    
     """
     args_schema: Type[
         StockMarketSymbolSearchToolArgsSchema
@@ -33,14 +30,15 @@ class StockMarketSymbolSearchTool(BaseTool):
 
     def _run(self, query):
         ddg = DuckDuckGoSearchAPIWrapper()
-        return ddg.run(query)
-
+        try:
+            return ddg.run(query)
+        except Exception as e:
+            return f"An error occurred while searching for the stock symbol: {e}"
 
 class CompanyOverviewArgsSchema(BaseModel):
     symbol: str = Field(
-        description="Stock symbol of the company.Example: AAPL,TSLA",
+        description="Stock symbol of the company. Example: AAPL, TSLA",
     )
-
 
 class CompanyOverviewTool(BaseTool):
     name = "CompanyOverview"
@@ -51,11 +49,14 @@ class CompanyOverviewTool(BaseTool):
     args_schema: Type[CompanyOverviewArgsSchema] = CompanyOverviewArgsSchema
 
     def _run(self, symbol):
-        r = requests.get(
-            f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey={alpha_vantage_api_key}"
-        )
-        return r.json()
-
+        try:
+            r = requests.get(
+                f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey={alpha_vantage_api_key}"
+            )
+            r.raise_for_status()
+            return r.json()
+        except requests.exceptions.RequestException as e:
+            return f"An error occurred while fetching the company overview: {e}"
 
 class CompanyIncomeStatementTool(BaseTool):
     name = "CompanyIncomeStatement"
@@ -66,11 +67,14 @@ class CompanyIncomeStatementTool(BaseTool):
     args_schema: Type[CompanyOverviewArgsSchema] = CompanyOverviewArgsSchema
 
     def _run(self, symbol):
-        r = requests.get(
-            f"https://www.alphavantage.co/query?function=INCOME_STATEMENT&symbol={symbol}&apikey={alpha_vantage_api_key}"
-        )
-        return r.json()["annualReports"]
-
+        try:
+            r = requests.get(
+                f"https://www.alphavantage.co/query?function=INCOME_STATEMENT&symbol={symbol}&apikey={alpha_vantage_api_key}"
+            )
+            r.raise_for_status()
+            return r.json().get("annualReports", "No data found")
+        except requests.exceptions.RequestException as e:
+            return f"An error occurred while fetching the income statement: {e}"
 
 class CompanyStockPerformanceTool(BaseTool):
     name = "CompanyStockPerformance"
@@ -81,12 +85,15 @@ class CompanyStockPerformanceTool(BaseTool):
     args_schema: Type[CompanyOverviewArgsSchema] = CompanyOverviewArgsSchema
 
     def _run(self, symbol):
-        r = requests.get(
-            f"https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol={symbol}&apikey={alpha_vantage_api_key}"
-        )
-        response = r.json()
-        return list(response["Weekly Time Series"].items())[:200]
-
+        try:
+            r = requests.get(
+                f"https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol={symbol}&apikey={alpha_vantage_api_key}"
+            )
+            r.raise_for_status()
+            response = r.json()
+            return list(response.get("Weekly Time Series", {}).items())[:200]
+        except requests.exceptions.RequestException as e:
+            return f"An error occurred while fetching the stock performance: {e}"
 
 agent = initialize_agent(
     llm=llm,
@@ -129,7 +136,7 @@ st.markdown(
 """
 )
 
-company = st.text_input("Write the name of the company you are interested on.")
+company = st.text_input("Write the name of the company you are interested in.")
 
 if company:
     result = agent.invoke(company)
