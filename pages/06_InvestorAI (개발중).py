@@ -1,13 +1,13 @@
-from langchain_community.schema import SystemMessage
+from langchain.schema import SystemMessage
 import streamlit as st
 import os
 import requests
 from typing import Type
-from langchain_community.chat_models import ChatOpenAI
-from langchain_community.tools import BaseTool
+from langchain.chat_models import ChatOpenAI
+from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
-from langchain_community.agents import initialize_agent, AgentType
-from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+from langchain.agents import initialize_agent, AgentType
+from langchain.utilities import DuckDuckGoSearchAPIWrapper
 
 llm = ChatOpenAI(temperature=0.1, model_name="gpt-3.5-turbo-1106")
 
@@ -24,9 +24,7 @@ class StockMarketSymbolSearchTool(BaseTool):
     Use this tool to find the stock market symbol for a company.
     It takes a query as an argument.
     """
-    args_schema: Type[
-        StockMarketSymbolSearchToolArgsSchema
-    ] = StockMarketSymbolSearchToolArgsSchema
+    args_schema: Type[StockMarketSymbolSearchToolArgsSchema] = StockMarketSymbolSearchToolArgsSchema
 
     def _run(self, query):
         ddg = DuckDuckGoSearchAPIWrapper()
