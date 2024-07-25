@@ -35,6 +35,10 @@ def embed_file(file_path):
         )
         loader = TextLoader(file_path)
         docs = loader.load_and_split(text_splitter=splitter)
+        st.write(f"Number of documents loaded and split: {len(docs)}")
+        if len(docs) == 0:
+            st.write("No documents were loaded. Please check the file content.")
+            return None
         embeddings = OpenAIEmbeddings()
         cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
         vectorstore = FAISS.from_documents(docs, cached_embeddings)
@@ -176,48 +180,53 @@ if video:
             if os.path.exists(transcript_path):
                 loader = TextLoader(transcript_path)
                 docs = loader.load_and_split(text_splitter=splitter)
-                first_summary_prompt = ChatPromptTemplate.from_template(
+                st.write(f"Number of documents loaded and split: {len(docs)}")
+                if len(docs) == 0:
+                    st.write("No documents were loaded. Please check the file content.")
+                else:
+                    first_summary_prompt = ChatPromptTemplate.from_template(
+                        """
+                        Write a concise summary of the following:
+                        "{text}"
+                        CONCISE SUMMARY:                
                     """
-                    Write a concise summary of the following:
-                    "{text}"
-                    CONCISE SUMMARY:                
-                """
-                )
-                first_summary_chain = first_summary_prompt | llm | StrOutputParser()
-                summary = first_summary_chain.invoke(
-                    {"text": docs[0].page_content},
-                )
-                refine_prompt = ChatPromptTemplate.from_template(
-                    """
-                    Your job is to produce a final summary.
-                    We have provided an existing summary up to a certain point: {existing_summary}
-                    We have the opportunity to refine the existing summary (only if needed) with some more context below.
-                    ------------
-                    {context}
-                    ------------
-                    Given the new context, refine the original summary.
-                    If the context isn't useful, RETURN the original summary.
-                    """
-                )
-                refine_chain = refine_prompt | llm | StrOutputParser()
-                with st.status("Summarizing...") as status:
-                    for i, doc in enumerate(docs[1:]):
-                        status.update(label=f"Processing document {i+1}/{len(docs)-1} ")
-                        summary = refine_chain.invoke(
-                            {
-                                "existing_summary": summary,
-                                "context": doc.page_content,
-                            }
-                        )
-                        st.write(summary)
-                st.write(summary)
+                    )
+                    first_summary_chain = first_summary_prompt | llm | StrOutputParser()
+                    summary = first_summary_chain.invoke(
+                        {"text": docs[0].page_content},
+                    )
+                    refine_prompt = ChatPromptTemplate.from_template(
+                        """
+                        Your job is to produce a final summary.
+                        We have provided an existing summary up to a certain point: {existing_summary}
+                        We have the opportunity to refine the existing summary (only if needed) with some more context below.
+                        ------------
+                        {context}
+                        ------------
+                        Given the new context, refine the original summary.
+                        If the context isn't useful, RETURN the original summary.
+                        """
+                    )
+                    refine_chain = refine_prompt | llm | StrOutputParser()
+                    with st.status("Summarizing...") as status:
+                        for i, doc in enumerate(docs[1:]):
+                            status.update(label=f"Processing document {i+1}/{len(docs)-1} ")
+                            summary = refine_chain.invoke(
+                                {
+                                    "existing_summary": summary,
+                                    "context": doc.page_content,
+                                }
+                            )
+                            st.write(summary)
+                    st.write(summary)
             else:
                 st.write("Transcript not found, please transcribe first.")
 
     with qa_tab:
         if os.path.exists(transcript_path):
             retriever = embed_file(transcript_path)
-            docs = retriever.invoke("do they talk about marcus aurelius?")
-            st.write(docs)
+            if retriever:
+                docs = retriever.invoke("do they talk about marcus aurelius?")
+                st.write(docs)
         else:
             st.write("Transcript not found.")
