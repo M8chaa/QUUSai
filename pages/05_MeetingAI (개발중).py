@@ -27,7 +27,7 @@ splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
 
 @st.cache_data()
 def embed_file(file_path):
-    print(f"Loading and embedding file from path: {file_path}")
+    st.write(f"Loading and embedding file from path: {file_path}")
     try:
         cache_dir = LocalFileStore(f"./.cache/embeddings/{file_path}")
         splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
@@ -42,33 +42,35 @@ def embed_file(file_path):
         retriever = vectorstore.as_retriever()
         return retriever
     except Exception as e:
-        print(f"Error loading and embedding file: {e}")
+        st.write(f"Error loading and embedding file: {e}")
         raise
 
 @st.cache_data()
 def transcribe_chunks(chunk_folder, destination):
     if has_transcript:
+        st.write("Transcript already exists.")
         return
-    print(f"Starting transcription of audio chunks from folder: {chunk_folder}")
+    st.write(f"Starting transcription of audio chunks from folder: {chunk_folder}")
     files = glob.glob(f"{chunk_folder}/*.mp3")
     files.sort()
-    print(f"Found {len(files)} audio chunks for transcription.")
+    st.write(f"Found {len(files)} audio chunks for transcription.")
     for file in files:
         try:
             with open(file, "rb") as audio_file, open(destination, "a") as text_file:
-                print(f"Transcribing file: {file}")
+                st.write(f"Transcribing file: {file}")
                 transcript = openai.Audio.transcribe(
                     "whisper-1",
                     audio_file,
                 )
                 text_file.write(transcript["text"])
         except Exception as e:
-            print(f"Error transcribing file {file}: {e}")
-    print(f"Transcription completed. Transcript saved at {destination}")
+            st.write(f"Error transcribing file {file}: {e}")
+    st.write(f"Transcription completed. Transcript saved at {destination}")
 
 @st.cache_data()
 def extract_audio_from_video(video_path):
     if has_transcript:
+        st.write("Transcript already exists.")
         return
     audio_path = video_path.replace("mp4", "mp3")
     command = [
@@ -80,27 +82,28 @@ def extract_audio_from_video(video_path):
         audio_path,
     ]
     try:
-        print(f"Running command: {' '.join(command)}")
+        st.write(f"Running command: {' '.join(command)}")
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
-            print(f"Error in ffmpeg: {result.stderr}")
+            st.write(f"Error in ffmpeg: {result.stderr}")
         else:
-            print(f"ffmpeg output: {result.stdout}")
+            st.write(f"ffmpeg output: {result.stdout}")
     except FileNotFoundError as e:
-        print(f"ffmpeg not found: {e}")
+        st.write(f"ffmpeg not found: {e}")
     except Exception as e:
-        print(f"Error running ffmpeg: {e}")
+        st.write(f"Error running ffmpeg: {e}")
     return audio_path
 
 @st.cache_data()
 def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
     if has_transcript:
+        st.write("Transcript already exists.")
         return
-    print(f"Checking if audio file exists at {audio_path}")
+    st.write(f"Checking if audio file exists at {audio_path}")
     if not os.path.exists(audio_path):
-        print(f"Audio file not found at {audio_path}")
+        st.write(f"Audio file not found at {audio_path}")
         return
-    print(f"Audio file found at {audio_path}")
+    st.write(f"Audio file found at {audio_path}")
     try:
         track = AudioSegment.from_mp3(audio_path)
         chunk_len = chunk_size * 60 * 1000
@@ -114,9 +117,9 @@ def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
                 f"./{chunks_folder}/chunk_{i}.mp3",
                 format="mp3",
             )
-        print(f"Audio cut into {chunks} chunks, saved in {chunks_folder}")
+        st.write(f"Audio cut into {chunks} chunks, saved in {chunks_folder}")
     except Exception as e:
-        print(f"Error cutting audio into chunks: {e}")
+        st.write(f"Error cutting audio into chunks: {e}")
 
 st.set_page_config(
     page_title="MeetingAI",
