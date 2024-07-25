@@ -150,7 +150,7 @@ st.markdown(
             
     Welcome to InvestorGPT.
             
-    Write down the name of a company and our Agent will do the research for you.
+    Write down the name of a NASDAQ company and our Agent will do the research for you.
 """
 )
 
