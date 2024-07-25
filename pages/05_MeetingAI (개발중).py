@@ -49,15 +49,21 @@ def embed_file(file_path):
 def transcribe_chunks(chunk_folder, destination):
     if has_transcript:
         return
+    print(f"Starting transcription of audio chunks from folder: {chunk_folder}")
     files = glob.glob(f"{chunk_folder}/*.mp3")
     files.sort()
+    print(f"Found {len(files)} audio chunks for transcription.")
     for file in files:
-        with open(file, "rb") as audio_file, open(destination, "a") as text_file:
-            transcript = openai.Audio.transcribe(
-                "whisper-1",
-                audio_file,
-            )
-            text_file.write(transcript["text"])
+        try:
+            with open(file, "rb") as audio_file, open(destination, "a") as text_file:
+                print(f"Transcribing file: {file}")
+                transcript = openai.Audio.transcribe(
+                    "whisper-1",
+                    audio_file,
+                )
+                text_file.write(transcript["text"])
+        except Exception as e:
+            print(f"Error transcribing file {file}: {e}")
     print(f"Transcription completed. Transcript saved at {destination}")
 
 @st.cache_data()
@@ -95,19 +101,22 @@ def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
         print(f"Audio file not found at {audio_path}")
         return
     print(f"Audio file found at {audio_path}")
-    track = AudioSegment.from_mp3(audio_path)
-    chunk_len = chunk_size * 60 * 1000
-    chunks = math.ceil(len(track) / chunk_len)
-    os.makedirs(chunks_folder, exist_ok=True)
-    for i in range(chunks):
-        start_time = i * chunk_len
-        end_time = (i + 1) * chunk_len
-        chunk = track[start_time:end_time]
-        chunk.export(
-            f"./{chunks_folder}/chunk_{i}.mp3",
-            format="mp3",
-        )
-    print(f"Audio cut into {chunks} chunks, saved in {chunks_folder}")
+    try:
+        track = AudioSegment.from_mp3(audio_path)
+        chunk_len = chunk_size * 60 * 1000
+        chunks = math.ceil(len(track) / chunk_len)
+        os.makedirs(chunks_folder, exist_ok=True)
+        for i in range(chunks):
+            start_time = i * chunk_len
+            end_time = (i + 1) * chunk_len
+            chunk = track[start_time:end_time]
+            chunk.export(
+                f"./{chunks_folder}/chunk_{i}.mp3",
+                format="mp3",
+            )
+        print(f"Audio cut into {chunks} chunks, saved in {chunks_folder}")
+    except Exception as e:
+        print(f"Error cutting audio into chunks: {e}")
 
 st.set_page_config(
     page_title="MeetingAI",
@@ -165,50 +174,46 @@ if video:
     with summary_tab:
         start = st.button("Generate summary")
         if start:
-            loader = TextLoader(transcript_path)
-
-            docs = loader.load_and_split(text_splitter=splitter)
-
-            first_summary_prompt = ChatPromptTemplate.from_template(
+            if os.path.exists(transcript_path):
+                loader = TextLoader(transcript_path)
+                docs = loader.load_and_split(text_splitter=splitter)
+                first_summary_prompt = ChatPromptTemplate.from_template(
+                    """
+                    Write a concise summary of the following:
+                    "{text}"
+                    CONCISE SUMMARY:                
                 """
-                Write a concise summary of the following:
-                "{text}"
-                CONCISE SUMMARY:                
-            """
-            )
-
-            first_summary_chain = first_summary_prompt | llm | StrOutputParser()
-
-            summary = first_summary_chain.invoke(
-                {"text": docs[0].page_content},
-            )
-
-            refine_prompt = ChatPromptTemplate.from_template(
-                """
-                Your job is to produce a final summary.
-                We have provided an existing summary up to a certain point: {existing_summary}
-                We have the opportunity to refine the existing summary (only if needed) with some more context below.
-                ------------
-                {context}
-                ------------
-                Given the new context, refine the original summary.
-                If the context isn't useful, RETURN the original summary.
-                """
-            )
-
-            refine_chain = refine_prompt | llm | StrOutputParser()
-
-            with st.status("Summarizing...") as status:
-                for i, doc in enumerate(docs[1:]):
-                    status.update(label=f"Processing document {i+1}/{len(docs)-1} ")
-                    summary = refine_chain.invoke(
-                        {
-                            "existing_summary": summary,
-                            "context": doc.page_content,
-                        }
-                    )
-                    st.write(summary)
-            st.write(summary)
+                )
+                first_summary_chain = first_summary_prompt | llm | StrOutputParser()
+                summary = first_summary_chain.invoke(
+                    {"text": docs[0].page_content},
+                )
+                refine_prompt = ChatPromptTemplate.from_template(
+                    """
+                    Your job is to produce a final summary.
+                    We have provided an existing summary up to a certain point: {existing_summary}
+                    We have the opportunity to refine the existing summary (only if needed) with some more context below.
+                    ------------
+                    {context}
+                    ------------
+                    Given the new context, refine the original summary.
+                    If the context isn't useful, RETURN the original summary.
+                    """
+                )
+                refine_chain = refine_prompt | llm | StrOutputParser()
+                with st.status("Summarizing...") as status:
+                    for i, doc in enumerate(docs[1:]):
+                        status.update(label=f"Processing document {i+1}/{len(docs)-1} ")
+                        summary = refine_chain.invoke(
+                            {
+                                "existing_summary": summary,
+                                "context": doc.page_content,
+                            }
+                        )
+                        st.write(summary)
+                st.write(summary)
+            else:
+                st.write("Transcript not found, please transcribe first.")
 
     with qa_tab:
         if os.path.exists(transcript_path):
