@@ -14,6 +14,9 @@ from langchain.schema import StrOutputParser
 from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings import CacheBackedEmbeddings, OpenAIEmbeddings
 
+# Initialize OpenAI client
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 llm = ChatOpenAI(
     temperature=0.1,
 )
@@ -60,12 +63,12 @@ def transcribe_chunks(chunk_folder, destination):
         try:
             with open(file, "rb") as audio_file:
                 st.write(f"Transcribing file: {file}")
-                response = openai.Audio.transcriptions.create(
+                transcript = client.audio.transcriptions.create(
                     model="whisper-1",
                     file=audio_file,
                 )
                 with open(destination, "a") as text_file:
-                    text_file.write(response['text'])
+                    text_file.write(transcript.text)
         except Exception as e:
             st.write(f"Error transcribing file {file}: {e}")
     st.write(f"Transcription completed. Transcript saved at {destination}")
