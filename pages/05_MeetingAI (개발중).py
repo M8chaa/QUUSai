@@ -25,7 +25,6 @@ splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_overlap=100,
 )
 
-@st.cache_data()
 def embed_file(file_path):
     st.write(f"Loading and embedding file from path: {file_path}")
     try:
@@ -45,7 +44,6 @@ def embed_file(file_path):
         st.write(f"Error loading and embedding file: {e}")
         raise
 
-@st.cache_data()
 def transcribe_chunks(chunk_folder, destination):
     if has_transcript:
         st.write("Transcript already exists.")
@@ -67,7 +65,6 @@ def transcribe_chunks(chunk_folder, destination):
             st.write(f"Error transcribing file {file}: {e}")
     st.write(f"Transcription completed. Transcript saved at {destination}")
 
-@st.cache_data()
 def extract_audio_from_video(video_path):
     if has_transcript:
         st.write("Transcript already exists.")
@@ -94,7 +91,6 @@ def extract_audio_from_video(video_path):
         st.write(f"Error running ffmpeg: {e}")
     return audio_path
 
-@st.cache_data()
 def cut_audio_in_chunks(audio_path, chunk_size, chunks_folder):
     if has_transcript:
         st.write("Transcript already exists.")
