@@ -3,6 +3,7 @@ import streamlit as st
 st.set_page_config(
     page_title="NokcciAI",
     page_icon="💼",
+    layout="wide"
 )
 
 st.markdown(
@@ -18,7 +19,7 @@ st.markdown(
 # Embed the website in the main screen
 st.markdown(
     """
-    <iframe src="https://www.nokcci.com/" width="100%" height="600"></iframe>
+    <iframe src="https://www.nokcci.com/" width="100%" height="1000px" style="border:none;"></iframe>
     """,
     unsafe_allow_html=True
 )
