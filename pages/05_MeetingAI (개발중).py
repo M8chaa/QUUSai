@@ -4,9 +4,7 @@ import subprocess
 import math
 from pydub import AudioSegment
 import glob
-from openai import OpenAI
-
-client = OpenAI()
+import openai
 import os
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
@@ -60,11 +58,14 @@ def transcribe_chunks(chunk_folder, destination):
     st.write(f"Found {len(files)} audio chunks for transcription.")
     for file in files:
         try:
-            with open(file, "rb") as audio_file, open(destination, "a") as text_file:
+            with open(file, "rb") as audio_file:
                 st.write(f"Transcribing file: {file}")
-                transcript = client.audio.transcribe("whisper-1",
-                audio_file)
-                text_file.write(transcript.text)
+                response = openai.Audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                )
+                with open(destination, "a") as text_file:
+                    text_file.write(response['text'])
         except Exception as e:
             st.write(f"Error transcribing file {file}: {e}")
     st.write(f"Transcription completed. Transcript saved at {destination}")
