@@ -27,18 +27,23 @@ splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
 
 @st.cache_data()
 def embed_file(file_path):
-    cache_dir = LocalFileStore(f"./.cache/embeddings/{file_path}")
-    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=800,
-        chunk_overlap=100,
-    )
-    loader = TextLoader(file_path)
-    docs = loader.load_and_split(text_splitter=splitter)
-    embeddings = OpenAIEmbeddings()
-    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
-    vectorstore = FAISS.from_documents(docs, cached_embeddings)
-    retriever = vectorstore.as_retriever()
-    return retriever
+    print(f"Loading and embedding file from path: {file_path}")
+    try:
+        cache_dir = LocalFileStore(f"./.cache/embeddings/{file_path}")
+        splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+            chunk_size=800,
+            chunk_overlap=100,
+        )
+        loader = TextLoader(file_path)
+        docs = loader.load_and_split(text_splitter=splitter)
+        embeddings = OpenAIEmbeddings()
+        cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+        vectorstore = FAISS.from_documents(docs, cached_embeddings)
+        retriever = vectorstore.as_retriever()
+        return retriever
+    except Exception as e:
+        print(f"Error loading and embedding file: {e}")
+        raise
 
 @st.cache_data()
 def transcribe_chunks(chunk_folder, destination):
@@ -206,8 +211,9 @@ if video:
             st.write(summary)
 
     with qa_tab:
-        retriever = embed_file(transcript_path)
-
-        docs = retriever.invoke("do they talk about marcus aurelius?")
-
-        st.write(docs)
+        if os.path.exists(transcript_path):
+            retriever = embed_file(transcript_path)
+            docs = retriever.invoke("do they talk about marcus aurelius?")
+            st.write(docs)
+        else:
+            st.write("Transcript not found.")
