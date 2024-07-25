@@ -19,7 +19,14 @@ st.markdown(
 # Embed the website in the main screen
 st.markdown(
     """
-    <iframe src="https://www.nokcci.com/" width="100%" height="1000px" style="border:none;"></iframe>
+    <style>
+    .full-height-iframe {
+        height: 100vh;
+        width: 100%;
+        border: none;
+    }
+    </style>
+    <iframe src="https://www.nokcci.com/" class="full-height-iframe"></iframe>
     """,
     unsafe_allow_html=True
 )
